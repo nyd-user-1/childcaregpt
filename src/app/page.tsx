@@ -88,7 +88,7 @@ export default function HomePage() {
             </div>
 
             {/* Explore carousel */}
-            <CardCarousel />
+            <CardCarouselPortrait />
 
           </div>
         </div>
