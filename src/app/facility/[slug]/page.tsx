@@ -74,7 +74,6 @@ export default function DetailPageFacility({ params }: { params: Promise<{ slug:
   const prevSlug = DUMMY_LOCATIONS[(idx - 1 + total) % total].slug
   const nextSlug = DUMMY_LOCATIONS[(idx + 1) % total].slug
 
-  const [profileOpen, setProfileOpen] = useState(true)
   const [infoExpanded, setInfoExpanded] = useState(false)
   const [chartsOpen, setChartsOpen] = useState(false)
   const [mapsOpen, setMapsOpen] = useState(false)
@@ -144,14 +143,14 @@ export default function DetailPageFacility({ params }: { params: Promise<{ slug:
 
               <div className="rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
                 <button
-                  onClick={() => { setProfileOpen(v => !v); setInfoExpanded(false) }}
+                  onClick={() => setInfoExpanded(v => !v)}
                   className="flex items-center justify-between w-full px-4 py-3 bg-[var(--surface)] hover:bg-[var(--inp-bg)] transition-colors"
                 >
                   <span className="text-sm font-semibold text-[var(--txt)]">Facility Profile</span>
-                  <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', profileOpen && 'rotate-180')} />
+                  <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', infoExpanded && 'rotate-180')} />
                 </button>
 
-                {profileOpen && visibleRows.map((row, i) => (
+                {visibleRows.map((row, i) => (
                   <div key={i} className="grid grid-cols-[1fr_auto] gap-x-3 px-4 py-2.5 border-t border-[var(--border)]">
                     <span className="text-sm text-[var(--muted)]">{row.label}</span>
                     <span className={cn('text-sm text-right', row.highlight ? 'font-bold text-sky-500' : 'text-[var(--txt)]')}>
@@ -159,24 +158,6 @@ export default function DetailPageFacility({ params }: { params: Promise<{ slug:
                     </span>
                   </div>
                 ))}
-
-                {profileOpen && !infoExpanded && profileRows.length > DEFAULT_ROWS && (
-                  <button
-                    onClick={() => setInfoExpanded(true)}
-                    className="w-full flex items-center justify-center py-2 border-t border-[var(--border)] text-[var(--muted)] hover:text-[var(--txt)] transition-colors"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                )}
-
-                {profileOpen && infoExpanded && (
-                  <button
-                    onClick={() => setInfoExpanded(false)}
-                    className="w-full flex items-center justify-center py-2 border-t border-[var(--border)] text-[var(--muted)] hover:text-[var(--txt)] transition-colors"
-                  >
-                    <ChevronDown className="h-4 w-4 rotate-180" />
-                  </button>
-                )}
               </div>
             </div>
 
