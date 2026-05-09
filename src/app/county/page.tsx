@@ -143,7 +143,7 @@ export default function CountyPage() {
                       <tr key={c.slug} onClick={() => router.push(`/county/${c.slug}`)}
                         className="group cursor-pointer hover:bg-[var(--inp-bg)] transition-colors">
                         {/* Sticky COUNTY cell — GPU layer via will-change; no <a> inside to avoid stacking context */}
-                        <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
+                        <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--row-hover)] font-semibold text-[var(--txt)] transition-colors')}>
                           {c.county} County
                         </td>
                         <td className={cn(td, 'text-[var(--muted)]')}>NY</td>

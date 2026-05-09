@@ -110,7 +110,7 @@ export default function CityPage() {
                     const td = 'px-4 py-2.5 border-b border-[var(--border)]'
                     return (
                       <tr key={c.slug} onClick={() => router.push(`/city/${c.slug}`)} className="group cursor-pointer hover:bg-[var(--inp-bg)] transition-colors">
-                        <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
+                        <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--row-hover)] font-semibold text-[var(--txt)] transition-colors')}>
                           City {c.county}
                         </td>
                         <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
