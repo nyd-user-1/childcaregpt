@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { MapPin, Mic, ArrowUp, Blocks } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { PlusMenu } from '@/components/PlusMenu'
-import { CardCarousel } from '@/components/CardCarousel'
+import { CardCarouselPortrait } from '@/components/CardCarouselPortrait'
 
 export default function HomePage() {
   const [input, setInput] = useState('')
