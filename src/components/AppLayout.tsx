@@ -56,7 +56,7 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
       </div>
 
       {/* ── Main content ─────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--surface)] overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--surface)] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.07)]">
 
         {/* Top bar */}
         <div className="flex items-center px-5 pt-5 pb-3">
