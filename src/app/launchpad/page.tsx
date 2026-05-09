@@ -1,76 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Map } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
+import { NY_COUNTIES } from '@/lib/ny-counties'
 import { cn } from '@/lib/utils'
 
-/* ── All 62 NY counties ───────────────────────────────────────────── */
-
-const NY_COUNTIES = [
-  { county: 'Albany',       providers: 142, seats: 4260,  filled: 3820,  open: 440,  diff: -38 },
-  { county: 'Allegany',     providers:  22, seats:  660,  filled:  590,  open:  70,  diff:  +3 },
-  { county: 'Bronx',        providers: 318, seats: 9540,  filled: 9100,  open: 440,  diff: +22 },
-  { county: 'Broome',       providers:  67, seats: 2010,  filled: 1780,  open: 230,  diff: -12 },
-  { county: 'Cattaraugus',  providers:  31, seats:  930,  filled:  840,  open:  90,  diff:  +4 },
-  { county: 'Cayuga',       providers:  38, seats: 1140,  filled: 1020,  open: 120,  diff:  +5 },
-  { county: 'Chautauqua',   providers:  58, seats: 1740,  filled: 1560,  open: 180,  diff:  +7 },
-  { county: 'Chemung',      providers:  44, seats: 1320,  filled: 1180,  open: 140,  diff:  +6 },
-  { county: 'Chenango',     providers:  19, seats:  570,  filled:  510,  open:  60,  diff:  -2 },
-  { county: 'Clinton',      providers:  33, seats:  990,  filled:  880,  open: 110,  diff:  +4 },
-  { county: 'Columbia',     providers:  27, seats:  810,  filled:  720,  open:  90,  diff:  +3 },
-  { county: 'Cortland',     providers:  21, seats:  630,  filled:  560,  open:  70,  diff:  +2 },
-  { county: 'Delaware',     providers:  14, seats:  420,  filled:  375,  open:  45,  diff:  -1 },
-  { county: 'Dutchess',     providers:  89, seats: 2670,  filled: 2340,  open: 330,  diff:  +8 },
-  { county: 'Erie',         providers: 245, seats: 7350,  filled: 6890,  open: 460,  diff: +15 },
-  { county: 'Essex',        providers:  18, seats:  540,  filled:  480,  open:  60,  diff:  -4 },
-  { county: 'Franklin',     providers:  16, seats:  480,  filled:  425,  open:  55,  diff:  +2 },
-  { county: 'Fulton',       providers:  24, seats:  720,  filled:  640,  open:  80,  diff:  +3 },
-  { county: 'Genesee',      providers:  29, seats:  870,  filled:  780,  open:  90,  diff:  +4 },
-  { county: 'Greene',       providers:  17, seats:  510,  filled:  455,  open:  55,  diff:  +2 },
-  { county: 'Hamilton',     providers:   4, seats:  120,  filled:   95,  open:  25,  diff:  +2 },
-  { county: 'Herkimer',     providers:  20, seats:  600,  filled:  535,  open:  65,  diff:  +2 },
-  { county: 'Jefferson',    providers:  46, seats: 1380,  filled: 1230,  open: 150,  diff:  +5 },
-  { county: 'Kings',        providers: 425, seats: 12750, filled: 11900, open: 850,  diff: +18 },
-  { county: 'Lewis',        providers:   9, seats:  270,  filled:  240,  open:  30,  diff:  +1 },
-  { county: 'Livingston',   providers:  23, seats:  690,  filled:  615,  open:  75,  diff:  +3 },
-  { county: 'Madison',      providers:  26, seats:  780,  filled:  695,  open:  85,  diff:  +3 },
-  { county: 'Monroe',       providers: 198, seats: 5940,  filled: 5420,  open: 520,  diff:  +5 },
-  { county: 'Montgomery',   providers:  22, seats:  660,  filled:  590,  open:  70,  diff:  +3 },
-  { county: 'Nassau',       providers: 312, seats: 9360,  filled: 8750,  open: 610,  diff: +30 },
-  { county: 'New York',     providers: 287, seats: 8610,  filled: 8200,  open: 410,  diff: -20 },
-  { county: 'Niagara',      providers:  72, seats: 2160,  filled: 1940,  open: 220,  diff:  +6 },
-  { county: 'Oneida',       providers:  84, seats: 2520,  filled: 2280,  open: 240,  diff: +11 },
-  { county: 'Onondaga',     providers: 167, seats: 5010,  filled: 4650,  open: 360,  diff: +14 },
-  { county: 'Ontario',      providers:  41, seats: 1230,  filled: 1100,  open: 130,  diff:  +5 },
-  { county: 'Orange',       providers: 134, seats: 4020,  filled: 3700,  open: 320,  diff:  +9 },
-  { county: 'Orleans',      providers:  16, seats:  480,  filled:  430,  open:  50,  diff:  +2 },
-  { county: 'Oswego',       providers:  43, seats: 1290,  filled: 1150,  open: 140,  diff:  +5 },
-  { county: 'Otsego',       providers:  18, seats:  540,  filled:  480,  open:  60,  diff:  +2 },
-  { county: 'Putnam',       providers:  28, seats:  840,  filled:  760,  open:  80,  diff:  +3 },
-  { county: 'Queens',       providers: 389, seats: 11670, filled: 10900, open: 770,  diff: +24 },
-  { county: 'Rensselaer',   providers:  56, seats: 1680,  filled: 1520,  open: 160,  diff:  +7 },
-  { county: 'Richmond',     providers:  98, seats: 2940,  filled: 2720,  open: 220,  diff: +12 },
-  { county: 'Rockland',     providers: 143, seats: 4290,  filled: 3980,  open: 310,  diff: +16 },
-  { county: 'St. Lawrence', providers:  37, seats: 1110,  filled:  990,  open: 120,  diff:  +4 },
-  { county: 'Saratoga',     providers:  79, seats: 2370,  filled: 2110,  open: 260,  diff:  +9 },
-  { county: 'Schenectady',  providers:  68, seats: 2040,  filled: 1830,  open: 210,  diff:  +8 },
-  { county: 'Schoharie',    providers:  11, seats:  330,  filled:  295,  open:  35,  diff:  +1 },
-  { county: 'Schuyler',     providers:   7, seats:  210,  filled:  188,  open:  22,  diff:  +1 },
-  { county: 'Seneca',       providers:  12, seats:  360,  filled:  320,  open:  40,  diff:  +2 },
-  { county: 'Steuben',      providers:  33, seats:  990,  filled:  885,  open: 105,  diff:  +4 },
-  { county: 'Suffolk',      providers: 278, seats: 8340,  filled: 7800,  open: 540,  diff: +19 },
-  { county: 'Sullivan',     providers:  26, seats:  780,  filled:  695,  open:  85,  diff:  +3 },
-  { county: 'Tioga',        providers:  15, seats:  450,  filled:  400,  open:  50,  diff:  +2 },
-  { county: 'Tompkins',     providers:  34, seats: 1020,  filled:  910,  open: 110,  diff:  +4 },
-  { county: 'Ulster',       providers:  52, seats: 1560,  filled: 1395,  open: 165,  diff:  +6 },
-  { county: 'Warren',       providers:  29, seats:  870,  filled:  775,  open:  95,  diff:  +3 },
-  { county: 'Washington',   providers:  21, seats:  630,  filled:  560,  open:  70,  diff:  +2 },
-  { county: 'Wayne',        providers:  31, seats:  930,  filled:  830,  open: 100,  diff:  +4 },
-  { county: 'Westchester',  providers: 224, seats: 6720,  filled: 6250,  open: 470,  diff: +17 },
-  { county: 'Wyoming',      providers:  13, seats:  390,  filled:  348,  open:  42,  diff:  +2 },
-  { county: 'Yates',        providers:   8, seats:  240,  filled:  214,  open:  26,  diff:  +1 },
-]
+/* NY_COUNTIES imported from shared lib above */
 
 /* ── Provider cards per tab ───────────────────────────────────────── */
 
@@ -216,8 +153,10 @@ export default function LaunchpadPage() {
                     </thead>
                     <tbody>
                       {NY_COUNTIES.map((row, i) => (
-                        <tr key={row.county} className={cn('border-b border-[var(--border2)]', i % 2 !== 0 && 'bg-[var(--inp-bg)]')}>
-                          <td className="px-4 py-3 font-medium text-[var(--txt)]">{row.county}</td>
+                        <tr key={row.county} className={cn('border-b border-[var(--border2)] hover:bg-[var(--row-hover)] cursor-pointer transition-colors', i % 2 !== 0 && 'bg-[var(--inp-bg)]')}>
+                          <td className="px-4 py-3 font-medium text-[var(--txt)]">
+                            <Link href={`/counties/${row.slug}`} className="hover:text-sky-500 transition-colors">{row.county}</Link>
+                          </td>
                           <td className="px-4 py-3 text-[var(--txt2)]">{row.providers}</td>
                           <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.seats)}</td>
                           <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.filled)}</td>
@@ -263,8 +202,9 @@ export default function LaunchpadPage() {
               {currentProviders.map((p, i) => {
                 const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
                 return (
-                  <div key={`${p.name}-${i}`}
-                    className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+                  <Link key={`${p.name}-${i}`}
+                    href={`/counties/${p.county.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md"
                     style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                     <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2 py-1">
@@ -274,7 +214,7 @@ export default function LaunchpadPage() {
                       <p className="text-sm font-bold text-white leading-snug">{p.name}</p>
                       <p className="text-[10px] text-white/70">{p.county}</p>
                     </div>
-                  </div>
+                  </Link>
                 )
               })}
             </div>
