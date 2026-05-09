@@ -106,60 +106,64 @@ export default function CountyPage() {
 
         {/* ── List view ── */}
         {view === 'list' && (
-          <div className="flex-1 min-h-0 overflow-auto no-scrollbar">
-            <table className="text-sm whitespace-nowrap" style={{ minWidth: '1800px', width: '100%', borderSpacing: 0 }}>
+          <div className="px-5 pb-5 flex-1 min-h-0 overflow-hidden">
+            <div className="h-full overflow-auto no-scrollbar rounded-xl border border-[var(--border)]">
+              <table className="text-sm whitespace-nowrap" style={{ minWidth: '1800px', width: '100%', borderSpacing: 0 }}>
 
-              {/* Sticky header row */}
-              <thead className="sticky top-0 z-20 bg-[var(--surface)]">
-                <tr>
-                  <th
-                    onClick={() => setSortAsc(v => !v)}
-                    className={cn(thCls, 'cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px] border-b border-[var(--border)]')}
-                  >
-                    COUNTY {sortAsc ? '^' : 'v'}
-                  </th>
-                  {EXTRA_HEADERS.map(h => (
-                    <th key={h} className={cn(thCls, 'border-b border-[var(--border)]')}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
+                {/* Sticky header row */}
+                <thead className="sticky top-0 z-20 bg-[var(--surface)]">
+                  <tr>
+                    {/* Sticky COUNTY header */}
+                    <th
+                      onClick={() => setSortAsc(v => !v)}
+                      className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-b border-r border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px]')}
+                    >
+                      COUNTY {sortAsc ? '^' : 'v'}
+                    </th>
+                    {EXTRA_HEADERS.map(h => (
+                      <th key={h} className={cn(thCls, 'border-b border-[var(--border)]')}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
 
-              <tbody>
-                {filtered.map(c => {
-                  const grade    = getGrade(c.compliance)
-                  const annual   = c.seats * c.avgCost * 52
-                  const turnover = `${15 + c.waitlistMonths * 2}%`
-                  const ratio    = `1:${4 + (c.providers % 3)}`
-                  const infant   = fmt(Math.round(c.seats * 0.25))
-                  const toddler  = fmt(Math.round(c.seats * 0.35))
-                  const td = 'px-4 py-2.5 border-b border-[var(--border)]'
+                <tbody>
+                  {filtered.map(c => {
+                    const grade    = getGrade(c.compliance)
+                    const annual   = c.seats * c.avgCost * 52
+                    const turnover = `${15 + c.waitlistMonths * 2}%`
+                    const ratio    = `1:${4 + (c.providers % 3)}`
+                    const infant   = fmt(Math.round(c.seats * 0.25))
+                    const toddler  = fmt(Math.round(c.seats * 0.35))
+                    const td = 'px-4 py-2.5 border-b border-[var(--border)]'
 
-                  return (
-                    <tr key={c.slug} className="hover:bg-[var(--inp-bg)] transition-colors">
-                      <td className={cn(td, 'font-semibold text-[var(--txt)]')}>
-                        <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
-                          {c.county} County
-                        </Link>
-                      </td>
-                      <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
-                      <td className={cn(td, 'font-semibold', GRADE_COLOR[grade])}>{grade}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{c.providers}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.seats)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.filled)}</td>
-                      <td className={cn(td, 'font-bold text-sky-500')}>{fmt(c.open)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>${c.avgCost}/wk</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{c.waitlistMonths} mo</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{c.compliance}%</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>${fmt(annual)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{turnover}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{ratio}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{infant}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{toddler}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                    return (
+                      <tr key={c.slug} className="group hover:bg-[var(--inp-bg)] transition-colors">
+                        {/* Sticky COUNTY cell */}
+                        <td className={cn(td, 'sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] border-r border-[var(--border)] font-semibold text-[var(--txt)] transition-colors')}>
+                          <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
+                            {c.county} County
+                          </Link>
+                        </td>
+                        <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
+                        <td className={cn(td, 'font-semibold', GRADE_COLOR[grade])}>{grade}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{c.providers}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.seats)}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.filled)}</td>
+                        <td className={cn(td, 'font-bold text-sky-500')}>{fmt(c.open)}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>${c.avgCost}/wk</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{c.waitlistMonths} mo</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{c.compliance}%</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>${fmt(annual)}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{turnover}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{ratio}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{infant}</td>
+                        <td className={cn(td, 'text-[var(--txt)]')}>{toddler}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
