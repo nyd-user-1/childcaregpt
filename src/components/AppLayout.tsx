@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Sun, PanelLeftOpen, PanelLeftClose,
+  Blocks, PanelLeftOpen, PanelLeftClose,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
@@ -80,11 +80,8 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
                 href="/"
                 className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xl font-bold hover:bg-[var(--inp-bg)] transition-colors"
               >
-                <Sun
-                  className="h-5 w-5 shrink-0"
-                  style={{ fill: 'rgba(251,191,36,0.2)', stroke: 'rgb(251,191,36)' }}
-                />
-                SolarGPT
+                <Blocks className="h-5 w-5 shrink-0 text-[var(--txt)]" />
+                ChildcareGPT
               </Link>
               <span className="text-[var(--muted)] text-xl select-none">|</span>
               <span className="text-xl font-medium">{title}</span>

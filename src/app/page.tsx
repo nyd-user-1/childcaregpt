@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MapPin, Mic, ArrowUp, Sun } from 'lucide-react'
+import { MapPin, Mic, ArrowUp, Blocks } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { PlusMenu } from '@/components/PlusMenu'
 import { CardCarousel } from '@/components/CardCarousel'
@@ -26,11 +26,8 @@ export default function HomePage() {
             {/* Logo */}
             <div className="flex justify-center">
               <div className="flex items-center gap-2">
-                <Sun
-                  className="h-9 w-9"
-                  style={{ fill: 'rgba(251,191,36,0.2)', stroke: 'rgb(251,191,36)' }}
-                />
-                <h1 className="text-3xl font-bold text-[var(--txt)]">SolarGPT</h1>
+                <Blocks className="h-9 w-9 text-[var(--txt)]" />
+                <h1 className="text-3xl font-bold text-[var(--txt)]">ChildcareGPT</h1>
               </div>
             </div>
 
