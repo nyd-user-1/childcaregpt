@@ -115,7 +115,7 @@ export default function ChartsPage() {
           {CHARTS.map(chart => (
             <div
               key={chart.id}
-              className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+              className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)] hover:border-[var(--txt)]/20 hover:shadow-md transition-all cursor-pointer"
             >
               {/* Chart — no padding, fills edge-to-edge */}
               <div className="flex-1 min-h-0">

@@ -67,7 +67,7 @@ function ButtonGroup({
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 
-const DEFAULT_ROWS = 2
+const DEFAULT_ROWS = 2 // rows visible when accordion is collapsed
 
 export default function DetailPageCounty({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params)
@@ -81,7 +81,7 @@ export default function DetailPageCounty({ params }: { params: Promise<{ slug: s
   const nextSlug = NY_COUNTIES[(idx + 1) % total].slug
 
   const [profileOpen, setProfileOpen] = useState(true)
-  const [allRowsShown, setAllRowsShown] = useState(false)
+  const [infoExpanded, setInfoExpanded] = useState(false)
   const [chartsOpen, setChartsOpen] = useState(false)
   const [mapsOpen, setMapsOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
@@ -100,7 +100,7 @@ export default function DetailPageCounty({ params }: { params: Promise<{ slug: s
     { label: 'Compliance Rate',        value: `${county.compliance}%`,           highlight: false },
   ]
 
-  const visibleRows = profileRows.slice(0, allRowsShown ? 999 : DEFAULT_ROWS)
+  const visibleRows = infoExpanded ? profileRows : profileRows.slice(0, DEFAULT_ROWS)
 
   return (
     <>
@@ -151,14 +151,14 @@ export default function DetailPageCounty({ params }: { params: Promise<{ slug: s
               <div className="rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
                 {/* Accordion header */}
                 <button
-                  onClick={() => setProfileOpen(v => !v)}
+                  onClick={() => { setProfileOpen(v => !v); setInfoExpanded(false) }}
                   className="flex items-center justify-between w-full px-4 py-3 bg-[var(--surface)] hover:bg-[var(--inp-bg)] transition-colors"
                 >
                   <span className="text-sm font-semibold text-[var(--txt)]">County Profile</span>
                   <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', profileOpen && 'rotate-180')} />
                 </button>
 
-                {/* Rows — default 2 visible */}
+                {/* Always show first 2 rows when open */}
                 {profileOpen && visibleRows.map((row, i) => (
                   <div key={i} className="grid grid-cols-[1fr_auto] gap-x-3 px-4 py-2.5 border-t border-[var(--border)]">
                     <span className="text-sm text-[var(--muted)]">{row.label}</span>
@@ -168,13 +168,23 @@ export default function DetailPageCounty({ params }: { params: Promise<{ slug: s
                   </div>
                 ))}
 
-                {/* Expand / collapse trigger */}
-                {profileOpen && profileRows.length > DEFAULT_ROWS && (
+                {/* Expand chevron — only when collapsed and there are more rows */}
+                {profileOpen && !infoExpanded && profileRows.length > DEFAULT_ROWS && (
                   <button
-                    onClick={() => setAllRowsShown(v => !v)}
-                    className="w-full text-xs text-[var(--muted)] hover:text-[var(--txt)] py-2.5 border-t border-[var(--border)] transition-colors"
+                    onClick={() => setInfoExpanded(true)}
+                    className="w-full flex items-center justify-center py-2 border-t border-[var(--border)] text-[var(--muted)] hover:text-[var(--txt)] transition-colors"
                   >
-                    {allRowsShown ? 'Show less' : `Show ${profileRows.length - DEFAULT_ROWS} more`}
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                )}
+
+                {/* Collapse chevron — only when expanded */}
+                {profileOpen && infoExpanded && (
+                  <button
+                    onClick={() => setInfoExpanded(false)}
+                    className="w-full flex items-center justify-center py-2 border-t border-[var(--border)] text-[var(--muted)] hover:text-[var(--txt)] transition-colors"
+                  >
+                    <ChevronDown className="h-4 w-4 rotate-180" />
                   </button>
                 )}
               </div>

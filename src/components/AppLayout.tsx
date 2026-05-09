@@ -10,20 +10,22 @@ import {
 import { Sidebar } from '@/components/Sidebar'
 
 const PATH_NAV: Record<string, string> = {
-  '/':         'Chat',
-  '/charts':   'Charts',
-  '/explore':  'Explore',
+  '/':          'Chat',
+  '/charts':    'Charts',
+  '/maps':      'Maps',
+  '/explore':   'Explore',
   '/launchpad': 'Launchpad',
-  '/report':   'Report',
-  '/sites':    'Sites',
+  '/report':    'Report',
+  '/sites':     'Sites',
 }
 
 const PATH_TITLE: Record<string, string> = {
-  '/charts':  'Charts',
-  '/explore': 'Explore',
+  '/charts':    'Charts',
+  '/maps':      'Maps',
+  '/explore':   'Explore',
   '/launchpad': 'Launchpad',
-  '/report':  'Report',
-  '/sites':   'Sites',
+  '/report':    'Report',
+  '/sites':     'Sites',
 }
 
 interface AppLayoutProps {

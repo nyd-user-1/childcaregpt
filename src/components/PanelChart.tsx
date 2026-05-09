@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { AppPanel } from './AppPanel'
 import { MiniAreaChart, MiniBarChart } from './MiniCharts'
 
@@ -17,9 +18,10 @@ export function PanelChart({ open, onClose }: { open: boolean; onClose: () => vo
     <AppPanel open={open} onClose={onClose} title="Charts">
       <div className="px-4 py-4 space-y-3">
         {CHARTS.map(c => (
-          <div
+          <Link
             key={c.id}
-            className="w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--txt)]/20 transition-colors overflow-hidden cursor-pointer"
+            href="/charts"
+            className="block w-full rounded-2xl border border-[var(--border)] bg-[var(--surface)] hover:border-[var(--txt)]/20 transition-colors overflow-hidden cursor-pointer"
           >
             <div className="mx-3 mt-3 h-[100px]">
               {c.type === 'area' && <MiniAreaChart id={c.id} color={c.color} data={c.data} />}
@@ -29,7 +31,7 @@ export function PanelChart({ open, onClose }: { open: boolean; onClose: () => vo
               <p className="font-semibold text-sm text-[var(--txt)]">{c.title}</p>
               <p className="text-xs text-[var(--muted)] mt-0.5">{c.desc}</p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </AppPanel>

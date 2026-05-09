@@ -9,10 +9,11 @@ import {
 import { cn } from '@/lib/utils'
 
 const NAV_TOP = [
-  { label: 'Chat',    icon: MessageCircle,   href: '/'       },
-  { label: 'Charts',  icon: LayoutDashboard, href: '/charts' },
-  { label: 'Explore', icon: Compass,         href: '/explore' },
-  { label: 'Launchpad', icon: Rocket, href: '/launchpad' },
+  { label: 'Chat',      icon: MessageCircle,   href: '/'          },
+  { label: 'Charts',    icon: LayoutDashboard, href: '/charts'    },
+  { label: 'Maps',      icon: Map,             href: '/maps'      },
+  { label: 'Explore',   icon: Compass,         href: '/explore'   },
+  { label: 'Launchpad', icon: Rocket,          href: '/launchpad' },
 ]
 
 const NAV_BOTTOM = [
