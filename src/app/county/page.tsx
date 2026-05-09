@@ -107,20 +107,19 @@ export default function CountyPage() {
         {/* ── List view ── */}
         {view === 'list' && (
           <div className="flex-1 min-h-0 overflow-auto no-scrollbar">
-            <table className="text-sm whitespace-nowrap border-collapse" style={{ minWidth: '1800px', width: '100%' }}>
+            <table className="text-sm whitespace-nowrap" style={{ minWidth: '1800px', width: '100%', borderSpacing: 0 }}>
 
               {/* Sticky header row */}
-              <thead className="sticky top-0 z-20">
-                <tr className="bg-[var(--surface)] border-b border-[var(--border)]">
-                  {/* Sticky COUNTY column */}
+              <thead className="sticky top-0 z-20 bg-[var(--surface)]">
+                <tr>
                   <th
                     onClick={() => setSortAsc(v => !v)}
-                    className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-r border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px]')}
+                    className={cn(thCls, 'cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px] border-b border-[var(--border)]')}
                   >
                     COUNTY {sortAsc ? '^' : 'v'}
                   </th>
                   {EXTRA_HEADERS.map(h => (
-                    <th key={h} className={thCls}>{h}</th>
+                    <th key={h} className={cn(thCls, 'border-b border-[var(--border)]')}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -133,32 +132,29 @@ export default function CountyPage() {
                   const ratio    = `1:${4 + (c.providers % 3)}`
                   const infant   = fmt(Math.round(c.seats * 0.25))
                   const toddler  = fmt(Math.round(c.seats * 0.35))
+                  const td = 'px-4 py-2.5 border-b border-[var(--border)]'
 
                   return (
-                    <tr
-                      key={c.slug}
-                      className="group border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--inp-bg)] transition-colors"
-                    >
-                      {/* Sticky COUNTY cell */}
-                      <td className="sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] border-r border-[var(--border)] px-4 py-2.5 font-semibold text-[var(--txt)] transition-colors">
+                    <tr key={c.slug} className="hover:bg-[var(--inp-bg)] transition-colors">
+                      <td className={cn(td, 'font-semibold text-[var(--txt)]')}>
                         <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
                           {c.county} County
                         </Link>
                       </td>
-                      <td className="px-4 py-2.5 text-[var(--muted)]">NY</td>
-                      <td className={cn('px-4 py-2.5 font-semibold', GRADE_COLOR[grade])}>{grade}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{c.providers}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{fmt(c.seats)}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{fmt(c.filled)}</td>
-                      <td className="px-4 py-2.5 font-bold text-sky-500">{fmt(c.open)}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">${c.avgCost}/wk</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{c.waitlistMonths} mo</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{c.compliance}%</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">${fmt(annual)}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{turnover}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{ratio}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{infant}</td>
-                      <td className="px-4 py-2.5 text-[var(--txt)]">{toddler}</td>
+                      <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
+                      <td className={cn(td, 'font-semibold', GRADE_COLOR[grade])}>{grade}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{c.providers}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.seats)}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.filled)}</td>
+                      <td className={cn(td, 'font-bold text-sky-500')}>{fmt(c.open)}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>${c.avgCost}/wk</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{c.waitlistMonths} mo</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{c.compliance}%</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>${fmt(annual)}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{turnover}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{ratio}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{infant}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>{toddler}</td>
                     </tr>
                   )
                 })}
