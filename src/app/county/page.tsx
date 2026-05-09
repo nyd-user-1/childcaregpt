@@ -135,11 +135,11 @@ export default function CountyPage() {
                     const ratio    = `1:${4 + (c.providers % 3)}`
                     const infant   = fmt(Math.round(c.seats * 0.25))
                     const toddler  = fmt(Math.round(c.seats * 0.35))
-                    const td = 'px-4 py-2.5 border-b border-[var(--border)] group-hover:bg-[var(--inp-bg)] transition-colors'
+                    const td = 'px-4 py-2.5 border-b border-[var(--border)]'
 
                     return (
-                      <tr key={c.slug} className="group">
-                        {/* Sticky COUNTY cell */}
+                      <tr key={c.slug} className="group hover:bg-[var(--inp-bg)] transition-colors">
+                        {/* Sticky COUNTY cell — own compositing layer via will-change, overrides tr bg */}
                         <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
                           <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
                             {c.county} County
