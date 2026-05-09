@@ -155,7 +155,7 @@ export default function LaunchpadPage() {
                       {NY_COUNTIES.map((row, i) => (
                         <tr key={row.county} className={cn('border-b border-[var(--border2)] hover:bg-[var(--row-hover)] cursor-pointer transition-colors', i % 2 !== 0 && 'bg-[var(--inp-bg)]')}>
                           <td className="px-4 py-3 font-medium text-[var(--txt)]">
-                            <Link href={`/counties/${row.slug}`} className="hover:text-sky-500 transition-colors">{row.county}</Link>
+                            <Link href={`/county/${row.slug}`} className="hover:text-sky-500 transition-colors">{row.county}</Link>
                           </td>
                           <td className="px-4 py-3 text-[var(--txt2)]">{row.providers}</td>
                           <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.seats)}</td>
@@ -203,7 +203,7 @@ export default function LaunchpadPage() {
                 const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
                 return (
                   <Link key={`${p.name}-${i}`}
-                    href={`/counties/${p.county.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    href={`/county/${p.county.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                     className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md"
                     style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />

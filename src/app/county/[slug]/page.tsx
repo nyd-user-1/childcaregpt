@@ -41,7 +41,7 @@ function ButtonGroup({
     <div className="hidden sm:flex items-center shrink-0">
       <div className="inline-flex -space-x-px">
         {/* ButtonPrevious — always active, circular */}
-        <Link href={`/counties/${prevSlug}`} className={`${btn} rounded-l-full`}>
+        <Link href={`/county/${prevSlug}`} className={`${btn} rounded-l-full`}>
           <ChevronLeft className="h-4 w-4" />
         </Link>
         {/* ButtonChart */}
@@ -57,7 +57,7 @@ function ButtonGroup({
           <MessageCircle className="h-4 w-4" />
         </button>
         {/* ButtonNext — always active, circular */}
-        <Link href={`/counties/${nextSlug}`} className={`${btn} rounded-r-full`}>
+        <Link href={`/county/${nextSlug}`} className={`${btn} rounded-r-full`}>
           <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
