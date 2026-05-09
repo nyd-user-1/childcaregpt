@@ -65,7 +65,7 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
           <button
             onClick={() => setSidebarOpen(v => !v)}
             aria-label="Toggle sidebar"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--border)] transition-colors hover:bg-[var(--inp-bg)]"
+            className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors hover:bg-[var(--inp-bg)]"
           >
             {sidebarOpen
               ? <PanelLeftClose className="h-5 w-5 text-[var(--txt)]" />
