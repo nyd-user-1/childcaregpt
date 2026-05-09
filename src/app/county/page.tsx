@@ -139,7 +139,7 @@ export default function CountyPage() {
                     return (
                       <tr key={c.slug} className="group">
                         {/* Sticky COUNTY cell */}
-                        <td className={cn(td, 'sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
+                        <td className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
                           <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
                             {c.county} County
                           </Link>
