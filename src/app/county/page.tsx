@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Search, List, LayoutGrid, Plus, ChartColumn } from 'lucide-react'
+import { Search, List, LayoutGrid } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { NY_COUNTIES } from '@/lib/ny-counties'
 import { cn } from '@/lib/utils'
@@ -45,6 +45,13 @@ function fmt(n: number) {
   return String(n)
 }
 
+/* ── Table column headers (right of the sticky COUNTY col) ───────── */
+const EXTRA_HEADERS = [
+  'STATE', 'GRADE', 'PROVIDERS', 'SEATS', 'FILLED', 'OPEN',
+  'AVG COST', 'WAITLIST', 'COMPLIANCE',
+  'ANNUAL MKT', 'TURNOVER', 'RATIO', 'INFANT SEATS', 'TODDLER SEATS',
+]
+
 /* ── Page ─────────────────────────────────────────────────────────── */
 export default function CountyPage() {
   const [view, setView]       = useState<'list' | 'grid'>('list')
@@ -64,12 +71,16 @@ export default function CountyPage() {
   const active  = 'bg-[var(--inp-bg)] text-[var(--txt)]'
   const muted   = 'text-[var(--muted)] hover:text-[var(--txt)]'
 
+  const thCls = 'px-4 py-4 text-left text-[11px] font-medium tracking-wide text-[var(--muted)] uppercase'
+
   return (
     <AppLayout showNavArrows>
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        <div className="px-5 pt-4 pb-8 flex flex-col gap-3">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
-          {/* ── Search ── */}
+        {/* ── Sticky: Search + Toolbar ── */}
+        <div className="shrink-0 bg-[var(--surface)] px-5 pt-4 pb-3 flex flex-col gap-3">
+
+          {/* Search bar */}
           <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 py-3">
             <Search className="h-4 w-4 text-[var(--muted)] shrink-0" />
             <input
@@ -80,62 +91,85 @@ export default function CountyPage() {
             />
           </div>
 
-          {/* ── Toolbar ── */}
+          {/* Toolbar */}
           <div className="flex items-center gap-0.5">
-            <button onClick={() => setView('list')}  className={cn(iconBtn, view === 'list' ? active : muted)}><List         className="h-4 w-4" /></button>
-            <button onClick={() => setView('grid')}  className={cn(iconBtn, view === 'grid' ? active : muted)}><LayoutGrid   className="h-4 w-4" /></button>
-            <button className={cn(iconBtn, muted)}><Plus         className="h-4 w-4" /></button>
-            <button className={cn(iconBtn, muted)}><ChartColumn  className="h-4 w-4" /></button>
+            <button onClick={() => setView('list')} className={cn(iconBtn, view === 'list' ? active : muted)}>
+              <List className="h-4 w-4" />
+            </button>
+            <button onClick={() => setView('grid')} className={cn(iconBtn, view === 'grid' ? active : muted)}>
+              <LayoutGrid className="h-4 w-4" />
+            </button>
             <div className="flex-1" />
             <span className="text-xs text-[var(--muted)]">{filtered.length} of {NY_COUNTIES.length}</span>
           </div>
+        </div>
 
-          {/* ── List view ── */}
-          {view === 'list' && (
-            <div className="overflow-x-auto no-scrollbar rounded-xl border border-[var(--border)]">
-              <table className="w-full text-sm whitespace-nowrap">
-                <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--surface)]">
-                    <th
-                      onClick={() => setSortAsc(v => !v)}
-                      className="text-left px-4 py-2.5 text-[11px] font-medium tracking-wide text-[var(--muted)] uppercase cursor-pointer hover:text-[var(--txt)] select-none"
+        {/* ── List view ── */}
+        {view === 'list' && (
+          <div className="flex-1 min-h-0 overflow-auto no-scrollbar">
+            <table className="text-sm whitespace-nowrap border-collapse" style={{ minWidth: '1800px', width: '100%' }}>
+
+              {/* Sticky header row */}
+              <thead className="sticky top-0 z-20">
+                <tr className="bg-[var(--surface)] border-b border-[var(--border)]">
+                  {/* Sticky COUNTY column */}
+                  <th
+                    onClick={() => setSortAsc(v => !v)}
+                    className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-r border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px]')}
+                  >
+                    COUNTY {sortAsc ? '^' : 'v'}
+                  </th>
+                  {EXTRA_HEADERS.map(h => (
+                    <th key={h} className={thCls}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {filtered.map(c => {
+                  const grade    = getGrade(c.compliance)
+                  const annual   = c.seats * c.avgCost * 52
+                  const turnover = `${15 + c.waitlistMonths * 2}%`
+                  const ratio    = `1:${4 + (c.providers % 3)}`
+                  const infant   = fmt(Math.round(c.seats * 0.25))
+                  const toddler  = fmt(Math.round(c.seats * 0.35))
+
+                  return (
+                    <tr
+                      key={c.slug}
+                      className="group border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--inp-bg)] transition-colors"
                     >
-                      COUNTY {sortAsc ? '^' : 'v'}
-                    </th>
-                    {['STATE','GRADE','PROVIDERS','SEATS','FILLED','OPEN','AVG COST','WAITLIST','COMPLIANCE'].map(h => (
-                      <th key={h} className="text-left px-4 py-2.5 text-[11px] font-medium tracking-wide text-[var(--muted)] uppercase">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map(c => {
-                    const grade = getGrade(c.compliance)
-                    return (
-                      <tr key={c.slug} className="border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--inp-bg)] transition-colors">
-                        <td className="px-4 py-2.5 font-semibold text-[var(--txt)]">
-                          <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
-                            {c.county} County
-                          </Link>
-                        </td>
-                        <td className="px-4 py-2.5 text-[var(--muted)]">NY</td>
-                        <td className={cn('px-4 py-2.5 font-semibold', GRADE_COLOR[grade])}>{grade}</td>
-                        <td className="px-4 py-2.5 text-[var(--txt)]">{c.providers}</td>
-                        <td className="px-4 py-2.5 text-[var(--txt)]">{fmt(c.seats)}</td>
-                        <td className="px-4 py-2.5 text-[var(--txt)]">{fmt(c.filled)}</td>
-                        <td className="px-4 py-2.5 font-bold text-sky-500">{fmt(c.open)}</td>
-                        <td className="px-4 py-2.5 text-[var(--txt)]">${c.avgCost}/wk</td>
-                        <td className="px-4 py-2.5 text-[var(--txt)]">{c.waitlistMonths} mo</td>
-                        <td className="px-4 py-2.5 text-[var(--txt)]">{c.compliance}%</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                      {/* Sticky COUNTY cell */}
+                      <td className="sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] border-r border-[var(--border)] px-4 py-2.5 font-semibold text-[var(--txt)] transition-colors">
+                        <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
+                          {c.county} County
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2.5 text-[var(--muted)]">NY</td>
+                      <td className={cn('px-4 py-2.5 font-semibold', GRADE_COLOR[grade])}>{grade}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{c.providers}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{fmt(c.seats)}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{fmt(c.filled)}</td>
+                      <td className="px-4 py-2.5 font-bold text-sky-500">{fmt(c.open)}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">${c.avgCost}/wk</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{c.waitlistMonths} mo</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{c.compliance}%</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">${fmt(annual)}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{turnover}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{ratio}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{infant}</td>
+                      <td className="px-4 py-2.5 text-[var(--txt)]">{toddler}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-          {/* ── Grid view ── */}
-          {view === 'grid' && (
+        {/* ── Grid view ── */}
+        {view === 'grid' && (
+          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-5 pt-2 pb-8">
             <div className="grid grid-cols-5 gap-3">
               {filtered.map((c, i) => {
                 const annual = c.seats * c.avgCost * 52
@@ -146,11 +180,9 @@ export default function CountyPage() {
                     className="relative rounded-2xl overflow-hidden block"
                     style={{ background: GRADIENTS[i % GRADIENTS.length], aspectRatio: '3 / 4' }}
                   >
-                    {/* Value badge */}
                     <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-white">
                       ${fmt(annual)}
                     </div>
-                    {/* County label */}
                     <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/30 to-transparent">
                       <p className="text-sm font-bold text-white leading-tight">{c.county} County</p>
                       <p className="text-xs text-white/70 mt-0.5">NY</p>
@@ -159,9 +191,9 @@ export default function CountyPage() {
                 )
               })}
             </div>
-          )}
+          </div>
+        )}
 
-        </div>
       </div>
     </AppLayout>
   )
