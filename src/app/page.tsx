@@ -33,7 +33,7 @@ export default function HomePage() {
             {/* Logo */}
             <div className="flex justify-center">
               <div className="flex items-center gap-2">
-                <Blocks className="h-9 w-9 text-[var(--txt)]" />
+                <Blocks className="h-9 w-9" style={{ stroke: '#38bdf8', fill: 'rgba(56,189,248,0.15)' }} />
                 <h1 className="text-3xl font-bold text-[var(--txt)]">ChildcareGPT</h1>
               </div>
             </div>
