@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { MapPin, Mic, ArrowUp, Sun } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { PlusMenu } from '@/components/PlusMenu'
@@ -10,12 +10,12 @@ export default function HomePage() {
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  function autoResize() {
+  useEffect(() => {
     const el = textareaRef.current
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 144)}px`
-  }
+  }, [input])
 
   return (
     <AppLayout>
@@ -41,7 +41,7 @@ export default function HomePage() {
                   ref={textareaRef}
                   rows={1}
                   value={input}
-                  onChange={e => { setInput(e.target.value); autoResize() }}
+                  onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) e.preventDefault() }}
                   placeholder="Ask about solar potential..."
                   className="flex-1 w-full resize-none bg-transparent py-1 text-[17px] text-[var(--txt)] placeholder:text-[var(--muted2)] outline-none leading-relaxed"
