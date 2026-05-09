@@ -2,6 +2,10 @@
  * Ingests NY State regulated childcare facilities from data.ny.gov (SODA2)
  * into the Neon `facilities` table.
  *
+ * Merges two datasets:
+ *   fymg-3wv3 — core facility data (address, capacity, status, etc.)
+ *   cb42-qumz — date columns (facility_opened_date, license_issue_date, license_expiration_date)
+ *
  * Usage: DATABASE_URL=<url> node scripts/ingest-facilities.mjs
  */
 
@@ -16,13 +20,15 @@ if (!DATABASE_URL) {
 
 const pool = new Pool({ connectionString: DATABASE_URL, ssl: true });
 
-const API_BASE = 'https://data.ny.gov/resource/fymg-3wv3.json';
-const PAGE_SIZE = 1000;
+const MAIN_API  = 'https://data.ny.gov/resource/fymg-3wv3.json';
+const DATES_API = 'https://data.ny.gov/resource/cb42-qumz.json';
+const PAGE_SIZE  = 1000;
 const BATCH_SIZE = 100;
 
-const toInt = (v) => { const n = Number.parseInt(v, 10); return isNaN(n) ? null : n; };
-const toFloat = (v) => { const n = Number.parseFloat(v); return isNaN(n) ? null : n; };
-const toBool = (v) => v === 'Y' ? true : v === 'N' ? false : null;
+const toInt   = (v) => { const n = Number.parseInt(v, 10); return isNaN(n) ? null : n; };
+const toFloat = (v) => { const n = Number.parseFloat(v);   return isNaN(n) ? null : n; };
+const toBool  = (v) => v === 'Y' ? true : v === 'N' ? false : null;
+const toDate  = (v) => { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10); };
 
 const COLS = [
   'facility_id','program_type','region_code','county','facility_status',
@@ -32,12 +38,14 @@ const COLS = [
   'school_district_name','capacity_description',
   'infant_capacity','toddler_capacity','preschool_capacity',
   'school_age_capacity','total_capacity',
-  'profile_url','latitude','longitude','ingested_at',
+  'profile_url','latitude','longitude',
+  'facility_opened_date','license_issue_date','license_expiration_date',
+  'ingested_at',
 ];
 
 const UPDATE_COLS = COLS.filter(c => c !== 'facility_id' && c !== 'ingested_at');
 
-function rowToParams(r) {
+function rowToParams(r, dates) {
   return [
     toInt(r.facility_id),
     r.program_type ?? null,
@@ -68,52 +76,80 @@ function rowToParams(r) {
     r.additional_information?.url ?? null,
     toFloat(r.latitude),
     toFloat(r.longitude),
+    dates?.facility_opened_date    ?? null,
+    dates?.license_issue_date      ?? null,
+    dates?.license_expiration_date ?? null,
     new Date(),
   ];
 }
 
-async function upsertBatch(client, rows) {
-  const colList = COLS.join(', ');
+async function fetchAllPages(baseUrl, selectCols) {
+  const select = selectCols ? `&$select=${selectCols}` : '';
+  const results = [];
+  let offset = 0;
+  while (true) {
+    const url = `${baseUrl}?$limit=${PAGE_SIZE}&$offset=${offset}&$order=facility_id${select}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+    const page = await res.json();
+    results.push(...page);
+    if (page.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
+  }
+  return results;
+}
+
+async function upsertBatch(client, rows, dateMap) {
+  const colList  = COLS.join(', ');
   const updateSet = UPDATE_COLS.map(c => `${c} = EXCLUDED.${c}`).join(', ');
 
-  // Build parameterized VALUES for all rows in one query
   const values = [];
   const placeholders = rows.map((row, i) => {
-    const params = rowToParams(row);
+    const id = toInt(row.facility_id);
+    const params = rowToParams(row, dateMap.get(id));
     values.push(...params);
     const base = i * COLS.length;
     return `(${COLS.map((_, j) => `$${base + j + 1}`).join(', ')})`;
   });
 
-  const sql = `
-    INSERT INTO facilities (${colList})
-    VALUES ${placeholders.join(', ')}
-    ON CONFLICT (facility_id) DO UPDATE SET ${updateSet}
-  `;
-
-  await client.query(sql, values);
-}
-
-async function fetchPage(offset) {
-  const url = `${API_BASE}?$limit=${PAGE_SIZE}&$offset=${offset}&$order=facility_id`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`HTTP ${res.status} at offset ${offset}`);
-  return res.json();
+  await client.query(
+    `INSERT INTO facilities (${colList}) VALUES ${placeholders.join(', ')}
+     ON CONFLICT (facility_id) DO UPDATE SET ${updateSet}`,
+    values
+  );
 }
 
 async function main() {
   const client = await pool.connect();
   try {
-    console.log('Starting facility ingest...');
+    console.log('Fetching date data from cb42-qumz...');
+    const dateRows = await fetchAllPages(
+      DATES_API,
+      'facility_id,facility_opened_date,license_issue_date,license_expiration_date'
+    );
+    const dateMap = new Map(dateRows.map(r => [
+      toInt(r.facility_id),
+      {
+        facility_opened_date:    toDate(r.facility_opened_date),
+        license_issue_date:      toDate(r.license_issue_date),
+        license_expiration_date: toDate(r.license_expiration_date),
+      },
+    ]));
+    console.log(`  loaded dates for ${dateMap.size} facilities`);
+
+    console.log('Ingesting facility data from fymg-3wv3...');
     let offset = 0;
-    let total = 0;
+    let total  = 0;
 
     while (true) {
-      const rows = await fetchPage(offset);
+      const url = `${MAIN_API}?$limit=${PAGE_SIZE}&$offset=${offset}&$order=facility_id`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status} at offset ${offset}`);
+      const rows = await res.json();
       if (rows.length === 0) break;
 
       for (let i = 0; i < rows.length; i += BATCH_SIZE) {
-        await upsertBatch(client, rows.slice(i, i + BATCH_SIZE));
+        await upsertBatch(client, rows.slice(i, i + BATCH_SIZE), dateMap);
       }
 
       total += rows.length;
