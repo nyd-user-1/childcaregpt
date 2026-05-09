@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import {
   MessageCircle, LayoutDashboard, Compass, Zap, BarChart3, Map,
   Sparkles, Users, ChevronDown, User,
@@ -8,15 +9,15 @@ import {
 import { cn } from '@/lib/utils'
 
 const NAV_TOP = [
-  { label: 'Chat',    icon: MessageCircle   },
-  { label: 'Charts',  icon: LayoutDashboard },
-  { label: 'Explore', icon: Compass         },
-  { label: 'Grid',    icon: Zap             },
+  { label: 'Chat',    icon: MessageCircle,   href: '/'       },
+  { label: 'Charts',  icon: LayoutDashboard, href: '/charts' },
+  { label: 'Explore', icon: Compass,         href: '/explore' },
+  { label: 'Grid',    icon: Zap,             href: '/grid'   },
 ]
 
 const NAV_BOTTOM = [
-  { label: 'Report', icon: Sparkles },
-  { label: 'Sites',  icon: Users    },
+  { label: 'Report', icon: Sparkles, href: '/report' },
+  { label: 'Sites',  icon: Users,    href: '/sites'  },
 ]
 
 const DATA_ITEMS = [
@@ -53,11 +54,12 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-0.5">
 
         {/* Top items */}
-        {NAV_TOP.map(({ label, icon: Icon }) => (
-          <div
+        {NAV_TOP.map(({ label, icon: Icon, href }) => (
+          <Link
             key={label}
+            href={href}
             className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium cursor-pointer select-none',
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors',
               activeLabel === label
                 ? 'bg-[var(--inp-bg)] text-[var(--txt)]'
                 : 'text-[var(--txt)] hover:bg-[var(--inp-bg)]'
@@ -65,7 +67,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
           >
             <Icon className="h-[18px] w-[18px] flex-shrink-0" />
             {label}
-          </div>
+          </Link>
         ))}
 
         {/* Data group */}
@@ -107,11 +109,12 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
         )}
 
         {/* Bottom items */}
-        {NAV_BOTTOM.map(({ label, icon: Icon }) => (
-          <div
+        {NAV_BOTTOM.map(({ label, icon: Icon, href }) => (
+          <Link
             key={label}
+            href={href}
             className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium cursor-pointer select-none',
+              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors',
               activeLabel === label
                 ? 'bg-[var(--inp-bg)] text-[var(--txt)]'
                 : 'text-[var(--txt)] hover:bg-[var(--inp-bg)]'
@@ -119,7 +122,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
           >
             <Icon className="h-[18px] w-[18px] flex-shrink-0" />
             {label}
-          </div>
+          </Link>
         ))}
       </nav>
 
