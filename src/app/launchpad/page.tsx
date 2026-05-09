@@ -5,7 +5,7 @@ import { Map } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { cn } from '@/lib/utils'
 
-/* ── Dummy data — 20 NY counties ─────────────────────────────────── */
+/* ── Dummy data ───────────────────────────────────────────────────── */
 
 const NY_COUNTIES = [
   { county: 'Albany',      providers: 142, seats: 4260,  filled: 3820,  open: 440,  diff: -38 },
@@ -30,13 +30,18 @@ const NY_COUNTIES = [
   { county: 'Rockland',    providers: 143, seats: 4290,  filled: 3980,  open: 310,  diff: +16 },
 ]
 
-const GRADIENTS = [
-  'linear-gradient(135deg,#fca5a5 0%,#dc2626 100%)',
-  'linear-gradient(135deg,#c4b5fd 0%,#7c3aed 100%)',
-  'linear-gradient(135deg,#fdba74 0%,#ea580c 100%)',
-  'linear-gradient(135deg,#86efac 0%,#15803d 100%)',
-  'linear-gradient(135deg,#67e8f9 0%,#0e7490 100%)',
-  'linear-gradient(135deg,#fda4af 0%,#be185d 100%)',
+/* Gradient pairs — light → dark, matching SolarGPT's GEA color scheme */
+const CARD_GRADIENTS = [
+  ['#fca5a5', '#dc2626'],  // red
+  ['#22d3ee', '#0e7490'],  // cyan
+  ['#4ade80', '#15803d'],  // green
+  ['#fde047', '#b45309'],  // yellow
+  ['#34d399', '#065f46'],  // emerald
+  ['#60a5fa', '#1d4ed8'],  // blue
+  ['#2dd4bf', '#0f766e'],  // teal
+  ['#c084fc', '#7e22ce'],  // purple
+  ['#fb923c', '#c2410c'],  // orange
+  ['#f472b6', '#be185d'],  // pink
 ]
 
 const PROVIDER_TABS = [
@@ -57,92 +62,103 @@ export default function LaunchpadPage() {
 
   return (
     <AppLayout showNavArrows>
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 flex flex-col gap-4">
+      {/* Exact SolarGPT grid layout: overflow-y-auto, p-4, flex flex-col gap-5 */}
+      <div className="flex-1 overflow-y-auto no-scrollbar">
+        <div className="p-4 flex flex-col gap-5">
 
-          {/* ── Top row: table + map ── */}
-          <div className="flex gap-4" style={{ height: 320 }}>
+          {/* ── Top section: table (52%) + map (flex-1), h-[380px] ── */}
+          <div className="h-[380px] flex flex-col shrink-0">
+            <div className="flex-1 min-h-0 flex gap-4">
 
-            {/* County data table */}
-            <div className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden flex flex-col">
-              <div className="overflow-y-auto flex-1">
-                <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-[var(--surface)]">
-                    <tr className="border-b border-[var(--border)]">
-                      {['County','Providers','Seats','Seats Filled','Seats Open','Difference (+/-)'].map(h => (
-                        <th key={h} className="text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] px-4 py-3 whitespace-nowrap">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {NY_COUNTIES.map((row, i) => (
-                      <tr key={row.county} className={cn('border-b border-[var(--border2)]', i % 2 === 0 ? '' : 'bg-[var(--inp-bg)]')}>
-                        <td className="px-4 py-3 font-medium text-[var(--txt)]">{row.county}</td>
-                        <td className="px-4 py-3 text-[var(--txt2)]">{row.providers}</td>
-                        <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.seats)}</td>
-                        <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.filled)}</td>
-                        <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.open)}</td>
-                        <td className={cn('px-4 py-3 font-semibold', row.diff >= 0 ? 'text-emerald-600' : 'text-red-500')}>
-                          {row.diff >= 0 ? `+${row.diff}` : row.diff}
-                        </td>
+              {/* County data table — w-[52%] matching SolarGPT */}
+              <div className="w-[52%] min-w-0 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden flex flex-col">
+                <div className="overflow-y-auto flex-1">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-[var(--surface)]">
+                      <tr className="border-b border-[var(--border)]">
+                        {['County','Providers','Seats','Seats Filled','Seats Open','Difference (+/-)'].map(h => (
+                          <th key={h} className="text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] px-4 py-3 whitespace-nowrap">
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Map placeholder */}
-            <div className="w-[40%] rounded-xl border border-[var(--border)] overflow-hidden flex flex-col items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg,#e8f4fb 0%,#d0eaf7 100%)' }}>
-              <Map className="h-12 w-12 text-[var(--muted)]" />
-              <p className="text-sm font-medium text-[var(--txt2)]">New York State</p>
-              <p className="text-xs text-[var(--muted)]">County Map</p>
-            </div>
-
-          </div>
-
-          {/* ── Provider type tab bar ── */}
-          <div className="flex items-center gap-2">
-            {PROVIDER_TABS.map((tab, i) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(i)}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap',
-                  activeTab === i
-                    ? 'border border-blue-500 font-bold text-[var(--txt)]'
-                    : 'text-[var(--muted)] hover:text-[var(--txt)]'
-                )}
-              >
-                {tab}
-              </button>
-            ))}
-          </div>
-
-          {/* ── County gradient cards ── */}
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-            {NY_COUNTIES.map((c, i) => (
-              <div
-                key={c.county}
-                className="relative shrink-0 w-44 h-64 rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform"
-                style={{ background: GRADIENTS[i % GRADIENTS.length] }}
-              >
-                {/* Badge */}
-                <div className="absolute top-3 right-3 bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5">
-                  <span className="text-[11px] font-semibold text-white">{c.providers}</span>
-                </div>
-                {/* Labels */}
-                <div className="absolute bottom-4 left-4">
-                  <p className="text-[13px] font-semibold text-white leading-snug">{c.county} County</p>
-                  <p className="text-[11px] text-white/70 mt-0.5">NY</p>
+                    </thead>
+                    <tbody>
+                      {NY_COUNTIES.map((row, i) => (
+                        <tr key={row.county} className={cn('border-b border-[var(--border2)]', i % 2 !== 0 && 'bg-[var(--inp-bg)]')}>
+                          <td className="px-4 py-3 font-medium text-[var(--txt)]">{row.county}</td>
+                          <td className="px-4 py-3 text-[var(--txt2)]">{row.providers}</td>
+                          <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.seats)}</td>
+                          <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.filled)}</td>
+                          <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.open)}</td>
+                          <td className={cn('px-4 py-3 font-semibold', row.diff >= 0 ? 'text-emerald-600' : 'text-red-500')}>
+                            {row.diff >= 0 ? `+${row.diff}` : row.diff}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            ))}
+
+              {/* Map placeholder — flex-1 matching SolarGPT map proportion */}
+              <div className="flex-1 min-w-0 rounded-xl border border-[var(--border)] overflow-hidden flex flex-col items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(135deg,#e8f4fb 0%,#d0eaf7 100%)' }}>
+                <Map className="h-12 w-12 text-[var(--muted)]" />
+                <p className="text-sm font-medium text-[var(--txt2)]">New York State</p>
+                <p className="text-xs text-[var(--muted)]">County Map</p>
+              </div>
+
+            </div>
           </div>
 
+          {/* ── Bottom: sticky tab bar + landscape card grid ── */}
+          <div>
+
+            {/* Sticky tab bar — exact SolarGPT pattern, blue accent instead of amber */}
+            <div className="sticky top-0 z-10 bg-[var(--surface)] -mx-4 px-4 flex items-center gap-1 border-b border-[var(--border)] mb-4">
+              {PROVIDER_TABS.map((t, i) => (
+                <button
+                  key={t}
+                  onClick={() => setActiveTab(i)}
+                  className={cn(
+                    'px-3 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
+                    activeTab === i
+                      ? 'border-blue-500 text-[var(--txt)]'
+                      : 'border-transparent text-[var(--muted)] hover:text-[var(--txt)]'
+                  )}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {/* Landscape card grid — exact SolarGPT: grid-cols-4, aspect-[4/3], gradient */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
+              {NY_COUNTIES.map((county, i) => {
+                const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
+                return (
+                  <div
+                    key={county.county}
+                    className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md cursor-pointer"
+                    style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    {/* Badge — top right */}
+                    <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2 py-1">
+                      <span className="text-xs font-bold text-white">{county.providers}</span>
+                    </div>
+                    {/* Name + state — bottom left */}
+                    <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+                      <p className="text-sm font-bold text-white leading-snug">{county.county} County</p>
+                      <p className="text-[10px] text-white/70">NY</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+          </div>
         </div>
       </div>
     </AppLayout>
