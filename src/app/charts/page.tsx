@@ -1,124 +1,107 @@
 'use client'
 
 import { AppLayout } from '@/components/AppLayout'
-import { MiniAreaChart, MiniBarChart, MiniLineChart, MiniPieChart } from '@/components/MiniCharts'
+import { MiniAreaChart, MiniBarChart } from '@/components/MiniCharts'
 
-/* ── Dummy data ───────────────────────────────────────────────────── */
+/* ── Dummy data — matching Image #24 visual patterns ─────────────── */
 
-const AREA_GROWTH   = [42, 48, 45, 55, 62, 58, 68, 72, 70, 78, 82, 88]
-const AREA_SUBSIDY  = [30, 35, 38, 42, 40, 48, 52, 49, 56, 60, 58, 65]
-const AREA_CAPACITY = [65, 70, 68, 75, 72, 78, 80, 77, 83, 85, 84, 90]
+// Area charts: wavy data with clear peaks & valleys (like SolarGPT "Potential")
+const AREA_TEAL   = [25, 48, 72, 82, 78, 62, 58, 72, 88, 86, 80, 72] // 2 humps
+const AREA_GREEN  = [15, 22, 35, 32, 45, 54, 50, 62, 70, 76, 80, 86] // gentle rise
+const AREA_PURPLE = [20, 50, 80, 90, 84, 62, 58, 75, 92, 88, 80, 70] // 2 humps
+const AREA_CYAN   = [38, 62, 80, 70, 58, 66, 76, 72, 65, 74, 78, 73] // rolling waves
 
-const BAR_ENROLL   = [100, 88, 76, 65, 57, 50, 44, 38, 33, 28]
-const BAR_COST     = [100, 91, 82, 73, 67, 61, 55, 50, 46, 41]
-const BAR_TURNOVER = [100, 88, 78, 69, 63, 56, 50, 44, 38, 31]
-
-const LINE_WAITLIST    = [32, 38, 35, 42, 45, 41, 48, 50, 47, 53, 51, 56]
-const LINE_COMPLIANCE  = [82, 85, 88, 86, 90, 92, 89, 93, 91, 95, 92, 96]
-const LINE_RENEWALS    = [45, 52, 48, 58, 62, 55, 65, 70, 67, 75, 72, 80]
-
-const PIE_TYPES    = { data: [45, 28, 18, 9],  colors: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'] }
-const PIE_AGES     = { data: [22, 26, 35, 17], colors: ['#ec4899', '#6366f1', '#10b981', '#f59e0b'] }
-const PIE_RATINGS  = { data: [12, 22, 30, 24, 12], colors: ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#10b981'] }
+// Bar charts: various patterns matching Image #24
+const BAR_BLUE_DESC   = [100, 88, 78, 68, 58, 50, 42, 35, 28, 22]              // row1 c2 — descending
+const BAR_ORG_PEAK    = [32, 50, 70, 90, 100, 88, 72, 55, 38, 25]              // row1 c3 — peaked
+const BAR_ORG_DESC    = [100, 80, 62, 50, 40, 32, 24, 16, 10, 6]               // row1 c4 — descending
+const BAR_PURPLE_MANY = [100, 95, 88, 82, 76, 70, 64, 58, 52, 46, 40, 34, 28, 22, 16] // row2 c1 — many bars
+const BAR_PINK_DESC   = [100, 88, 75, 62, 52, 42, 33, 25, 18, 12]              // row2 c2 — descending
+const BAR_BLUE_MIX    = [45, 78, 55, 90, 62, 80, 48, 85, 70, 58, 82, 45, 68, 55] // row2 c3 — irregular
+const BAR_RED_MIX     = [60, 85, 72, 92, 55, 82, 76, 95, 65, 88, 74, 90]      // row2 c4 — irregular
+const BAR_ORG_STEEP   = [100, 72, 50, 38, 28, 20, 14, 9, 5, 3]                // row3 c2 — steep drop
 
 /* ── Chart definitions ────────────────────────────────────────────── */
 
-type ChartDef = {
-  id: string
-  title: string
-  description: string
-  render: () => React.ReactNode
-}
+type ChartDef = { id: string; title: string; description: string; node: React.ReactNode }
 
 const CHARTS: ChartDef[] = [
-  /* ── Row 1: area, bar, line, pie ── */
+  /* Row 1 — area · bar · bar · bar */
   {
     id: 'c1',
     title: 'Provider Growth',
     description: 'Licensed childcare providers enrolled monthly',
-    render: () => <MiniAreaChart id="c1" color="#14b8a6" data={AREA_GROWTH} />,
+    node: <MiniAreaChart id="c1" color="#14b8a6" data={AREA_TEAL} />,
   },
   {
     id: 'c2',
     title: 'Enrollment by State',
     description: 'Top 10 states by total childcare enrollment',
-    render: () => <MiniBarChart color="#3b82f6" data={BAR_ENROLL} />,
+    node: <MiniBarChart color="#3b82f6" data={BAR_BLUE_DESC} />,
   },
   {
     id: 'c3',
     title: 'Waitlist Trends',
     description: 'Average months on waitlist over the past year',
-    render: () => <MiniLineChart color="#6366f1" data={LINE_WAITLIST} />,
+    node: <MiniBarChart color="#f59e0b" data={BAR_ORG_PEAK} />,
   },
   {
     id: 'c4',
     title: 'Provider Types',
     description: 'Distribution by facility type',
-    render: () => (
-      <div className="flex items-center justify-center h-full">
-        <MiniPieChart data={PIE_TYPES.data} colors={PIE_TYPES.colors} />
-      </div>
-    ),
+    node: <MiniBarChart color="#f97316" data={BAR_ORG_DESC} />,
   },
 
-  /* ── Row 2: bar, pie, area, line ── */
+  /* Row 2 — bar · bar · bar · bar */
   {
     id: 'c5',
     title: 'Weekly Cost by County',
     description: 'Average weekly childcare cost — top counties',
-    render: () => <MiniBarChart color="#ec4899" data={BAR_COST} />,
+    node: <MiniBarChart color="#a855f7" data={BAR_PURPLE_MANY} />,
   },
   {
     id: 'c6',
     title: 'Age Groups Served',
     description: 'Children enrolled by developmental age group',
-    render: () => (
-      <div className="flex items-center justify-center h-full">
-        <MiniPieChart data={PIE_AGES.data} colors={PIE_AGES.colors} />
-      </div>
-    ),
+    node: <MiniBarChart color="#ec4899" data={BAR_PINK_DESC} />,
   },
   {
     id: 'c7',
     title: 'Subsidy Coverage',
     description: 'CCDF subsidy enrollment trend by month',
-    render: () => <MiniAreaChart id="c7" color="#10b981" data={AREA_SUBSIDY} />,
+    node: <MiniBarChart color="#3b82f6" data={BAR_BLUE_MIX} />,
   },
   {
     id: 'c8',
     title: 'Compliance Rate',
     description: 'Annual facility inspection pass rate (%)',
-    render: () => <MiniLineChart color="#ef4444" data={LINE_COMPLIANCE} />,
+    node: <MiniBarChart color="#ef4444" data={BAR_RED_MIX} />,
   },
 
-  /* ── Row 3: line, area, pie, bar ── */
+  /* Row 3 — area · bar · area · area */
   {
     id: 'c9',
     title: 'License Renewals',
     description: 'Monthly license renewal applications filed',
-    render: () => <MiniLineChart color="#f59e0b" data={LINE_RENEWALS} />,
+    node: <MiniAreaChart id="c9" color="#10b981" data={AREA_GREEN} />,
   },
   {
     id: 'c10',
     title: 'Capacity Utilization',
     description: 'Occupied vs available slots — rolling quarterly',
-    render: () => <MiniAreaChart id="c10" color="#8b5cf6" data={AREA_CAPACITY} />,
+    node: <MiniBarChart color="#f59e0b" data={BAR_ORG_STEEP} />,
   },
   {
     id: 'c11',
     title: 'Quality Ratings',
-    description: 'QRIS rating level distribution across providers',
-    render: () => (
-      <div className="flex items-center justify-center h-full">
-        <MiniPieChart data={PIE_RATINGS.data} colors={PIE_RATINGS.colors} />
-      </div>
-    ),
+    description: 'QRIS rating distribution across providers',
+    node: <MiniAreaChart id="c11" color="#a855f7" data={AREA_PURPLE} />,
   },
   {
     id: 'c12',
     title: 'Staff Turnover',
     description: 'Annual staff turnover rate by state (%)',
-    render: () => <MiniBarChart color="#6366f1" data={BAR_TURNOVER} />,
+    node: <MiniAreaChart id="c12" color="#06b6d4" data={AREA_CYAN} />,
   },
 ]
 
@@ -127,22 +110,21 @@ const CHARTS: ChartDef[] = [
 export default function ChartsPage() {
   return (
     <AppLayout showNavArrows>
-      {/* Grid fills all remaining height — no dead space */}
       <div className="flex-1 overflow-hidden p-4 pb-5">
         <div className="h-full grid grid-cols-4 grid-rows-3 gap-4">
           {CHARTS.map(chart => (
             <div
               key={chart.id}
-              className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 pt-4 pb-3 overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
+              className="flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.04)]"
             >
-              {/* Chart visualization — flex-1 fills available space */}
+              {/* Chart — no padding, fills edge-to-edge */}
               <div className="flex-1 min-h-0">
-                {chart.render()}
+                {chart.node}
               </div>
 
               {/* Label */}
-              <div className="shrink-0 pt-3">
-                <p className="text-[13px] font-semibold text-[var(--txt)] leading-snug">{chart.title}</p>
+              <div className="shrink-0 px-4 pt-2 pb-3">
+                <p className="text-[13px] font-bold text-[var(--txt)] leading-snug">{chart.title}</p>
                 <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-snug">{chart.description}</p>
               </div>
             </div>
