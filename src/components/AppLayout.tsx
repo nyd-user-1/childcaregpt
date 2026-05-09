@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Blocks, PanelLeftOpen, PanelLeftClose,
+  PanelLeftOpen, PanelLeftClose,
   ChevronLeft, ChevronRight,
 } from 'lucide-react'
+import { BottleBaby } from '@/components/BottleBaby'
 import { Sidebar } from '@/components/Sidebar'
 
 const PATH_NAV: Record<string, string> = {
@@ -82,7 +83,7 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
                 href="/"
                 className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xl font-bold hover:bg-[var(--inp-bg)] transition-colors"
               >
-                <Blocks className="h-5 w-5 shrink-0" style={{ stroke: '#38bdf8', fill: 'rgba(56,189,248,0.15)' }} />
+                <BottleBaby className="h-5 w-5 shrink-0" style={{ stroke: '#38bdf8', fill: 'rgba(56,189,248,0.15)' }} />
                 ChildcareGPT
               </Link>
               <span className="text-[var(--muted)] text-xl select-none">|</span>

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { MapPin, Mic, ArrowUp, Blocks } from 'lucide-react'
+import { MapPin, Mic, ArrowUp } from 'lucide-react'
+import { BottleBaby } from '@/components/BottleBaby'
 import { AppLayout } from '@/components/AppLayout'
 import { PlusMenu } from '@/components/PlusMenu'
 import { CardCarouselPortrait } from '@/components/CardCarouselPortrait'
@@ -33,7 +34,7 @@ export default function HomePage() {
             {/* Logo */}
             <div className="flex justify-center">
               <div className="flex items-center gap-2">
-                <Blocks className="h-9 w-9" style={{ stroke: '#38bdf8', fill: 'rgba(56,189,248,0.15)' }} />
+                <BottleBaby className="h-9 w-9" style={{ stroke: '#38bdf8', fill: 'rgba(56,189,248,0.15)' }} />
                 <h1 className="text-3xl font-bold text-[var(--txt)]">ChildcareGPT</h1>
               </div>
             </div>
