@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   MessageCircle, LayoutDashboard, Compass, Rocket, BarChart3, Map,
-  Sparkles, Users, ChevronDown, User,
+  Sparkles, Users, ChevronDown, User, Building2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ const NAV_TOP = [
   { label: 'Chat',      icon: MessageCircle,   href: '/'          },
   { label: 'Charts',    icon: LayoutDashboard, href: '/charts'    },
   { label: 'Maps',      icon: Map,             href: '/maps'      },
+  { label: 'Counties',  icon: Building2,       href: '/county'    },
   { label: 'Explore',   icon: Compass,         href: '/explore'   },
   { label: 'Launchpad', icon: Rocket,          href: '/launchpad' },
 ]

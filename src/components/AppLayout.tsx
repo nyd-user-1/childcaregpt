@@ -16,6 +16,7 @@ const PATH_NAV: Record<string, string> = {
   '/maps':      'Maps',
   '/explore':   'Explore',
   '/launchpad': 'Launchpad',
+  '/county':    'Counties',
   '/report':    'Report',
   '/sites':     'Sites',
 }
@@ -25,6 +26,7 @@ const PATH_TITLE: Record<string, string> = {
   '/maps':      'Maps',
   '/explore':   'Explore',
   '/launchpad': 'Launchpad',
+  '/county':    'Counties',
   '/report':    'Report',
   '/sites':     'Sites',
 }
@@ -39,6 +41,7 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
   const pathname = usePathname()
 
   const activeNav = PATH_NAV[pathname] ?? (
+    pathname.startsWith('/county') ? 'Counties' :
     pathname.startsWith('/data/')  ? 'Data' :
     pathname.startsWith('/map/')   ? 'Map'  : undefined
   )
