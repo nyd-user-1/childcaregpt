@@ -116,6 +116,7 @@ export default function CountyPage() {
                     {/* Sticky COUNTY header */}
                     <th
                       onClick={() => setSortAsc(v => !v)}
+                      style={{ willChange: 'transform' }}
                       className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px]')}
                     >
                       COUNTY {sortAsc ? '^' : 'v'}
@@ -139,7 +140,7 @@ export default function CountyPage() {
                     return (
                       <tr key={c.slug} className="group">
                         {/* Sticky COUNTY cell */}
-                        <td className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
+                        <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
                           <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
                             {c.county} County
                           </Link>
