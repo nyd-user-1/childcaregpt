@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Search, List, LayoutGrid } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { NY_COUNTIES } from '@/lib/ny-counties'
@@ -54,6 +55,7 @@ const EXTRA_HEADERS = [
 
 /* ── Page ─────────────────────────────────────────────────────────── */
 export default function CountyPage() {
+  const router = useRouter()
   const [view, setView]       = useState<'list' | 'grid'>('list')
   const [search, setSearch]   = useState('')
   const [sortAsc, setSortAsc] = useState(true)
@@ -138,12 +140,11 @@ export default function CountyPage() {
                     const td = 'px-4 py-2.5 border-b border-[var(--border)]'
 
                     return (
-                      <tr key={c.slug} className="group hover:bg-[var(--inp-bg)] transition-colors">
-                        {/* Sticky COUNTY cell — own compositing layer via will-change, overrides tr bg */}
+                      <tr key={c.slug} onClick={() => router.push(`/county/${c.slug}`)}
+                        className="group cursor-pointer hover:bg-[var(--inp-bg)] transition-colors">
+                        {/* Sticky COUNTY cell — GPU layer via will-change; no <a> inside to avoid stacking context */}
                         <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
-                          <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
-                            {c.county} County
-                          </Link>
+                          {c.county} County
                         </td>
                         <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
                         <td className={cn(td, 'font-semibold', GRADE_COLOR[grade])}>{grade}</td>

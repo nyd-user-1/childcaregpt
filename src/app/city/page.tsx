@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, List, LayoutGrid } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
@@ -49,6 +50,7 @@ const EXTRA_HEADERS = [
 ]
 
 export default function CityPage() {
+  const router = useRouter()
   const [view, setView]       = useState<'list' | 'grid'>('list')
   const [search, setSearch]   = useState('')
   const [sortAsc, setSortAsc] = useState(true)
@@ -107,9 +109,9 @@ export default function CityPage() {
                     const toddler  = fmt(Math.round(c.seats * 0.35))
                     const td = 'px-4 py-2.5 border-b border-[var(--border)]'
                     return (
-                      <tr key={c.slug} className="group hover:bg-[var(--inp-bg)] transition-colors">
+                      <tr key={c.slug} onClick={() => router.push(`/city/${c.slug}`)} className="group cursor-pointer hover:bg-[var(--inp-bg)] transition-colors">
                         <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
-                          <Link href={`/city/${c.slug}`} className="hover:text-sky-500 transition-colors">City {c.county}</Link>
+                          City {c.county}
                         </td>
                         <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
                         <td className={cn(td, 'font-semibold', GRADE_COLOR[grade])}>{grade}</td>
