@@ -108,6 +108,10 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
         {children}
 
       </div>
+
+      {/* Panel root — panels portal here, push from right same as sidebar pushes from left */}
+      <div id="chat-panel-root" className="flex shrink-0 h-full" />
+
     </div>
   )
 }
