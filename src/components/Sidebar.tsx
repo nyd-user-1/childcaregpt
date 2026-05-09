@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
-  MessageCircle, LayoutDashboard, Compass, Zap, BarChart3, Map,
+  MessageCircle, LayoutDashboard, Compass, Rocket, BarChart3, Map,
   Sparkles, Users, ChevronDown, User,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -12,7 +12,7 @@ const NAV_TOP = [
   { label: 'Chat',    icon: MessageCircle,   href: '/'       },
   { label: 'Charts',  icon: LayoutDashboard, href: '/charts' },
   { label: 'Explore', icon: Compass,         href: '/explore' },
-  { label: 'Grid',    icon: Zap,             href: '/grid'   },
+  { label: 'Launchpad', icon: Rocket, href: '/launchpad' },
 ]
 
 const NAV_BOTTOM = [
