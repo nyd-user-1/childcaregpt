@@ -116,7 +116,7 @@ export default function CountyPage() {
                     {/* Sticky COUNTY header */}
                     <th
                       onClick={() => setSortAsc(v => !v)}
-                      className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-b border-r border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px]')}
+                      className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[200px]')}
                     >
                       COUNTY {sortAsc ? '^' : 'v'}
                     </th>
@@ -134,12 +134,12 @@ export default function CountyPage() {
                     const ratio    = `1:${4 + (c.providers % 3)}`
                     const infant   = fmt(Math.round(c.seats * 0.25))
                     const toddler  = fmt(Math.round(c.seats * 0.35))
-                    const td = 'px-4 py-2.5 border-b border-[var(--border)]'
+                    const td = 'px-4 py-2.5 border-b border-[var(--border)] group-hover:bg-[var(--inp-bg)] transition-colors'
 
                     return (
-                      <tr key={c.slug} className="group hover:bg-[var(--inp-bg)] transition-colors">
+                      <tr key={c.slug} className="group">
                         {/* Sticky COUNTY cell */}
-                        <td className={cn(td, 'sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] border-r border-[var(--border)] font-semibold text-[var(--txt)] transition-colors')}>
+                        <td className={cn(td, 'sticky left-0 z-10 bg-[var(--surface)] group-hover:bg-[var(--inp-bg)] font-semibold text-[var(--txt)] transition-colors')}>
                           <Link href={`/county/${c.slug}`} className="hover:text-sky-500 transition-colors">
                             {c.county} County
                           </Link>
