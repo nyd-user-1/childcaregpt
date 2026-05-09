@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import {
-  MessageCircle, LayoutDashboard, Compass, Rocket, BarChart3, Map,
-  Sparkles, Users, ChevronDown, User, Building2,
+  MessageCircle, LayoutDashboard, Rocket, BarChart3, Map,
+  ChevronDown, User, Building2, School, Hash, Landmark,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,14 +12,15 @@ const NAV_TOP = [
   { label: 'Chat',      icon: MessageCircle,   href: '/'          },
   { label: 'Charts',    icon: LayoutDashboard, href: '/charts'    },
   { label: 'Maps',      icon: Map,             href: '/maps'      },
-  { label: 'Counties',  icon: Building2,       href: '/county'    },
-  { label: 'Explore',   icon: Compass,         href: '/explore'   },
+  { label: 'County',    icon: Building2,       href: '/county'    },
+  { label: 'Facility',  icon: School,          href: '/facility'  },
+  { label: 'Zip Code',  icon: Hash,            href: '/zip-code'  },
+  { label: 'City',      icon: Landmark,        href: '/city'      },
   { label: 'Launchpad', icon: Rocket,          href: '/launchpad' },
 ]
 
 const NAV_BOTTOM = [
-  { label: 'Report', icon: Sparkles, href: '/report' },
-  { label: 'Sites',  icon: Users,    href: '/sites'  },
+  { label: 'Report', icon: BarChart3, href: '/report' },
 ]
 
 const DATA_ITEMS = [

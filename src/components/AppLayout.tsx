@@ -14,21 +14,23 @@ const PATH_NAV: Record<string, string> = {
   '/':          'Chat',
   '/charts':    'Charts',
   '/maps':      'Maps',
-  '/explore':   'Explore',
+  '/county':    'County',
+  '/facility':  'Facility',
+  '/zip-code':  'Zip Code',
+  '/city':      'City',
   '/launchpad': 'Launchpad',
-  '/county':    'Counties',
   '/report':    'Report',
-  '/sites':     'Sites',
 }
 
 const PATH_TITLE: Record<string, string> = {
   '/charts':    'Charts',
   '/maps':      'Maps',
-  '/explore':   'Explore',
-  '/launchpad': 'Launchpad',
   '/county':    'Counties',
+  '/facility':  'Facilities',
+  '/zip-code':  'ZIP Codes',
+  '/city':      'Cities',
+  '/launchpad': 'Launchpad',
   '/report':    'Report',
-  '/sites':     'Sites',
 }
 
 interface AppLayoutProps {
@@ -41,9 +43,11 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
   const pathname = usePathname()
 
   const activeNav = PATH_NAV[pathname] ?? (
-    pathname.startsWith('/county') ? 'Counties' :
-    pathname.startsWith('/data/')  ? 'Data' :
-    pathname.startsWith('/map/')   ? 'Map'  : undefined
+    pathname.startsWith('/county')   ? 'County'   :
+    pathname.startsWith('/facility') ? 'Facility' :
+    pathname.startsWith('/zip-code') ? 'Zip Code' :
+    pathname.startsWith('/zip/')     ? 'Zip Code' :
+    pathname.startsWith('/city')     ? 'City'     : undefined
   )
   const title = PATH_TITLE[pathname]
 
