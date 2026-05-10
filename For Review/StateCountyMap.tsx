@@ -9,8 +9,8 @@ import { fmtUsd } from '@/lib/utils'
 
 type ChipData = { name: string; value: number | null }
 
-const COUNTIES_URL = '/geojson/us-counties.geojson'
-const STATES_URL = '/geojson/us-states.geojson'
+const COUNTIES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-counties.geojson'
+const STATES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-states.geojson'
 
 function nameToSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')

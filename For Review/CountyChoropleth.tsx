@@ -10,8 +10,8 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 
 type ChipData = { name: string; value: number; buildings: number }
 
-const STATES_URL = '/geojson/us-states.geojson'
-const COUNTIES_URL = '/geojson/us-counties.geojson'
+const STATES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-states.geojson'
+const COUNTIES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-counties.geojson'
 const ZOOM_THRESHOLD = 6
 
 function nameToSlug(name: string) {

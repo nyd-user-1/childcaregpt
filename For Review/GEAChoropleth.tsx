@@ -18,8 +18,8 @@ function darkenHex(hex: string, factor = 0.55): string {
   return `#${Math.round(r * factor).toString(16).padStart(2, '0')}${Math.round(g * factor).toString(16).padStart(2, '0')}${Math.round(b * factor).toString(16).padStart(2, '0')}`
 }
 
-const COUNTIES_URL = '/geojson/us-counties.geojson'
-const STATES_URL = '/geojson/us-states.geojson'
+const COUNTIES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-counties.geojson'
+const STATES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-states.geojson'
 
 const MAP_STYLE = [
   { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },

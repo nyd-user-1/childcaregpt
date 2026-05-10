@@ -10,7 +10,7 @@ import { useIsMobile } from '@/hooks/useIsMobile'
 
 type SunroofCounty = { fips?: string; untapped_annual_value_usd: number }
 
-const COUNTIES_URL = '/geojson/us-counties.geojson'
+const COUNTIES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-counties.geojson'
 
 const MAP_STYLE = [
   { featureType: 'all', elementType: 'labels', stylers: [{ visibility: 'off' }] },

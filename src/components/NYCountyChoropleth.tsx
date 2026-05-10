@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { countyToSlug } from '@/lib/ny-counties'
 
-const COUNTIES_URL = '/geojson/us-counties.geojson'
+const COUNTIES_URL = 'https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/us-counties.geojson'
 
 // NY FIPS
 const NY_STATE_FIPS = '36'
