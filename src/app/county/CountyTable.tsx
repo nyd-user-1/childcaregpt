@@ -32,6 +32,17 @@ function fmtCost(n: number | null) {
   return `$${Math.round(n)}/wk`
 }
 
+function fmtCostMo(n: number | null) {
+  if (n == null) return '—'
+  return `$${Math.round(n * 4.33).toLocaleString()}/mo`
+}
+
+function fmtCostYr(n: number | null) {
+  if (n == null) return '—'
+  const yr = Math.round(n * 52)
+  return yr >= 1000 ? `$${(yr / 1000).toFixed(1)}K/yr` : `$${yr}/yr`
+}
+
 function fmtIncome(n: number | null) {
   if (n == null) return '—'
   return `$${Math.round(n / 1000)}K`
@@ -56,21 +67,26 @@ export type CountyRow = {
 }
 
 type ColKey = 'providers' | 'total' | 'infant' | 'toddler' | 'preschool'
-            | 'schoolAge' | 'mcinfant' | 'mctoddler' | 'mcpreschool' | 'mhi'
+            | 'schoolAge' | 'seatsPerProvider'
+            | 'mcinfant' | 'mcinfantMo' | 'mcinfantYr'
+            | 'mctoddler' | 'mcpreschool' | 'mhi'
 
 interface ColDef { key: ColKey; header: string; tooltip: string }
 
 const COLS: ColDef[] = [
-  { key: 'providers',   header: 'PROVIDERS',     tooltip: 'Number of OCFS-regulated childcare facilities in the county.' },
-  { key: 'total',       header: 'TOTAL SEATS',   tooltip: 'Sum of all licensed childcare capacity across facilities.' },
-  { key: 'infant',      header: 'INFANT',         tooltip: 'Sum of licensed infant capacity (birth–18 months) across facilities.' },
-  { key: 'toddler',     header: 'TODDLER',        tooltip: 'Sum of licensed toddler capacity (18 months–3 years) across facilities.' },
-  { key: 'preschool',   header: 'PRESCHOOL',      tooltip: 'Sum of licensed preschool capacity across facilities.' },
-  { key: 'schoolAge',   header: 'SCHOOL AGE',     tooltip: 'Sum of licensed school-age capacity across facilities.' },
-  { key: 'mcinfant',    header: 'MED. INFANT',    tooltip: 'Median weekly center-based infant care cost (DOL NDCP, 2022).' },
-  { key: 'mctoddler',   header: 'MED. TODDLER',   tooltip: 'Median weekly center-based toddler care cost (DOL NDCP, 2022).' },
-  { key: 'mcpreschool', header: 'MED. PRESCHOOL', tooltip: 'Median weekly center-based preschool cost (DOL NDCP, 2022).' },
-  { key: 'mhi',         header: 'MED. INCOME',    tooltip: 'Median household income (DOL NDCP, 2022).' },
+  { key: 'providers',        header: 'PROVIDERS',      tooltip: 'Number of OCFS-regulated childcare facilities in the county.' },
+  { key: 'total',            header: 'TOTAL SEATS',    tooltip: 'Sum of all licensed childcare capacity across facilities.' },
+  { key: 'infant',           header: 'INFANT',         tooltip: 'Sum of licensed infant capacity (birth–18 months) across facilities.' },
+  { key: 'toddler',          header: 'TODDLER',        tooltip: 'Sum of licensed toddler capacity (18 months–3 years) across facilities.' },
+  { key: 'preschool',        header: 'PRESCHOOL',      tooltip: 'Sum of licensed preschool capacity across facilities.' },
+  { key: 'schoolAge',        header: 'SCHOOL AGE',     tooltip: 'Sum of licensed school-age capacity across facilities.' },
+  { key: 'seatsPerProvider', header: 'SEATS/PROVIDER', tooltip: 'Average seats per licensed facility (total seats ÷ providers). High values indicate large centers; low values indicate small home-based programs.' },
+  { key: 'mcinfant',         header: 'MED. INFANT/WK', tooltip: 'Median weekly center-based infant care cost (DOL NDCP, 2022).' },
+  { key: 'mcinfantMo',       header: 'MED. INFANT/MO', tooltip: 'Median monthly center-based infant care cost (weekly × 4.33, DOL NDCP, 2022).' },
+  { key: 'mcinfantYr',       header: 'MED. INFANT/YR', tooltip: 'Median annual center-based infant care cost (weekly × 52, DOL NDCP, 2022).' },
+  { key: 'mctoddler',        header: 'MED. TODDLER',   tooltip: 'Median weekly center-based toddler care cost (DOL NDCP, 2022).' },
+  { key: 'mcpreschool',      header: 'MED. PRESCHOOL', tooltip: 'Median weekly center-based preschool cost (DOL NDCP, 2022).' },
+  { key: 'mhi',              header: 'MED. INCOME',    tooltip: 'Median household income (DOL NDCP, 2022).' },
 ]
 
 function ColHeader({ col, active, dir, onSort }: {
@@ -109,16 +125,19 @@ function ColHeader({ col, active, dir, onSort }: {
 
 function getVal(row: CountyRow, key: ColKey): number {
   switch (key) {
-    case 'providers':   return row.provider_count
-    case 'total':       return row.total_capacity
-    case 'infant':      return row.infant_capacity
-    case 'toddler':     return row.toddler_capacity
-    case 'preschool':   return row.preschool_capacity
-    case 'schoolAge':   return row.school_age_capacity
-    case 'mcinfant':    return row.mcinfant ?? 0
-    case 'mctoddler':   return row.mctoddler ?? 0
-    case 'mcpreschool': return row.mcpreschool ?? 0
-    case 'mhi':         return row.mhi ?? 0
+    case 'providers':        return row.provider_count
+    case 'total':            return row.total_capacity
+    case 'infant':           return row.infant_capacity
+    case 'toddler':          return row.toddler_capacity
+    case 'preschool':        return row.preschool_capacity
+    case 'schoolAge':        return row.school_age_capacity
+    case 'seatsPerProvider': return row.provider_count > 0 ? row.total_capacity / row.provider_count : 0
+    case 'mcinfant':         return row.mcinfant ?? 0
+    case 'mcinfantMo':       return row.mcinfant != null ? row.mcinfant * 4.33 : 0
+    case 'mcinfantYr':       return row.mcinfant != null ? row.mcinfant * 52 : 0
+    case 'mctoddler':        return row.mctoddler ?? 0
+    case 'mcpreschool':      return row.mcpreschool ?? 0
+    case 'mhi':              return row.mhi ?? 0
   }
 }
 
@@ -209,7 +228,12 @@ export default function CountyTable({ counties }: { counties: CountyRow[] }) {
                       <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.toddler_capacity)}</td>
                       <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.preschool_capacity)}</td>
                       <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.school_age_capacity)}</td>
+                      <td className={cn(td, 'text-[var(--txt)]')}>
+                        {c.provider_count > 0 ? Math.round(c.total_capacity / c.provider_count) : '—'}
+                      </td>
                       <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCost(c.mcinfant)}</td>
+                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCostMo(c.mcinfant)}</td>
+                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCostYr(c.mcinfant)}</td>
                       <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCost(c.mctoddler)}</td>
                       <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCost(c.mcpreschool)}</td>
                       <td className={cn(td, 'text-[var(--txt)]')}>{fmtIncome(c.mhi)}</td>
