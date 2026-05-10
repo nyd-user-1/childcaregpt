@@ -18,7 +18,7 @@ export default function LaunchpadLayout({
             {/* Left slot — county table (page.tsx) */}
             {children}
             {/* Right slot — map placeholder or county detail (@detail) */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
               {detail}
             </div>
           </div>
