@@ -156,8 +156,7 @@ export function CityShell({
                       className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] hover:border-transparent transition-all">
                       <p className="text-base font-bold text-[var(--txt)]">{z.zip_code}</p>
                       <p className="text-xs font-medium text-[var(--txt2)] mt-0.5">{stats.city}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-[var(--muted)]">{z.providers} providers</span>
+                      <div className="mt-2">
                         <span className="text-xs font-bold text-sky-500">{fmtNum(z.seats)} seats</span>
                       </div>
                     </Link>
