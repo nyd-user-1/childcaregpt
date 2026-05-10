@@ -7,6 +7,11 @@ export interface SeriesDef {
   label: string
 }
 
+export interface FilterDef {
+  key: string
+  label: string
+}
+
 export interface ChartConfig {
   slug: string
   title: string
@@ -17,6 +22,7 @@ export interface ChartConfig {
   periodToggle?: boolean
   periodBase?: 'weekly' | 'annual'
   series?: SeriesDef[]
+  filters?: FilterDef[]
 }
 
 export const CHART_CONFIGS: ChartConfig[] = [
@@ -27,6 +33,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#0ea5e9',
     chartType: 'bar',
     kpiLabel: 'total providers',
+    filters: [{ key: 'all', label: 'All' }, { key: 'active', label: 'Active' }],
   },
   {
     slug: 'capacity-by-county',
@@ -35,6 +42,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#6366f1',
     chartType: 'bar',
     kpiLabel: 'total licensed seats',
+    filters: [{ key: 'all', label: 'All' }, { key: 'active', label: 'Active' }],
   },
   {
     slug: 'program-types',
@@ -43,6 +51,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#a855f7',
     chartType: 'bar',
     kpiLabel: 'total facilities',
+    filters: [{ key: 'count', label: 'By Count' }, { key: 'seats', label: 'By Seats' }],
   },
   {
     slug: 'facilities-by-year',
@@ -51,6 +60,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#14b8a6',
     chartType: 'area',
     kpiLabel: 'facilities on record',
+    filters: [{ key: 'all', label: 'All Types' }, { key: 'dcc', label: 'DCC Only' }],
   },
   {
     slug: 'age-group-capacity',
@@ -59,6 +69,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#8b5cf6',
     chartType: 'bar',
     kpiLabel: 'total age-allocated seats',
+    filters: [{ key: 'all', label: 'All Types' }, { key: 'center', label: 'Center Only' }],
   },
   {
     slug: 'facility-status',
@@ -67,6 +78,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#10b981',
     chartType: 'bar',
     kpiLabel: 'total facilities',
+    filters: [{ key: 'all', label: 'All' }, { key: 'active', label: 'Licensed' }],
   },
   {
     slug: 'license-expiration',
@@ -75,36 +87,40 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#f97316',
     chartType: 'bar',
     kpiLabel: 'licenses expiring 2025 – 2032',
+    filters: [{ key: 'all', label: 'All' }, { key: 'licensed', label: 'Licensed' }],
   },
   {
     slug: 'infant-care-cost',
     title: 'Infant Care Cost',
-    description: 'Median center-based infant care cost by county (2022 DOL)',
+    description: 'Median infant care cost by county (2022 DOL)',
     color: '#f59e0b',
     chartType: 'bar',
     kpiLabel: 'statewide median',
     periodToggle: true,
     periodBase: 'weekly',
+    filters: [{ key: 'center', label: 'Center Care' }, { key: 'family', label: 'Family Care' }],
   },
   {
     slug: 'toddler-care-cost',
     title: 'Toddler Care Cost',
-    description: 'Median center-based toddler care cost by county (2022 DOL)',
+    description: 'Median toddler care cost by county (2022 DOL)',
     color: '#fb923c',
     chartType: 'bar',
     kpiLabel: 'statewide median',
     periodToggle: true,
     periodBase: 'weekly',
+    filters: [{ key: 'center', label: 'Center Care' }, { key: 'family', label: 'Family Care' }],
   },
   {
     slug: 'preschool-care-cost',
     title: 'Preschool Care Cost',
-    description: 'Median center-based preschool care cost by county (2022 DOL)',
+    description: 'Median preschool care cost by county (2022 DOL)',
     color: '#eab308',
     chartType: 'bar',
     kpiLabel: 'statewide median',
     periodToggle: true,
     periodBase: 'weekly',
+    filters: [{ key: 'center', label: 'Center Care' }, { key: 'family', label: 'Family Care' }],
   },
   {
     slug: 'household-income',
@@ -115,6 +131,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     kpiLabel: 'statewide median',
     periodToggle: true,
     periodBase: 'annual',
+    filters: [{ key: 'income', label: 'Income' }, { key: 'poverty', label: 'Poverty Rate' }],
   },
   {
     slug: 'cost-trend',
@@ -125,6 +142,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     kpiLabel: '2022 statewide avg',
     periodToggle: true,
     periodBase: 'weekly',
+    filters: [{ key: 'infant', label: 'Infant' }, { key: 'toddler', label: 'Toddler' }],
   },
   {
     slug: 'center-vs-family',
@@ -139,6 +157,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
       { key: 'center', color: '#3b82f6', label: 'Center Care' },
       { key: 'family', color: '#f97316', label: 'Family Care' },
     ],
+    filters: [{ key: 'all', label: '2008 – 2022' }, { key: 'recent', label: 'Last 5 Yrs' }],
   },
   {
     slug: 'income-vs-cost',
@@ -147,6 +166,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#a855f7',
     chartType: 'scatter',
     kpiLabel: 'counties plotted',
+    filters: [{ key: 'all', label: 'All Counties' }, { key: 'top20', label: 'Top 20' }],
   },
   {
     slug: 'lfpr-by-county',
@@ -155,6 +175,7 @@ export const CHART_CONFIGS: ChartConfig[] = [
     color: '#ec4899',
     chartType: 'bar',
     kpiLabel: 'statewide avg',
+    filters: [{ key: 'all', label: 'All Counties' }, { key: 'top20', label: 'Highest 20' }],
   },
 ]
 

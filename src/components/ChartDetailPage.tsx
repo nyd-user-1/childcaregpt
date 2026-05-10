@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import Link from 'next/link'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   ResponsiveContainer, AreaChart, Area, BarChart, Bar,
   LineChart, Line, ScatterChart, Scatter, XAxis, YAxis,
   Tooltip as RechartsTip, CartesianGrid, Cell,
 } from 'recharts'
 import { AppLayout } from '@/components/AppLayout'
+import { ChartsDrawer } from '@/components/ChartsDrawer'
 import { cn } from '@/lib/utils'
 import {
   type ChartConfig, type Period,
@@ -65,11 +64,27 @@ export function ChartDetailPage({
   config, prevSlug, nextSlug, kpiValue,
   tableRows = [], chartPoints = [], multiPoints = [], scatterPoints = [],
 }: Props) {
-  const [period, setPeriod] = useState<Period>('weekly')
+  const [period, setPeriod]   = useState<Period>('weekly')
+  const [filter, setFilter]   = useState(config.filters?.[0]?.key ?? '')
 
   const base = config.periodBase ?? 'weekly'
 
   const scaledKpi = config.periodToggle ? applyPeriod(kpiValue, base, period) : kpiValue
+
+  /* Broadcast nav + KPI to AppLayout header */
+  useEffect(() => {
+    const detail = {
+      prevHref: `/chart/${prevSlug}`,
+      nextHref: `/chart/${nextSlug}`,
+      color: config.color,
+      kpi: fmtKpi(scaledKpi, config, config.periodToggle ? period : undefined),
+      kpiLabel: config.kpiLabel,
+    }
+    window.dispatchEvent(new CustomEvent('childcaregpt:chart-nav', { detail }))
+    return () => {
+      window.dispatchEvent(new CustomEvent('childcaregpt:chart-nav', { detail: null }))
+    }
+  }, [prevSlug, nextSlug, config, scaledKpi, period])
 
   const scaledChart: StdRow[] = useMemo(() => {
     if (!config.periodToggle) return chartPoints
@@ -109,28 +124,12 @@ export function ChartDetailPage({
     fontSize: '12px',
   }
 
-  const navBtn = 'flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors'
-
   return (
     <AppLayout>
       <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* ── Header band ── */}
-        <div className="shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-5 pt-4 pb-0">
-
-          {/* KPI + nav */}
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Link href={`/chart/${prevSlug}`} className={navBtn}><ChevronLeft className="h-4 w-4" /></Link>
-              <Link href={`/chart/${nextSlug}`} className={navBtn}><ChevronRight className="h-4 w-4" /></Link>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold tabular-nums" style={{ color: config.color }}>
-                {fmtKpi(scaledKpi, config, config.periodToggle ? period : undefined)}
-              </div>
-              <div className="text-xs text-[var(--muted)] mt-0.5">{config.kpiLabel}</div>
-            </div>
-          </div>
+        <div className="shrink-0 border-b border-[var(--border)] bg-[var(--surface)] px-5 pt-3 pb-0">
 
           {/* Chart */}
           <div className="h-40 md:h-52 -mx-1 mb-3">
@@ -192,20 +191,34 @@ export function ChartDetailPage({
             </ResponsiveContainer>
           </div>
 
-          {/* Period toggle */}
-          {config.periodToggle && (
-            <div className="flex items-center gap-1 pb-3">
-              {(['weekly', 'monthly', 'annual'] as Period[]).map(p => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize',
-                    period === p
-                      ? 'text-[var(--txt)] border border-sky-500/50 bg-white shadow-sm'
-                      : 'text-[var(--muted)] hover:text-[var(--txt)]',
-                  )}>{p}</button>
-              ))}
-            </div>
-          )}
+          {/* Tab row: Charts drawer + filter tabs + period toggle */}
+          <div className="flex items-center gap-1.5 pb-3 flex-wrap">
+            <ChartsDrawer />
+            <div className="h-4 w-px bg-[var(--border)] mx-0.5" />
+            {/* Filter tabs */}
+            {config.filters?.map(f => (
+              <button key={f.key} onClick={() => setFilter(f.key)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                  filter === f.key
+                    ? 'text-[var(--txt)] border border-[var(--border)] bg-white shadow-sm'
+                    : 'text-[var(--muted)] hover:text-[var(--txt)]',
+                )}>{f.label}</button>
+            ))}
+            {/* Period toggle — shown after filters for cost/income charts */}
+            {config.periodToggle && config.filters && (
+              <div className="h-4 w-px bg-[var(--border)] mx-0.5" />
+            )}
+            {config.periodToggle && (['weekly', 'monthly', 'annual'] as Period[]).map(p => (
+              <button key={p} onClick={() => setPeriod(p)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors capitalize',
+                  period === p
+                    ? 'text-[var(--txt)] border border-sky-500/50 bg-white shadow-sm'
+                    : 'text-[var(--muted)] hover:text-[var(--txt)]',
+                )}>{p}</button>
+            ))}
+          </div>
         </div>
 
         {/* ── Table ── */}
