@@ -5,8 +5,7 @@ import { MapPin, Mic, ArrowUp } from 'lucide-react'
 import { PlusMenu } from '@/components/PlusMenu'
 
 export function ChatInput() {
-  const [input, setInput]       = useState('')
-  const [isFocused, setIsFocused] = useState(false)
+  const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const autoResize = () => {
@@ -22,7 +21,7 @@ export function ChatInput() {
   }
 
   return (
-    <div className={`flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 pt-3 pb-3 transition-all gap-1 ${isFocused ? 'shadow-[0_8px_24px_rgba(0,0,0,0.08)]' : 'shadow-[0_1px_3px_rgba(0,0,0,0.04)]'}`}>
+    <div className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 pt-3 pb-3 transition-all gap-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
 
       {/* ChatTextArea */}
       <div className="flex items-start">
@@ -35,8 +34,6 @@ export function ChatInput() {
           placeholder="Ask about childcare..."
           className="flex-1 resize-none bg-transparent py-1 text-[17px] text-[var(--txt)] placeholder:text-[var(--muted2)] outline-none leading-relaxed"
           style={{ minHeight: '40px' }}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
         />
       </div>
 
