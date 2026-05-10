@@ -634,14 +634,9 @@ export default function ReportPage() {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you have a preference for care setting?</h2>
                     <div className="grid grid-cols-2 gap-3">
-                      {[
-                        { val: 'Day Care Center',   tooltip: 'Larger facility with a structured program' },
-                        { val: 'Family Day Care',   tooltip: 'Small group in a home setting'             },
-                        { val: 'Group Family Care', tooltip: 'Mid-size home-based program'               },
-                        { val: 'No preference',     tooltip: 'Show me all options'                       },
-                      ].map(({ val, tooltip }) => (
-                        <CardOption key={val} label={val} tooltip={tooltip} selected={formData.settingPref === val}
-                          onClick={() => { update('settingPref', val); setTimeout(goNext, 120) }} />
+                      {['Day Care Center', 'Family Day Care', 'Group Family Care', 'No preference'].map(o => (
+                        <CardOption key={o} label={o} selected={formData.settingPref === o}
+                          onClick={() => { update('settingPref', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
