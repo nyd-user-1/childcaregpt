@@ -115,5 +115,18 @@ This is a pixel-perfect port of SolarGPT. When in doubt, read the SolarGPT sourc
 ### Slot Views (parallel route @detail)
 `DetailSlotCounty` — compact county detail rendered in the `@detail` slot on LaunchpadPage. No map placeholder, no section H2s. Uses same components as `DetailPageCounty`: H1, ButtonGroup, InfoTableCounty, CardLandscapeMini carousel.
 
+### ChatInput (home page prompt box)
+| Name | Description |
+|------|-------------|
+| `ChatInput` | Outer container — the whole rounded box (textarea + toolbar) |
+| `ChatTextArea` | The `<textarea>` element inside ChatInput |
+| `ChatToolBar` | Bottom row of ChatInput — icon buttons + ButtonSendChat |
+| `ButtonSendChat` | Dark rounded-xl send button (also written `ButtonSend`) |
+
 ### Icons
-`IconBabyBottle` — ChildcareGPT brand icon
+| Name | Description |
+|------|-------------|
+| `IconBabyBottle` | ChildcareGPT brand icon |
+| `IconMapPin` | Location/map pin icon in ChatToolBar |
+| `IconMic` | Microphone icon in ChatToolBar |
+| `IconPlus` | Plus/attach icon in ChatToolBar |
