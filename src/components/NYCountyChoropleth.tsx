@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { countyToSlug } from '@/lib/ny-counties'
 
-// National county GeoJSON — we filter to STATEFP==='36' (New York) client-side
-const COUNTIES_URL = 'https://gist.githubusercontent.com/sdwfrost/d1c73f91dd9d175998ed166eb216994a/raw/counties.geojson'
+const COUNTIES_URL = '/geojson/us-counties.geojson'
 
 // NY FIPS
 const NY_STATE_FIPS = '36'
