@@ -59,6 +59,7 @@ export function CountyShell({
   nextSlug: string
 }) {
   const [infoExpanded, setInfoExpanded] = useState(false)
+  const [profileIdx, setProfileIdx]     = useState(0)
   const [chartsOpen, setChartsOpen]     = useState(false)
   const [mapsOpen, setMapsOpen]         = useState(false)
   const [chatOpen, setChatOpen]         = useState(false)
@@ -67,21 +68,37 @@ export function CountyShell({
   const btn    = 'inline-flex items-center justify-center h-8 w-8 border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors'
   const active = 'text-[var(--txt)] bg-[var(--inp-bg)]'
 
-  const profileRows = [
-    { label: 'Licensed Providers',           value: String(stats.provider_count),              highlight: false },
-    { label: 'Total Licensed Capacity',       value: fmtNum(stats.total_capacity),              highlight: true  },
-    { label: 'Infant Capacity',               value: String(stats.infant_capacity),              highlight: false },
-    { label: 'Toddler Capacity',              value: String(stats.toddler_capacity),             highlight: false },
-    { label: 'Preschool Capacity',            value: String(stats.preschool_capacity),           highlight: false },
-    { label: 'School-Age Capacity',           value: String(stats.school_age_capacity),          highlight: false },
-    { label: 'Median Infant Cost (Center)',   value: fmtCurrency(costs?.mcinfant ?? null),       highlight: false },
-    { label: 'Median Toddler Cost (Center)',  value: fmtCurrency(costs?.mctoddler ?? null),      highlight: false },
-    { label: 'Median Preschool Cost (Center)',value: fmtCurrency(costs?.mcpreschool ?? null),    highlight: false },
-    { label: 'Median Infant Cost (Family)',   value: fmtCurrency(costs?.mfccinfant ?? null),     highlight: false },
-    { label: 'Median Household Income',       value: costs?.mhi != null ? `$${Math.round(costs.mhi).toLocaleString()}` : '—', highlight: false },
+  const PROFILES = [
+    {
+      title: 'County Inventory',
+      rows: [
+        { label: 'Licensed Providers',     value: String(stats.provider_count),   highlight: false },
+        { label: 'Total Licensed Capacity',value: fmtNum(stats.total_capacity),   highlight: true  },
+        { label: 'Infant Capacity',        value: String(stats.infant_capacity),   highlight: false },
+        { label: 'Toddler Capacity',       value: String(stats.toddler_capacity),  highlight: false },
+        { label: 'Preschool Capacity',     value: String(stats.preschool_capacity),highlight: false },
+        { label: 'School-Age Capacity',    value: String(stats.school_age_capacity),highlight: false },
+      ],
+    },
+    {
+      title: 'County Cost',
+      rows: [
+        { label: 'Median Infant Cost (Center)',   value: fmtCurrency(costs?.mcinfant ?? null),    highlight: false },
+        { label: 'Median Toddler Cost (Center)',  value: fmtCurrency(costs?.mctoddler ?? null),   highlight: false },
+        { label: 'Median Preschool Cost (Center)',value: fmtCurrency(costs?.mcpreschool ?? null),  highlight: false },
+        { label: 'Median Infant Cost (Family)',   value: fmtCurrency(costs?.mfccinfant ?? null),  highlight: false },
+        { label: 'Median Household Income',       value: costs?.mhi != null ? `$${Math.round(costs.mhi).toLocaleString()}` : '—', highlight: false },
+      ],
+    },
   ]
 
-  const visibleRows = infoExpanded ? profileRows : profileRows.slice(0, DEFAULT_ROWS)
+  const cycleProfile = (dir: 1 | -1) => {
+    setProfileIdx(i => (i + dir + PROFILES.length) % PROFILES.length)
+    setInfoExpanded(false)
+  }
+
+  const activeProfile = PROFILES[profileIdx]
+  const visibleRows = infoExpanded ? activeProfile.rows : activeProfile.rows.slice(0, DEFAULT_ROWS)
 
   return (
     <>
@@ -128,10 +145,10 @@ export function CountyShell({
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[var(--txt)]">Profiles</h2>
                 <div className="flex items-center gap-2">
-                  <button className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
+                  <button onClick={() => cycleProfile(-1)} className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <button className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
+                  <button onClick={() => cycleProfile(1)} className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -139,7 +156,7 @@ export function CountyShell({
               <div className="rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
                 <button onClick={() => setInfoExpanded(v => !v)}
                   className="flex items-center justify-between w-full px-4 py-3 bg-[var(--surface)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <span className="text-sm font-semibold text-[var(--txt)]">County Profile</span>
+                  <span className="text-sm font-semibold text-[var(--txt)]">{activeProfile.title}</span>
                   <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', infoExpanded && 'rotate-180')} />
                 </button>
                 {visibleRows.map((row, i) => (
