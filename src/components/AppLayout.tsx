@@ -53,7 +53,8 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
     pathname.startsWith('/launchpad') ? 'Launchpad' : undefined
   )
   const title = PATH_TITLE[pathname] ?? (
-    pathname.startsWith('/launchpad') ? 'Launchpad' : undefined
+    pathname.startsWith('/launchpad') ? 'Launchpad' :
+    pathname.startsWith('/chart/')    ? 'Charts'    : undefined
   )
 
   return (
