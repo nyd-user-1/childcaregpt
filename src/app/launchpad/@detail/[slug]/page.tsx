@@ -148,7 +148,7 @@ export default function DetailSlot({ params }: { params: Promise<{ slug: string 
             <div className="flex gap-3 pb-1">
               {county.zips.map(z => (
                 <div key={z.zip}
-                  className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] hover:border-transparent transition-all cursor-pointer">
+                  className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] transition-all cursor-pointer">
                   <p className="text-base font-bold text-[var(--txt)]">{z.zip}</p>
                   <p className="text-xs font-medium text-[var(--txt2)] mt-0.5">{z.city}</p>
                   <div className="mt-2">

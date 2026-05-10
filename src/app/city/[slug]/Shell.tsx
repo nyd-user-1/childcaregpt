@@ -159,7 +159,7 @@ export function CityShell({
                 <div className="flex gap-3 pb-1">
                   {zips.map(z => (
                     <Link key={z.zip_code} href={`/zip/${z.zip_code}`}
-                      className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] hover:border-transparent transition-all">
+                      className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] transition-all">
                       <p className="text-base font-bold text-[var(--txt)]">{z.zip_code}</p>
                       <p className="text-xs font-medium text-[var(--txt2)] mt-0.5">{stats.city}</p>
                       <div className="mt-2">

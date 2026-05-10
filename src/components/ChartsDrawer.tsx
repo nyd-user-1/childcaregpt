@@ -77,7 +77,7 @@ export function ChartsDrawer() {
               return (
                 <button key={chart.slug}
                   onClick={() => { router.push(`/chart/${chart.slug}`); setOpen(false) }}
-                  className="group text-left rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:shadow-md hover:border-transparent transition-all overflow-hidden">
+                  className="group text-left rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:shadow-md transition-all overflow-hidden">
                   <div className="h-20 px-2 pt-2">
                     <ResponsiveContainer width="100%" height="100%">
                       {AREA_SLUGS.has(chart.slug) ? (
