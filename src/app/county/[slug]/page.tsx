@@ -41,7 +41,9 @@ export default async function DetailPageCounty({ params }: { params: Promise<{ s
 
   // county_costs uses "Albany County" format — query after we have the real county name
   const costRows = await sql`
-    SELECT mcinfant, mctoddler, mcpreschool, mfccinfant, mhi
+    SELECT mcinfant, mctoddler, mcpreschool,
+           mfccinfant, mfcctoddler, mfccpreschool,
+           mhi, flfpr_20to64_under6, pr_f
     FROM county_costs
     WHERE lower(county_name) = lower(${(stats.county_name as string) + ' County'})
       AND studyyear = 2022
@@ -61,11 +63,15 @@ export default async function DetailPageCounty({ params }: { params: Promise<{ s
         school_age_capacity:Number(stats.school_age_capacity),
       }}
       costs={costs ? {
-        mcinfant:    costs.mcinfant    != null ? Number(costs.mcinfant)    : null,
-        mctoddler:   costs.mctoddler   != null ? Number(costs.mctoddler)   : null,
-        mcpreschool: costs.mcpreschool != null ? Number(costs.mcpreschool) : null,
-        mfccinfant:  costs.mfccinfant  != null ? Number(costs.mfccinfant)  : null,
-        mhi:         costs.mhi         != null ? Number(costs.mhi)         : null,
+        mcinfant:            costs.mcinfant            != null ? Number(costs.mcinfant)            : null,
+        mctoddler:           costs.mctoddler           != null ? Number(costs.mctoddler)           : null,
+        mcpreschool:         costs.mcpreschool         != null ? Number(costs.mcpreschool)         : null,
+        mfccinfant:          costs.mfccinfant          != null ? Number(costs.mfccinfant)          : null,
+        mfcctoddler:         costs.mfcctoddler         != null ? Number(costs.mfcctoddler)         : null,
+        mfccpreschool:       costs.mfccpreschool       != null ? Number(costs.mfccpreschool)       : null,
+        mhi:                 costs.mhi                 != null ? Number(costs.mhi)                 : null,
+        flfpr_20to64_under6: costs.flfpr_20to64_under6 != null ? Number(costs.flfpr_20to64_under6) : null,
+        pr_f:                costs.pr_f                != null ? Number(costs.pr_f)                : null,
       } : null}
       zips={zipRows.map(z => ({
         zip_code:  z.zip_code as string,

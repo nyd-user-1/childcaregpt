@@ -33,7 +33,11 @@ export type CountyCosts = {
   mctoddler: number | null
   mcpreschool: number | null
   mfccinfant: number | null
+  mfcctoddler: number | null
+  mfccpreschool: number | null
   mhi: number | null
+  flfpr_20to64_under6: number | null
+  pr_f: number | null
 } | null
 
 export type ZipEntry = {
@@ -84,11 +88,15 @@ export function CountyShell({
     {
       title: 'Cost',
       rows: [
-        { label: 'Median Infant Cost (Center)',   value: fmtCurrency(costs?.mcinfant ?? null),    highlight: false },
-        { label: 'Median Toddler Cost (Center)',  value: fmtCurrency(costs?.mctoddler ?? null),   highlight: false },
-        { label: 'Median Preschool Cost (Center)',value: fmtCurrency(costs?.mcpreschool ?? null),  highlight: false },
-        { label: 'Median Infant Cost (Family)',   value: fmtCurrency(costs?.mfccinfant ?? null),  highlight: false },
-        { label: 'Median Household Income',       value: costs?.mhi != null ? `$${Math.round(costs.mhi).toLocaleString()}` : '—', highlight: false },
+        { label: 'Median Infant Cost (Center)',    value: fmtCurrency(costs?.mcinfant ?? null),    highlight: false },
+        { label: 'Median Toddler Cost (Center)',   value: fmtCurrency(costs?.mctoddler ?? null),   highlight: false },
+        { label: 'Median Preschool Cost (Center)', value: fmtCurrency(costs?.mcpreschool ?? null), highlight: false },
+        { label: 'Median Infant Cost (Family CC)', value: fmtCurrency(costs?.mfccinfant ?? null),  highlight: false },
+        { label: 'Median Toddler Cost (Family CC)',value: fmtCurrency(costs?.mfcctoddler ?? null), highlight: false },
+        { label: 'Median Preschool (Family CC)',   value: fmtCurrency(costs?.mfccpreschool ?? null),highlight: false },
+        { label: 'Median Household Income',        value: costs?.mhi != null ? `$${Math.round(costs.mhi).toLocaleString()}` : '—', highlight: false },
+        { label: "Women's LFPR (children under 6)", value: costs?.flfpr_20to64_under6 != null ? `${costs.flfpr_20to64_under6.toFixed(1)}%` : '—', highlight: false },
+        { label: 'Female Poverty Rate',            value: costs?.pr_f != null ? `${costs.pr_f.toFixed(1)}%` : '—', highlight: false },
       ],
     },
   ]
