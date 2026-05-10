@@ -18,7 +18,7 @@ export default function LaunchpadPage() {
           <thead className="sticky top-0 bg-[var(--surface)]">
             <tr className="border-b border-[var(--border)]">
               {['County','Providers','Seats','Seats Filled','Seats Open','Difference (+/-)'].map(h => (
-                <th key={h} className="text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] px-4 py-3 whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] px-4 py-4 whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>

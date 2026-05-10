@@ -43,13 +43,16 @@ export function AppLayout({ children, showNavArrows = false }: AppLayoutProps) {
   const pathname = usePathname()
 
   const activeNav = PATH_NAV[pathname] ?? (
-    pathname.startsWith('/county')   ? 'County'   :
-    pathname.startsWith('/facility') ? 'Facility' :
-    pathname.startsWith('/zip-code') ? 'Zip Code' :
-    pathname.startsWith('/zip/')     ? 'Zip Code' :
-    pathname.startsWith('/city')     ? 'City'     : undefined
+    pathname.startsWith('/county')    ? 'County'    :
+    pathname.startsWith('/facility')  ? 'Facility'  :
+    pathname.startsWith('/zip-code')  ? 'Zip Code'  :
+    pathname.startsWith('/zip/')      ? 'Zip Code'  :
+    pathname.startsWith('/city')      ? 'City'      :
+    pathname.startsWith('/launchpad') ? 'Launchpad' : undefined
   )
-  const title = PATH_TITLE[pathname]
+  const title = PATH_TITLE[pathname] ?? (
+    pathname.startsWith('/launchpad') ? 'Launchpad' : undefined
+  )
 
   return (
     <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px]" style={{ background: 'var(--bg)' }}>
