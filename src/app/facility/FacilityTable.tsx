@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Search, List, LayoutGrid } from 'lucide-react'
+import { Search, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { cn } from '@/lib/utils'
 
@@ -68,68 +68,153 @@ export type FacilityRow = {
   license_expiration_date: string | null
 }
 
-const EXTRA_HEADERS = [
-  'COUNTY', 'CITY', 'TYPE', 'STATUS',
-  'TOTAL', 'INFANT', 'TODDLER', 'PRESCHOOL', 'SCHOOL AGE',
-  'DIRECTOR', 'LIC. EXP',
+type ColKey = 'county' | 'city' | 'type' | 'status' | 'total'
+            | 'infant' | 'toddler' | 'preschool' | 'schoolAge'
+            | 'director' | 'licExp'
+
+interface ColDef { key: ColKey; header: string; tooltip: string }
+
+const COLS: ColDef[] = [
+  { key: 'county',    header: 'COUNTY',      tooltip: 'The NY county in which the facility is located.' },
+  { key: 'city',      header: 'CITY',        tooltip: 'The city or town in which the facility is located.' },
+  { key: 'type',      header: 'TYPE',        tooltip: 'OCFS program type: Day Care Center (DCC), Group Family Day Care (GFDC), Family Day Care (FDC), School Age Child Care (SACC), or Small Day Care Center (SDCC).' },
+  { key: 'status',    header: 'STATUS',      tooltip: 'Current licensing status: License or Registration (active), Pending Revocation (enforcement action pending), Suspended (license suspended).' },
+  { key: 'total',     header: 'TOTAL',       tooltip: 'Total licensed capacity — the maximum number of children this facility is approved to serve at one time.' },
+  { key: 'infant',    header: 'INFANT',      tooltip: 'Licensed capacity for infants (typically birth to 18 months). Only applies to Day Care Centers (DCC).' },
+  { key: 'toddler',   header: 'TODDLER',     tooltip: 'Licensed capacity for toddlers (typically 18 months to 3 years). Only applies to Day Care Centers (DCC).' },
+  { key: 'preschool', header: 'PRESCHOOL',   tooltip: 'Licensed capacity for preschool-age children (3 years to kindergarten). Only applies to Day Care Centers (DCC).' },
+  { key: 'schoolAge', header: 'SCHOOL AGE',  tooltip: 'Licensed capacity for school-age children (kindergarten and above).' },
+  { key: 'director',  header: 'DIRECTOR',    tooltip: 'Name of the approved on-site Director or Provider. Shown as "There is no approved Director/On-Site Provider" if no approved director is on file.' },
+  { key: 'licExp',    header: 'LIC. EXP',    tooltip: 'License or registration expiration date. Facilities must renew before this date to maintain active status.' },
 ]
 
+function ColHeader({ col, active, dir, onSort }: {
+  col: ColDef; active: boolean; dir: 'asc' | 'desc'; onSort: () => void
+}) {
+  return (
+    <th className="px-3 py-4 bg-[var(--surface)] border-b border-[var(--border)] whitespace-nowrap">
+      <div className="relative group/col inline-block">
+        <button
+          onClick={onSort}
+          className={cn(
+            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-black/5 hover:text-[var(--txt)]',
+            active ? 'text-[var(--txt)]' : 'text-[var(--muted)]',
+          )}
+        >
+          {col.header}
+          {active
+            ? dir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+            : <ChevronUp className="h-3 w-3 opacity-0 group-hover/col:opacity-40" />}
+        </button>
+        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full left-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
+          <div className="px-3.5 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--txt)] mb-1.5">{col.header}</p>
+            <p className="text-[12px] text-[var(--muted)] leading-relaxed font-normal">{col.tooltip}</p>
+          </div>
+          <Link href="/glossary" onClick={e => e.stopPropagation()}
+            className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3.5 py-2.5 text-[11px] font-medium text-sky-500 hover:bg-[var(--inp-bg)] transition-colors">
+            <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </div>
+      </div>
+    </th>
+  )
+}
+
+function getVal(row: FacilityRow, key: ColKey): number | string {
+  switch (key) {
+    case 'county':    return row.county
+    case 'city':      return row.city
+    case 'type':      return row.program_type
+    case 'status':    return row.facility_status
+    case 'total':     return row.total_capacity
+    case 'infant':    return row.infant_capacity
+    case 'toddler':   return row.toddler_capacity
+    case 'preschool': return row.preschool_capacity
+    case 'schoolAge': return row.school_age_capacity
+    case 'director':  return row.provider_name ?? ''
+    case 'licExp':    return row.license_expiration_date ?? ''
+  }
+}
+
 export default function FacilityTable({
-  facilities,
-  total,
+  facilities: initialFacilities,
+  total: initialTotal,
 }: {
   facilities: FacilityRow[]
   total: number
 }) {
   const router = useRouter()
-  const [view, setView]     = useState<'list' | 'grid'>('list')
-  const [search, setSearch] = useState('')
-  const [sortAsc, setSortAsc] = useState(true)
+  const [view, setView]       = useState<'list' | 'grid'>('list')
+  const [search, setSearch]   = useState('')
+  const [sortCol, setSortCol] = useState<'name' | ColKey>('name')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [facilities, setFacilities] = useState(initialFacilities)
+  const [total, setTotal]           = useState(initialTotal)
+  const [loading, setLoading]       = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
-    return facilities
-      .filter(f => !q ||
-        f.facility_name.toLowerCase().includes(q) ||
-        f.county.toLowerCase().includes(q) ||
-        f.city.toLowerCase().includes(q)
-      )
-      .sort((a, b) => sortAsc
-        ? a.facility_name.localeCompare(b.facility_name)
-        : b.facility_name.localeCompare(a.facility_name)
-      )
-  }, [search, sortAsc, facilities])
+  const fetchFacilities = useCallback(async (q: string) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ limit: '200' })
+      if (q) params.set('search', q)
+      const res = await fetch(`/api/facilities?${params}`)
+      const json = await res.json()
+      setFacilities(json.data)
+      setTotal(json.total)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-  const iconBtn = 'h-8 w-8 flex items-center justify-center rounded-lg transition-colors'
-  const active  = 'bg-[var(--inp-bg)] text-[var(--txt)]'
-  const muted   = 'text-[var(--muted)] hover:text-[var(--txt)]'
-  const thCls   = 'px-4 py-4 text-left text-[11px] font-medium tracking-wide text-[var(--muted)] uppercase'
-  const td      = 'px-4 py-2.5 border-b border-[var(--border)]'
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => fetchFacilities(search), 300)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [search, fetchFacilities])
+
+  function handleSort(col: 'name' | ColKey) {
+    if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortCol(col); setSortDir('asc') }
+  }
+
+  const sorted = useMemo(() => [...facilities].sort((a, b) => {
+    const av = sortCol === 'name' ? a.facility_name : getVal(a, sortCol)
+    const bv = sortCol === 'name' ? b.facility_name : getVal(b, sortCol)
+    if (typeof av === 'string') {
+      const cmp = av.localeCompare(bv as string)
+      return sortDir === 'asc' ? cmp : -cmp
+    }
+    return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number)
+  }), [facilities, sortCol, sortDir])
+
+  const iconBtn  = 'h-8 w-8 flex items-center justify-center rounded-lg transition-colors'
+  const activeBtn = 'bg-[var(--inp-bg)] text-[var(--txt)]'
+  const mutedBtn  = 'text-[var(--muted)] hover:text-[var(--txt)]'
+  const td        = 'px-4 py-2.5 border-b border-[var(--border)]'
 
   return (
     <AppLayout showNavArrows>
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
 
         <div className="shrink-0 bg-[var(--surface)] px-5 pt-4 pb-3 flex flex-col gap-3">
-          <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 py-3">
+          <div className={cn('flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 py-3', loading && 'opacity-60')}>
             <Search className="h-4 w-4 text-[var(--muted)] shrink-0" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search facilities..."
+              placeholder="Search facilities, counties, cities..."
               className="flex-1 bg-transparent text-sm text-[var(--txt)] placeholder:text-[var(--muted)] outline-none"
             />
           </div>
           <div className="flex items-center gap-0.5">
-            <button onClick={() => setView('list')} className={cn(iconBtn, view === 'list' ? active : muted)}>
-              <List className="h-4 w-4" />
-            </button>
-            <button onClick={() => setView('grid')} className={cn(iconBtn, view === 'grid' ? active : muted)}>
-              <LayoutGrid className="h-4 w-4" />
-            </button>
+            <button onClick={() => setView('list')} className={cn(iconBtn, view === 'list' ? activeBtn : mutedBtn)}><List className="h-4 w-4" /></button>
+            <button onClick={() => setView('grid')} className={cn(iconBtn, view === 'grid' ? activeBtn : mutedBtn)}><LayoutGrid className="h-4 w-4" /></button>
             <div className="flex-1" />
             <span className="text-xs text-[var(--muted)]">
-              {filtered.length} of {total.toLocaleString()}
+              {loading ? 'Searching…' : `${sorted.length.toLocaleString()} of ${total.toLocaleString()}`}
             </span>
           </div>
         </div>
@@ -141,25 +226,46 @@ export default function FacilityTable({
                 <thead className="sticky top-0 z-20 bg-[var(--surface)]">
                   <tr>
                     <th
-                      onClick={() => setSortAsc(v => !v)}
+                      onClick={() => handleSort('name')}
                       style={{ willChange: 'transform' }}
-                      className={cn(thCls, 'sticky left-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] cursor-pointer hover:text-[var(--txt)] select-none min-w-[220px]')}
+                      className="px-4 py-4 text-left sticky left-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] cursor-pointer select-none min-w-[220px]"
                     >
-                      FACILITY {sortAsc ? '^' : 'v'}
+                      <div className="relative group/col inline-block">
+                        <button className={cn(
+                          'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-black/5 hover:text-[var(--txt)]',
+                          sortCol === 'name' ? 'text-[var(--txt)]' : 'text-[var(--muted)]',
+                        )}>
+                          FACILITY
+                          {sortCol === 'name'
+                            ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
+                            : <ChevronUp className="h-3 w-3 opacity-40" />}
+                        </button>
+                        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full left-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
+                          <div className="px-3.5 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--txt)] mb-1.5">FACILITY</p>
+                            <p className="text-[12px] text-[var(--muted)] leading-relaxed font-normal">Legal name of the OCFS-regulated childcare program. Click a row to view the facility detail page.</p>
+                          </div>
+                          <Link href="/glossary" onClick={e => e.stopPropagation()}
+                            className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3.5 py-2.5 text-[11px] font-medium text-sky-500 hover:bg-[var(--inp-bg)] transition-colors">
+                            <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
+                            <ArrowUpRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
                     </th>
-                    {EXTRA_HEADERS.map(h => (
-                      <th key={h} className={cn(thCls, 'border-b border-[var(--border)]')}>{h}</th>
+                    {COLS.map(col => (
+                      <ColHeader key={col.key} col={col} active={sortCol === col.key} dir={sortDir} onSort={() => handleSort(col.key)} />
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map(f => (
+                  {sorted.map(f => (
                     <tr
                       key={f.facility_id}
                       onClick={() => router.push(`/facility/${toSlug(f.facility_name)}`)}
                       className="group cursor-pointer hover:bg-[var(--inp-bg)] transition-colors"
                     >
-                      <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] overflow-hidden bg-[var(--surface)] group-hover:bg-[var(--row-hover)] font-semibold text-[var(--txt)] transition-colors max-w-[220px] truncate')}>
+                      <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] bg-[var(--surface)] group-hover:bg-[var(--row-hover)] font-semibold text-[var(--txt)] transition-colors max-w-[220px] truncate')}>
                         {f.facility_name}
                       </td>
                       <td className={cn(td, 'text-[var(--muted)]')}>{f.county}</td>
@@ -186,7 +292,7 @@ export default function FacilityTable({
         {view === 'grid' && (
           <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-5 pt-2 pb-8">
             <div className="grid grid-cols-5 gap-3">
-              {filtered.map((f, i) => (
+              {sorted.map((f, i) => (
                 <Link
                   key={f.facility_id}
                   href={`/facility/${toSlug(f.facility_name)}`}
