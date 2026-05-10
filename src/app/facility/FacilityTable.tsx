@@ -21,11 +21,11 @@ const GRADIENTS = [
 ]
 
 const STATUS_COLOR: Record<string, string> = {
-  'License':                         'text-amber-500',
-  'Registration':                    'text-amber-500',
-  'Pending Revocation':              'text-orange-500',
-  'Pending Revocation and Denial':   'text-orange-500',
-  'Pending Denial':                  'text-orange-400',
+  'License':                         'text-sky-500',
+  'Registration':                    'text-sky-500',
+  'Pending Revocation':              'text-amber-500',
+  'Pending Revocation and Denial':   'text-amber-500',
+  'Pending Denial':                  'text-amber-400',
   'Suspended':                       'text-red-500',
 }
 
