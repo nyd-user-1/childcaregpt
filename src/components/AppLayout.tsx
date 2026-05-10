@@ -20,17 +20,19 @@ const PATH_NAV: Record<string, string> = {
   '/city':      'City',
   '/launchpad': 'Launchpad',
   '/report':    'Report',
+  '/glossary':  'Glossary',
 }
 
 const PATH_TITLE: Record<string, string> = {
   '/charts':    'Charts',
   '/maps':      'Maps',
-  '/county':    'Counties',
+  '/county':    'County',
   '/facility':  'Facilities',
   '/zip-code':  'ZIP Codes',
   '/city':      'Cities',
   '/launchpad': 'Launchpad',
   '/report':    'Report',
+  '/glossary':  'Glossary',
 }
 
 interface AppLayoutProps {

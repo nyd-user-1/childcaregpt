@@ -77,8 +77,8 @@ export function FacilityShell({
   const [chatOpen, setChatOpen]         = useState(false)
   const carouselRef = useRef<HTMLDivElement>(null)
 
-  const btn    = 'inline-flex items-center justify-center h-8 w-8 border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors'
-  const active = 'text-[var(--txt)] bg-[var(--inp-bg)]'
+  const btn    = 'inline-flex items-center justify-center h-8 w-8 border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-sky-500 hover:bg-[var(--inp-bg)] transition-colors'
+  const active = 'text-sky-500 bg-[var(--inp-bg)]'
   const tip    = 'absolute left-1/2 -translate-x-1/2 -top-8 px-2 py-1 rounded bg-[var(--txt)] text-[var(--bg)] text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50'
 
   const address = [facility.street_number, facility.street_name].filter(Boolean).join(' ')
