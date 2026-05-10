@@ -34,7 +34,7 @@ export default function ChartsPage() {
             const data = PREVIEW[chart.slug] ?? [50, 60, 70, 80, 75, 65, 55]
             return (
               <Link key={chart.slug} href={`/chart/${chart.slug}`}
-                className="group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:shadow-md transition-all">
+                className="group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-transparent hover:shadow-md transition-all">
                 <div className="flex-1 min-h-0 h-28 sm:h-32">
                   {AREA_SLUGS.has(chart.slug)
                     ? <MiniAreaChart id={chart.slug} color={chart.color} data={data} />
