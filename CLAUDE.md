@@ -1,5 +1,43 @@
 @AGENTS.md
 
+---
+## ⚠ TEMPLATE NOTICE — Read this first
+
+**If you are NOT working on ChildcareGPT, this repo was cloned as a starting template.**
+
+Do the following before writing any code:
+
+### Step 1 — Configure the brand (5 minutes)
+- **`src/lib/app-config.ts`** — set `APP_NAME`, `ACCENT_COLOR`, `CHART_NAV_EVENT`, `NAV_CYCLE`, `PATH_NAV`, `PATH_TITLE`, and all sidebar nav arrays
+- **`src/components/AppLogo.tsx`** — swap `BottleBaby` for the new app's icon
+
+### Step 2 — Connect a new database
+- Create a new Neon project at neon.tech
+- Add `DATABASE_URL` to `.env.local` and Vercel (Production + Preview + Development)
+- Drop the childcare schema and create tables for the new domain
+- Update `src/lib/db.ts` if needed (usually no change — it just reads `DATABASE_URL`)
+
+### Step 3 — Write a new CLAUDE.md immediately
+Replace this entire file with a project-specific CLAUDE.md covering:
+- The new app's purpose and production URL
+- Stack (Next.js 16, Neon Postgres, Tailwind, Google Maps — keep these unless you have a reason not to)
+- New DB schema and table names
+- New API routes
+- New page structure and nav
+- Any domain-specific rules
+
+Delete everything from the `TEMPLATE NOTICE` line down through the end of the ChildcareGPT-specific content. The ChildcareGPT sections below are reference only — they describe the shape of what you're replacing, not what you're building.
+
+### What NOT to touch (reuse as-is)
+- `src/components/AppLayout.tsx` — reads from app-config, no edits needed
+- `src/components/Sidebar.tsx` — reads from app-config, no edits needed
+- `src/components/AppPanel.tsx`, `PanelChart.tsx`, `PanelMap.tsx`, `PanelChat.tsx` — generic, reuse as-is
+- `src/components/MiniCharts.tsx`, `CardCarousel.tsx`, `PlusMenu.tsx` — generic, reuse as-is
+- `src/app/globals.css` — CSS vars and base styles, keep unless rebranding colors
+- `src/lib/utils.ts` — `cn()` helper, keep as-is
+
+---
+
 # Database & API Infrastructure
 
 ## Neon Postgres (`wispy-hat-96132084` / `neon-bisque-arrow`)
