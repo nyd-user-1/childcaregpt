@@ -85,7 +85,7 @@ export function ZipShell({
 
             {/* ── Header ── */}
             <div className="mb-8 flex items-center justify-between gap-2">
-              <h1 className="text-2xl font-bold text-[var(--txt)]">{stats.zip_code} — {stats.city}</h1>
+              <h1 className="text-2xl font-bold text-[var(--txt)]">{stats.zip_code} • {stats.city}</h1>
               <div className="hidden sm:flex items-center shrink-0">
                 <div className="inline-flex -space-x-px">
                   <div className="relative group">
@@ -117,7 +117,7 @@ export function ZipShell({
               style={{ background: 'linear-gradient(135deg,#e8f4fb 0%,#d0eaf7 100%)' }}>
               <Map className="h-14 w-14 text-[var(--muted)]" />
               <div className="text-center">
-                <p className="text-sm font-semibold text-[var(--txt2)]">{stats.zip_code} — {stats.city}, NY</p>
+                <p className="text-sm font-semibold text-[var(--txt2)]">{stats.zip_code} • {stats.city}, NY</p>
                 <p className="text-xs text-[var(--muted)] mt-0.5">ZIP Code Map · Coming Soon</p>
               </div>
             </div>

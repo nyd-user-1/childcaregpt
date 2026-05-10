@@ -71,7 +71,7 @@ export function CountyShell({
 
   const PROFILES = [
     {
-      title: 'County Inventory',
+      title: 'Inventory',
       rows: [
         { label: 'Licensed Providers',     value: String(stats.provider_count),   highlight: false },
         { label: 'Total Licensed Capacity',value: fmtNum(stats.total_capacity),   highlight: true  },
@@ -82,7 +82,7 @@ export function CountyShell({
       ],
     },
     {
-      title: 'County Cost',
+      title: 'Cost',
       rows: [
         { label: 'Median Infant Cost (Center)',   value: fmtCurrency(costs?.mcinfant ?? null),    highlight: false },
         { label: 'Median Toddler Cost (Center)',  value: fmtCurrency(costs?.mctoddler ?? null),   highlight: false },
