@@ -62,6 +62,7 @@ export function ZipShell({
 
   const btn    = 'inline-flex items-center justify-center h-8 w-8 border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors'
   const active = 'text-[var(--txt)] bg-[var(--inp-bg)]'
+  const tip    = 'absolute left-1/2 -translate-x-1/2 -top-8 px-2 py-1 rounded bg-[var(--txt)] text-[var(--bg)] text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50'
 
   const profileRows = [
     { label: 'City',                 value: stats.city,                         highlight: false },
@@ -87,21 +88,26 @@ export function ZipShell({
               <h1 className="text-2xl font-bold text-[var(--txt)]">{stats.zip_code} — {stats.city}</h1>
               <div className="hidden sm:flex items-center shrink-0">
                 <div className="inline-flex -space-x-px">
-                  <Link href={`/zip/${prevSlug}`} className={`${btn} rounded-l-full`}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Link>
-                  <button onClick={() => setChartsOpen(v => !v)} className={`${btn} ${chartsOpen ? active : ''}`} title="Charts">
-                    <ChartSpline className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => setMapsOpen(v => !v)} className={`${btn} ${mapsOpen ? active : ''}`} title="Maps">
-                    <MapPlus className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => setChatOpen(v => !v)} className={`${btn} ${chatOpen ? active : ''}`} title={`Ask about ${stats.zip_code}`}>
-                    <MessageCircle className="h-4 w-4" />
-                  </button>
-                  <Link href={`/zip/${nextSlug}`} className={`${btn} rounded-r-full`}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
+                  <div className="relative group">
+                    <Link href={`/zip/${prevSlug}`} className={`${btn} rounded-l-full`}><ChevronLeft className="h-4 w-4" /></Link>
+                    <span className={tip}>Prev</span>
+                  </div>
+                  <div className="relative group">
+                    <button onClick={() => setChartsOpen(v => !v)} className={`${btn} ${chartsOpen ? active : ''}`}><ChartSpline className="h-4 w-4" /></button>
+                    <span className={tip}>Charts</span>
+                  </div>
+                  <div className="relative group">
+                    <button onClick={() => setMapsOpen(v => !v)} className={`${btn} ${mapsOpen ? active : ''}`}><MapPlus className="h-4 w-4" /></button>
+                    <span className={tip}>Maps</span>
+                  </div>
+                  <div className="relative group">
+                    <button onClick={() => setChatOpen(v => !v)} className={`${btn} ${chatOpen ? active : ''}`}><MessageCircle className="h-4 w-4" /></button>
+                    <span className={tip}>Ask ChildcareGPT</span>
+                  </div>
+                  <div className="relative group">
+                    <Link href={`/zip/${nextSlug}`} className={`${btn} rounded-r-full`}><ChevronRight className="h-4 w-4" /></Link>
+                    <span className={tip}>Next</span>
+                  </div>
                 </div>
               </div>
             </div>
