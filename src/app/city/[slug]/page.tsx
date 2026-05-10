@@ -164,7 +164,7 @@ export default function DetailPageCity({ params }: { params: Promise<{ slug: str
             {/* ── ZIP Codes carousel ── */}
             <div className="mb-8">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--txt)]">ZIP Codes</h2>
+                <h2 className="text-lg font-semibold text-[var(--txt)]">Zip Codes</h2>
                 <div className="flex items-center gap-2">
                   <button onClick={() => zipScrollRef.current?.scrollBy({ left: -240, behavior: 'smooth' })}
                     className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
