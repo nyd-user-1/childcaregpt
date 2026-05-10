@@ -4,7 +4,7 @@ import { use } from 'react'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { useState, useRef } from 'react'
-import { ChevronLeft, ChevronRight, ChevronDown, ChartSpline, MapPlus, MessageCircle, Map } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChartSpline, MapPlus, MessageCircle } from 'lucide-react'
 import { PanelChart } from '@/components/PanelChart'
 import { PanelMap } from '@/components/PanelMap'
 import { PanelChat } from '@/components/PanelChat'
@@ -82,14 +82,14 @@ export default function DetailSlot({ params }: { params: Promise<{ slug: string 
   const fmtNum = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n)
 
   const profileRows = [
-    { label: 'Licensed Providers',    value: String(county.providers),           highlight: false },
-    { label: 'Total Licensed Seats',  value: fmtNum(county.seats),               highlight: false },
-    { label: 'Seats Filled',          value: `${fmtNum(county.filled)} (${Math.round(county.filled / county.seats * 100)}%)`, highlight: false },
-    { label: 'Seats Open',            value: fmtNum(county.open),                highlight: true  },
-    { label: 'Net Change (+/-)',       value: county.diff >= 0 ? `+${county.diff}` : String(county.diff), highlight: false },
-    { label: 'Avg Weekly Cost',        value: `$${county.avgCost}`,              highlight: false },
-    { label: 'Avg Waitlist',           value: `${county.waitlistMonths} months`, highlight: false },
-    { label: 'Compliance Rate',        value: `${county.compliance}%`,           highlight: false },
+    { label: 'Licensed Providers',   value: String(county.providers),           highlight: false },
+    { label: 'Total Licensed Seats', value: fmtNum(county.seats),               highlight: false },
+    { label: 'Seats Filled',         value: `${fmtNum(county.filled)} (${Math.round(county.filled / county.seats * 100)}%)`, highlight: false },
+    { label: 'Seats Open',           value: fmtNum(county.open),                highlight: true  },
+    { label: 'Net Change (+/-)',      value: county.diff >= 0 ? `+${county.diff}` : String(county.diff), highlight: false },
+    { label: 'Avg Weekly Cost',       value: `$${county.avgCost}`,              highlight: false },
+    { label: 'Avg Waitlist',          value: `${county.waitlistMonths} months`, highlight: false },
+    { label: 'Compliance Rate',       value: `${county.compliance}%`,           highlight: false },
   ]
 
   const visibleRows = infoExpanded ? profileRows : profileRows.slice(0, DEFAULT_ROWS)
@@ -115,30 +115,8 @@ export default function DetailSlot({ params }: { params: Promise<{ slug: string 
             />
           </div>
 
-          {/* ── Map placeholder ── */}
-          <div className="mb-8 h-64 sm:h-96 w-full rounded-2xl border border-[var(--border)] overflow-hidden flex flex-col items-center justify-center gap-3"
-            style={{ background: 'linear-gradient(135deg,#e8f4fb 0%,#d0eaf7 100%)' }}>
-            <Map className="h-14 w-14 text-[var(--muted)]" />
-            <div className="text-center">
-              <p className="text-sm font-semibold text-[var(--txt2)]">{county.county} County, NY</p>
-              <p className="text-xs text-[var(--muted)] mt-0.5">County Map · Coming Soon</p>
-            </div>
-          </div>
-
-          {/* ── Profiles ── */}
+          {/* ── InfoTableCounty ── */}
           <div className="mb-8">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[var(--txt)]">Profiles</h2>
-              <div className="flex items-center gap-2">
-                <button className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
             <div className="rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
               <button
                 onClick={() => setInfoExpanded(v => !v)}
@@ -159,43 +137,26 @@ export default function DetailSlot({ params }: { params: Promise<{ slug: string 
             </div>
           </div>
 
-          {/* ── Zip Codes carousel ── */}
-          <div className="mb-8">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-[var(--txt)]">Zip Codes</h2>
-              <div className="flex items-center gap-2">
-                <button onClick={() => zipScrollRef.current?.scrollBy({ left: -240, behavior: 'smooth' })}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button onClick={() => zipScrollRef.current?.scrollBy({ left: 240, behavior: 'smooth' })}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div ref={zipScrollRef} className="overflow-x-auto no-scrollbar">
-              <div className="flex gap-3 pb-1">
-                {county.zips.map(z => (
-                  <div key={z.zip}
-                    className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] hover:border-transparent transition-all cursor-pointer">
-                    <p className="text-base font-bold text-[var(--txt)]">{z.zip}</p>
-                    <p className="text-xs font-medium text-[var(--txt2)] mt-0.5">{z.city}</p>
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-xs text-[var(--muted)]">{z.providers} providers</span>
-                      <span className="text-xs font-bold text-sky-500">{fmtNum(z.seats)} seats</span>
-                    </div>
+          {/* ── CardLandscapeMini carousel ── */}
+          <div ref={zipScrollRef} className="overflow-x-auto no-scrollbar">
+            <div className="flex gap-3 pb-1">
+              {county.zips.map(z => (
+                <div key={z.zip}
+                  className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] hover:border-transparent transition-all cursor-pointer">
+                  <p className="text-base font-bold text-[var(--txt)]">{z.zip}</p>
+                  <p className="text-xs font-medium text-[var(--txt2)] mt-0.5">{z.city}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-[var(--muted)]">{z.providers} providers</span>
+                    <span className="text-xs font-bold text-sky-500">{fmtNum(z.seats)} seats</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Panels — portal into #chat-panel-root provided by layout.tsx's AppLayout */}
       <PanelChart open={chartsOpen} onClose={() => setChartsOpen(false)} />
       <PanelMap   open={mapsOpen}   onClose={() => setMapsOpen(false)}   />
       <PanelChat  open={chatOpen}   onClose={() => setChatOpen(false)}   countyName={county.county} />
