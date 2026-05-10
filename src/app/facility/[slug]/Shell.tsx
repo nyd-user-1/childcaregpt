@@ -71,6 +71,7 @@ export function FacilityShell({
   countyFacilities: CarouselFacility[]
 }) {
   const [infoExpanded, setInfoExpanded] = useState(false)
+  const [profileIdx, setProfileIdx]     = useState(0)
   const [chartsOpen, setChartsOpen]     = useState(false)
   const [mapsOpen, setMapsOpen]         = useState(false)
   const [chatOpen, setChatOpen]         = useState(false)
@@ -81,27 +82,43 @@ export function FacilityShell({
 
   const address = [facility.street_number, facility.street_name].filter(Boolean).join(' ')
 
-  const profileRows = [
-    { label: 'Program Type',         value: PROGRAM_TYPES[facility.program_type] ?? facility.program_type, highlight: false },
-    { label: 'Status',               value: facility.facility_status,                                       highlight: false },
-    { label: 'Provider',             value: facility.provider_name ?? '—',                                 highlight: false },
-    { label: 'Total Capacity',       value: fmtNum(facility.total_capacity),                               highlight: true  },
-    { label: 'Infant Capacity',      value: String(facility.infant_capacity),                              highlight: false },
-    { label: 'Toddler Capacity',     value: String(facility.toddler_capacity),                             highlight: false },
-    { label: 'Preschool Capacity',   value: String(facility.preschool_capacity),                           highlight: false },
-    { label: 'School-Age Capacity',  value: String(facility.school_age_capacity),                          highlight: false },
-    { label: 'Phone',                value: facility.phone_number ?? '—',                                  highlight: false },
-    { label: 'Address',              value: address || '—',                                                 highlight: false },
-    { label: 'City',                 value: facility.city,                                                  highlight: false },
-    { label: 'ZIP Code',             value: facility.zip_code,                                              highlight: false },
-    { label: 'County',               value: `${facility.county} County`,                                    highlight: false },
-    { label: 'Facility ID',          value: String(facility.facility_id),                                   highlight: false },
-    { label: 'Opened',               value: fmtDate(facility.facility_opened_date),                        highlight: false },
-    { label: 'License Issued',       value: fmtDate(facility.license_issue_date),                          highlight: false },
-    { label: 'License Expires',      value: fmtDate(facility.license_expiration_date),                     highlight: false },
+  const PROFILES = [
+    {
+      title: 'Facility Inventory',
+      rows: [
+        { label: 'Program Type',        value: PROGRAM_TYPES[facility.program_type] ?? facility.program_type, highlight: false },
+        { label: 'Status',              value: facility.facility_status,                                       highlight: false },
+        { label: 'Total Capacity',      value: fmtNum(facility.total_capacity),                               highlight: true  },
+        { label: 'Infant Capacity',     value: String(facility.infant_capacity),                              highlight: false },
+        { label: 'Toddler Capacity',    value: String(facility.toddler_capacity),                             highlight: false },
+        { label: 'Preschool Capacity',  value: String(facility.preschool_capacity),                           highlight: false },
+        { label: 'School-Age Capacity', value: String(facility.school_age_capacity),                          highlight: false },
+      ],
+    },
+    {
+      title: 'Facility Profile',
+      rows: [
+        { label: 'Provider',        value: facility.provider_name ?? '—',              highlight: false },
+        { label: 'Phone',           value: facility.phone_number ?? '—',               highlight: false },
+        { label: 'Address',         value: address || '—',                              highlight: false },
+        { label: 'City',            value: facility.city,                               highlight: false },
+        { label: 'ZIP Code',        value: facility.zip_code,                           highlight: false },
+        { label: 'County',          value: `${facility.county} County`,                 highlight: false },
+        { label: 'Facility ID',     value: String(facility.facility_id),                highlight: false },
+        { label: 'Opened',          value: fmtDate(facility.facility_opened_date),      highlight: false },
+        { label: 'License Issued',  value: fmtDate(facility.license_issue_date),        highlight: false },
+        { label: 'License Expires', value: fmtDate(facility.license_expiration_date),   highlight: false },
+      ],
+    },
   ]
 
-  const visibleRows = infoExpanded ? profileRows : profileRows.slice(0, DEFAULT_ROWS)
+  const cycleProfile = (dir: 1 | -1) => {
+    setProfileIdx(i => (i + dir + PROFILES.length) % PROFILES.length)
+    setInfoExpanded(false)
+  }
+
+  const activeProfile = PROFILES[profileIdx]
+  const visibleRows = infoExpanded ? activeProfile.rows : activeProfile.rows.slice(0, DEFAULT_ROWS)
 
   return (
     <>
@@ -148,10 +165,10 @@ export function FacilityShell({
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[var(--txt)]">Profiles</h2>
                 <div className="flex items-center gap-2">
-                  <button className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
+                  <button onClick={() => cycleProfile(-1)} className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
-                  <button className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
+                  <button onClick={() => cycleProfile(1)} className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -159,7 +176,7 @@ export function FacilityShell({
               <div className="rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
                 <button onClick={() => setInfoExpanded(v => !v)}
                   className="flex items-center justify-between w-full px-4 py-3 bg-[var(--surface)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <span className="text-sm font-semibold text-[var(--txt)]">Facility Profile</span>
+                  <span className="text-sm font-semibold text-[var(--txt)]">{activeProfile.title}</span>
                   <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', infoExpanded && 'rotate-180')} />
                 </button>
                 {visibleRows.map((row, i) => (
