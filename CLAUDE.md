@@ -63,5 +63,8 @@ This is a pixel-perfect port of SolarGPT. When in doubt, read the SolarGPT sourc
 ### Navigation
 `TabGroup` — underline-style tab navigation bar
 
+### Slot Views (parallel route @detail)
+`DetailSlotCounty` — compact county detail rendered in the `@detail` slot on LaunchpadPage. No map placeholder, no section H2s. Uses same components as `DetailPageCounty`: H1, ButtonGroup, InfoTableCounty, CardLandscapeMini carousel.
+
 ### Icons
 `IconBabyBottle` — ChildcareGPT brand icon
