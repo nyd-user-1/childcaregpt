@@ -1,5 +1,54 @@
 @AGENTS.md
 
+# Database & API Infrastructure
+
+## Neon Postgres (`wispy-hat-96132084` / `neon-bisque-arrow`)
+Connection via `DATABASE_URL` env var (set in `.env.local` and Vercel Production/Preview/Development).
+Client: `@neondatabase/serverless` — import `sql` from `@/lib/db`.
+
+### Tables
+
+#### `facilities` — 16,800 rows, keyed on `facility_id`
+NY State OCFS regulated childcare providers (from `data.ny.gov` dataset `fymg-3wv3` + dates from `cb42-qumz`).
+Key columns: `facility_id`, `program_type` (DCC/FDC/GFDC/SACC/SDCC), `county`, `facility_status`, `facility_name`, `city`, `zip_code`, `phone_number`, `provider_name`, `total_capacity`, `infant_capacity`, `toddler_capacity`, `preschool_capacity`, `school_age_capacity`, `profile_url`, `latitude`, `longitude`, `facility_opened_date`, `license_issue_date`, `license_expiration_date`.
+Indexes: `county`, `program_type`, `facility_status`, `zip_code`, `region_code`.
+
+#### `county_costs` — 930 rows, keyed on `(county_fips_code, studyyear)`
+DOL National Database of Childcare Prices, NY counties only, 2008–2022.
+Key columns: `county_fips_code` (e.g. `'36001'`), `county_name` (e.g. `'Albany County'`), `studyyear`, median/75th-pct center + family care costs by age group (`mcinfant`, `mctoddler`, `mcpreschool`, `mfccinfant`, etc.), women's labor force participation (`flfpr_20to64_under6`), income (`mhi`, `mfi`), poverty (`pr_f`, `pr_p`).
+
+### API Routes
+
+| Route | Description |
+|---|---|
+| `GET /api/facilities` | Query facilities. Params: `county`, `program_type`, `status`, `limit` (max 200), `offset` |
+| `GET /api/county-costs` | County cost data. Params: `year` (default 2022) |
+
+### Ingest Scripts (`scripts/`)
+- `ingest-facilities.mjs` — fetches both `fymg-3wv3` + `cb42-qumz`, merges dates, batch-upserts all 16,800 facilities. Run: `DATABASE_URL=... node scripts/ingest-facilities.mjs`
+- `ingest-county-costs.mjs` — reads `dol-child-care-data.csv` (keep locally, not committed), inserts NY rows only. Run: `DATABASE_URL=... node scripts/ingest-county-costs.mjs`
+- `backfill-dates.mjs` — one-time script, already run, can be discarded.
+
+---
+
+## Map Components
+
+### `NYCountyChoropleth` (`src/components/NYCountyChoropleth.tsx`)
+Google Maps choropleth of all 62 NY counties colored by a selectable DOL cost metric.
+- **Props:** `data: CountyCostRow[]` (from `/api/county-costs`), `metric?: ChoroplethMetric` (default `'mcinfant'`), `year?: number`, `onMetricChange?`, `className?`
+- **Metrics:** `mcinfant` · `mctoddler` · `mcpreschool` · `mfccinfant` · `mfcctoddler` · `mfccpreschool` · `mhi` · `pr_f`
+- Click on a county navigates to `/county/[slug]`
+- Requires `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (already in Vercel + `.env.local`)
+
+### GeoJSON assets (in `For Review/` — not yet promoted to `src/`)
+All map components fetch GeoJSON from `https://raw.githubusercontent.com/nyd-user-1/nyd-geojson/main/`:
+- `us-counties.geojson` — all US counties, FIPS-keyed (STATEFP + COUNTYFP)
+- `us-states.geojson` — all 50 states + DC
+- `ny-assembly-districts.geojson` — 150 districts, props: `District` (int), `Name`, `Party`
+- `ny-senate-districts.geojson` — 63 districts, props: `DISTRICT` (int), `NAME`, `Party`
+
+---
+
 # ChildcareGPT Wireframe Rules
 
 ## The Golden Rule
