@@ -51,9 +51,10 @@ export const PATH_TITLE: Record<string, string> = {
   '/zip-code':    'ZIP Codes',
   '/city':        'Cities',
   '/launchpad':   'Launchpad',
-  '/report':      'Report',
-  '/eligibility': 'Eligibility',
-  '/glossary':    'Glossary',
+  '/report':       'Report',
+  '/eligibility':  'Eligibility',
+  '/application':  'Application',
+  '/glossary':     'Glossary',
 }
 
 // ── Sidebar nav items ──────────────────────────────────────────────────────

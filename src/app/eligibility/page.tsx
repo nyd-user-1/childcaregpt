@@ -1,7 +1,10 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown, Check } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { AppLogo } from '@/components/AppLogo'
@@ -228,36 +231,46 @@ function BiggerButton({ children, onClick, disabled = false }: {
 
 type Msg = { id: string; role: 'user' | 'assistant'; content: string }
 
-const BENEFIT_OPTIONS = [
-  'Medicaid',
-  'SNAP (food stamps)',
-  'Housing Vouchers or Assistance',
-  'HEAP (Home Energy Assistance)',
-  'WIC',
-  'Social Security Income (SSI) or other federal assistance',
-  'Head Start or Early Head Start',
-  'Cash Assistance (TANF)',
-  'None of these',
+const BENEFIT_OPTIONS: { label: string; tooltip?: string }[] = [
+  { label: 'Medicaid' },
+  { label: 'SNAP',                   tooltip: 'Food Stamps' },
+  { label: 'Housing Assistance' },
+  { label: 'HEAP',                   tooltip: 'Home Energy Assistance Program' },
+  { label: 'WIC' },
+  { label: 'Social Security Income', tooltip: 'SSI or other federal assistance' },
+  { label: 'Head Start or Early Head Start' },
+  { label: 'Cash Assistance',        tooltip: 'TANF' },
+  { label: 'None of these' },
 ]
 
-function CheckItem({ label, checked, onClick }: { label: string; checked: boolean; onClick: () => void }) {
+function CheckItem({ label, tooltip, checked, onClick }: { label: string; tooltip?: string; checked: boolean; onClick: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-base font-medium transition-all ${
-        checked
-          ? 'border-[#0ea5e9] bg-sky-50 text-[#0ea5e9]'
-          : 'border-gray-200 bg-white text-gray-700 hover:border-[#0ea5e9]'
-      }`}
-    >
-      <div className={`h-5 w-5 rounded shrink-0 border-2 flex items-center justify-center transition-colors ${
-        checked ? 'border-[#0ea5e9] bg-[#0ea5e9]' : 'border-gray-300'
-      }`}>
-        {checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
-      </div>
-      {label}
-    </button>
+    <div className="relative group">
+      {tooltip && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-20 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <div className="bg-black text-white text-xs rounded-lg px-3 py-1.5 text-center leading-snug whitespace-normal max-w-[160px]">
+            {tooltip}
+          </div>
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black" />
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={onClick}
+        className={`w-full flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
+          checked
+            ? 'border-[#0ea5e9] bg-sky-50 text-[#0ea5e9]'
+            : 'border-gray-200 bg-white text-gray-700 hover:border-[#0ea5e9]'
+        }`}
+      >
+        <div className={`h-5 w-5 rounded shrink-0 border-2 flex items-center justify-center transition-colors ${
+          checked ? 'border-[#0ea5e9] bg-[#0ea5e9]' : 'border-gray-300'
+        }`}>
+          {checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+        </div>
+        {label}
+      </button>
+    </div>
   )
 }
 
@@ -415,6 +428,7 @@ function AssistantDrawer(props: Parameters<typeof AssistantContent>[0]) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function EligibilityPage() {
+  const router = useRouter()
   const [step, setStep]         = useState<Step>('address')
   const [stepIdx, setStepIdx]   = useState(0)
   const [formData, setFormData] = useState<FormData>(defaultFormData())
@@ -626,6 +640,12 @@ export default function EligibilityPage() {
                     style={{ backgroundColor: ACCENT }}
                     onMouseEnter={e => { e.currentTarget.style.backgroundColor = ACCENT_HOVER }}
                     onMouseLeave={e => { e.currentTarget.style.backgroundColor = ACCENT }}
+                    onClick={() => {
+                      if (eligibility === 'eligible') {
+                        localStorage.setItem('ccap-eligibility-data', JSON.stringify({ ...formData, county: selectedCounty }))
+                        router.push('/application')
+                      }
+                    }}
                   >
                     {eligibility === 'eligible' ? 'Apply for CCAP →' : 'Find Local Resources →'}
                   </button>
@@ -715,9 +735,18 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">What is your date of birth?</h2>
                     <input
                       type="text"
+                      autoFocus
                       value={formData.dateOfBirth}
-                      onChange={e => update('dateOfBirth', e.target.value)}
+                      onChange={e => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 8)
+                        let masked = digits
+                        if (digits.length > 4) masked = `${digits.slice(0,2)}-${digits.slice(2,4)}-${digits.slice(4)}`
+                        else if (digits.length > 2) masked = `${digits.slice(0,2)}-${digits.slice(2)}`
+                        update('dateOfBirth', masked)
+                        if (masked.length === 10) setTimeout(() => goNext(), 300)
+                      }}
                       placeholder="MM-DD-YYYY"
+                      maxLength={10}
                       className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
                     />
                     <div className="h-[68px]" />
@@ -735,7 +764,7 @@ export default function EligibilityPage() {
                           onClick={() => { update('maritalStatus', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
-                    <div className="h-[68px]" />
+                    <div className="h-[60px]" />
                     <BiggerButton onClick={goNext} disabled={!formData.maritalStatus}>CONTINUE →</BiggerButton>
                   </div>
                 )}
@@ -1072,22 +1101,23 @@ export default function EligibilityPage() {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">Do you or any adult applying with you currently receive any of the following?</h2>
                     <p className="text-base text-gray-500 mb-6">Select all that apply.</p>
-                    <div className="space-y-2">
-                      {BENEFIT_OPTIONS.map(benefit => {
-                        const isNone = benefit === 'None of these'
-                        const checked = formData.benefits.includes(benefit)
+                    <div className="grid grid-cols-3 gap-2">
+                      {BENEFIT_OPTIONS.map(({ label, tooltip }) => {
+                        const isNone = label === 'None of these'
+                        const checked = formData.benefits.includes(label)
                         return (
                           <CheckItem
-                            key={benefit}
-                            label={benefit}
+                            key={label}
+                            label={label}
+                            tooltip={tooltip}
                             checked={checked}
                             onClick={() => {
                               if (isNone) {
                                 update('benefits', checked ? [] : ['None of these'])
                               } else {
                                 const next = checked
-                                  ? formData.benefits.filter(b => b !== benefit)
-                                  : [...formData.benefits.filter(b => b !== 'None of these'), benefit]
+                                  ? formData.benefits.filter(b => b !== label)
+                                  : [...formData.benefits.filter(b => b !== 'None of these'), label]
                                 update('benefits', next)
                               }
                             }}
