@@ -28,6 +28,14 @@ Replace this entire file with a project-specific CLAUDE.md covering:
 
 Delete everything from the `TEMPLATE NOTICE` line down through the end of the ChildcareGPT-specific content. The ChildcareGPT sections below are reference only — they describe the shape of what you're replacing, not what you're building.
 
+### TODO — Remaining work to reach true clone-and-swap
+The shell is template-ready. The content layer is not. To complete the template:
+- Index pages (`/county`, `/facility`, `/zip-code`, `/city`) need generic `DataPage` stubs with placeholder queries
+- `chart-configs.ts` needs to be the single file a clone rewrites (currently SQL is spread across 15 chart case statements in `chart/[slug]/page.tsx`)
+- Map components (`NYCountyMap`, `NYCountyChoropleth`) are NY/childcare-specific
+- API routes (`/api/facilities`, `/api/county-costs`) are domain-specific
+- `/launchpad`, `/report`, `/eligibility` question content is childcare-specific
+
 ### What NOT to touch (reuse as-is)
 - `src/components/AppLayout.tsx` — reads from app-config, no edits needed
 - `src/components/Sidebar.tsx` — reads from app-config, no edits needed
