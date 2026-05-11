@@ -7,7 +7,7 @@
 
 import {
   MessageCircle, LayoutDashboard, Rocket, BarChart3, Map,
-  Building2, School, Hash, Landmark,
+  Building2, School, Hash, Landmark, ClipboardList,
 } from 'lucide-react'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
@@ -38,21 +38,23 @@ export const PATH_NAV: Record<string, string> = {
   '/zip-code':  'Zip Code',
   '/city':      'City',
   '/launchpad': 'Launchpad',
-  '/report':    'Report',
-  '/glossary':  'Glossary',
+  '/report':      'Report',
+  '/eligibility': 'Eligibility',
+  '/glossary':    'Glossary',
 }
 
 // ── Page title shown in AppLayout header (exact path → title) ─────────────
 export const PATH_TITLE: Record<string, string> = {
-  '/charts':    'Charts',
-  '/maps':      'Maps',
-  '/county':    'County',
-  '/facility':  'Facilities',
-  '/zip-code':  'ZIP Codes',
-  '/city':      'Cities',
-  '/launchpad': 'Launchpad',
-  '/report':    'Report',
-  '/glossary':  'Glossary',
+  '/charts':      'Charts',
+  '/maps':        'Maps',
+  '/county':      'County',
+  '/facility':    'Facilities',
+  '/zip-code':    'ZIP Codes',
+  '/city':        'Cities',
+  '/launchpad':   'Launchpad',
+  '/report':      'Report',
+  '/eligibility': 'Eligibility',
+  '/glossary':    'Glossary',
 }
 
 // ── Sidebar nav items ──────────────────────────────────────────────────────
@@ -70,7 +72,8 @@ export const SIDEBAR_NAV_TOP: NavItem[] = [
 ]
 
 export const SIDEBAR_NAV_BOTTOM: NavItem[] = [
-  { label: 'Report', icon: BarChart3, href: '/report' },
+  { label: 'Report',      icon: BarChart3,     href: '/report'      },
+  { label: 'Eligibility', icon: ClipboardList, href: '/eligibility' },
 ]
 
 export const SIDEBAR_DATA_ITEMS: string[] = [
