@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown, Check } from 'lucide-react'
+import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown, Check, RotateCcw } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { AppLogo } from '@/components/AppLogo'
 
@@ -238,7 +238,7 @@ const BENEFIT_OPTIONS: { label: string; tooltip?: string }[] = [
   { label: 'HEAP',                   tooltip: 'Home Energy Assistance Program' },
   { label: 'WIC' },
   { label: 'Social Security Income', tooltip: 'SSI or other federal assistance' },
-  { label: 'Head Start or Early Head Start' },
+  { label: 'Head Start' },
   { label: 'Cash Assistance',        tooltip: 'TANF' },
   { label: 'None of these' },
 ]
@@ -472,6 +472,14 @@ export default function EligibilityPage() {
     }, 150)
   }
 
+  function resetForm() {
+    setFormData(defaultFormData())
+    setStep('address')
+    setStepIdx(0)
+    setAnimating(false)
+    setSuggestions([])
+  }
+
   function goBack() {
     if (stepIdx === 0) return
     const prevIdx = resolvePrevIdx(stepIdx)
@@ -683,13 +691,22 @@ export default function EligibilityPage() {
             <div className="min-h-full flex flex-col justify-center px-4 py-6">
               <div className="mx-auto w-full max-w-3xl min-h-[400px]">
 
-                {stepIdx > 0 && (
-                  <button type="button" onClick={goBack}
-                    className="mb-4 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
-                    <ArrowLeft className="h-4 w-4" />
-                    Previous Question
-                  </button>
-                )}
+                <div className="mb-4 flex items-center justify-between">
+                  {stepIdx > 0 ? (
+                    <button type="button" onClick={goBack}
+                      className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                      <ArrowLeft className="h-4 w-4" />
+                      Previous Question
+                    </button>
+                  ) : <div />}
+                  {stepIdx > 0 && (
+                    <button type="button" onClick={resetForm}
+                      className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+                      <RotateCcw className="h-4 w-4" />
+                      Start Over
+                    </button>
+                  )}
+                </div>
 
                 {/* ADDRESS */}
                 {currentStep === 'address' && (
