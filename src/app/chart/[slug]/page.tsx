@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
-import { getChartConfig, getAdjacentSlugs, CHART_CONFIGS } from '@/lib/chart-configs'
+import { getChartConfig, CHART_CONFIGS } from '@/lib/chart-configs'
 import { ChartDetailPage, type StdRow, type MultiRow, type ScatterRow } from '@/components/ChartDetailPage'
 
 export async function generateStaticParams() {
@@ -12,7 +12,13 @@ export default async function ChartPage({ params }: { params: Promise<{ slug: st
   const config = getChartConfig(slug)
   if (!config) notFound()
 
-  const { prevSlug, nextSlug } = getAdjacentSlugs(slug)
+  const idx      = CHART_CONFIGS.findIndex(c => c.slug === slug)
+  const prevHref = idx === 0
+    ? '/charts'
+    : `/chart/${CHART_CONFIGS[idx - 1].slug}`
+  const nextHref = idx === CHART_CONFIGS.length - 1
+    ? '/maps'
+    : `/chart/${CHART_CONFIGS[idx + 1].slug}`
 
   let tableRows: StdRow[] = []
   let chartPoints: StdRow[] = []
@@ -238,8 +244,8 @@ export default async function ChartPage({ params }: { params: Promise<{ slug: st
   return (
     <ChartDetailPage
       config={config}
-      prevSlug={prevSlug}
-      nextSlug={nextSlug}
+      prevHref={prevHref}
+      nextHref={nextHref}
       kpiValue={kpiValue}
       tableRows={tableRows}
       chartPoints={chartPoints}

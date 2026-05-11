@@ -50,8 +50,8 @@ export type ScatterRow = { name: string; x: number; y: number }
 
 interface Props {
   config: ChartConfig
-  prevSlug: string
-  nextSlug: string
+  prevHref: string
+  nextHref: string
   kpiValue: number
   tableRows?: StdRow[]
   chartPoints?: StdRow[]
@@ -61,7 +61,7 @@ interface Props {
 
 /* ── Component ───────────────────────────────────────────────────── */
 export function ChartDetailPage({
-  config, prevSlug, nextSlug, kpiValue,
+  config, prevHref, nextHref, kpiValue,
   tableRows = [], chartPoints = [], multiPoints = [], scatterPoints = [],
 }: Props) {
   const [period, setPeriod]   = useState<Period>('weekly')
@@ -74,8 +74,8 @@ export function ChartDetailPage({
   /* Broadcast nav + KPI to AppLayout header */
   useEffect(() => {
     const detail = {
-      prevHref: `/chart/${prevSlug}`,
-      nextHref: `/chart/${nextSlug}`,
+      prevHref,
+      nextHref,
       color: config.color,
       kpi: fmtKpi(scaledKpi, config, config.periodToggle ? period : undefined),
       kpiLabel: config.kpiLabel,
@@ -84,7 +84,7 @@ export function ChartDetailPage({
     return () => {
       window.dispatchEvent(new CustomEvent('childcaregpt:chart-nav', { detail: null }))
     }
-  }, [prevSlug, nextSlug, config, scaledKpi, period])
+  }, [prevHref, nextHref, config, scaledKpi, period])
 
   const scaledChart: StdRow[] = useMemo(() => {
     if (!config.periodToggle) return chartPoints
