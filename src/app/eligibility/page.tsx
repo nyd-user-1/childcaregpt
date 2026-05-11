@@ -87,10 +87,37 @@ function defaultFormData(): FormData {
   }
 }
 
+// ─── Income limits — 85% NYS State Median Income, 2026 ───────────────────────
+
+const MONTHLY_INCOME_LIMITS: Record<number, number> = {
+  1: 4707,
+  2: 6156,
+  3: 7604,
+  4: 9053,
+  5: 10501,
+  6: 11949,
+}
+
+// Each additional person beyond 6 adds ~$1,448/mo
+function getMonthlyIncomeLimit(householdSize: number): number {
+  const size = Math.max(1, householdSize)
+  if (size <= 6) return MONTHLY_INCOME_LIMITS[size]
+  return MONTHLY_INCOME_LIMITS[6] + (size - 6) * 1448
+}
+
 // ─── Eligibility logic ────────────────────────────────────────────────────────
 
-function determineEligibility(d: FormData): 'eligible' | 'not-eligible' {
-  if (d.assets === 'Yes') return 'not-eligible'
+type EligibilityResult = {
+  outcome: 'eligible' | 'not-eligible'
+  failReason: 'assets' | 'no-activity' | 'income' | null
+  incomeLimit: number | null
+}
+
+function determineEligibility(d: FormData): EligibilityResult {
+  // 1. Asset test
+  if (d.assets === 'Yes') return { outcome: 'not-eligible', failReason: 'assets', incomeLimit: null }
+
+  // 2. Qualifying activity test
   const qualifying: (keyof FormData)[] = [
     'childSpecialNeeds','childAged18','fosterParent',
     'employed','jobSearchOrTraining','dssActivities',
@@ -98,7 +125,20 @@ function determineEligibility(d: FormData): 'eligible' | 'not-eligible' {
     'familyDuties','disability','domesticViolence',
     'substanceProgram','homeless',
   ]
-  return qualifying.some(k => d[k] === 'Yes') ? 'eligible' : 'not-eligible'
+  if (!qualifying.some(k => d[k] === 'Yes')) {
+    return { outcome: 'not-eligible', failReason: 'no-activity', incomeLimit: null }
+  }
+
+  // 3. Income test (85% NYS SMI, 2026)
+  if (d.householdSize && d.monthlyIncome) {
+    const size   = parseInt(d.householdSize, 10)
+    const income = parseFloat(d.monthlyIncome)
+    const limit  = getMonthlyIncomeLimit(size)
+    if (income > limit) return { outcome: 'not-eligible', failReason: 'income', incomeLimit: limit }
+    return { outcome: 'eligible', failReason: null, incomeLimit: limit }
+  }
+
+  return { outcome: 'eligible', failReason: null, incomeLimit: null }
 }
 
 function formatPhone(raw: string): string {
@@ -345,7 +385,7 @@ export default function EligibilityPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIdx])
 
-  const eligibility = determineEligibility(formData)
+  const { outcome: eligibility, failReason, incomeLimit } = determineEligibility(formData)
 
   const canContinue: Partial<Record<QuestionStep, boolean>> = {
     address:            !!formData.address,
@@ -410,7 +450,9 @@ export default function EligibilityPage() {
                       <h1 className="text-2xl font-bold text-gray-900">You May Not Be Eligible</h1>
                     </div>
                     <p className="mt-1 text-sm text-gray-400">
-                      Based on your answers, you may not qualify for CCAP at this time. Other resources may still be available.
+                      {failReason === 'assets' && 'Households with resources over $1,000,000 do not qualify for CCAP.'}
+                      {failReason === 'no-activity' && 'CCAP requires a qualifying activity such as employment, job search, or education. None were indicated.'}
+                      {failReason === 'income' && incomeLimit != null && `Your household income exceeds the 2026 CCAP limit of $${incomeLimit.toLocaleString()}/mo for a household of ${formData.householdSize}.`}
                     </p>
                   </>
                 )}
@@ -439,10 +481,11 @@ export default function EligibilityPage() {
                   {eligibility === 'eligible' && (
                     <div className="mt-5 space-y-1">
                       {[
-                        { label: 'Program',    value: 'Child Care Assistance Program' },
-                        { label: 'Administered by', value: 'Local Dept. of Social Services' },
-                        { label: 'Household size', value: formData.householdSize ? `${formData.householdSize} ${Number(formData.householdSize) === 1 ? 'person' : 'people'}` : '—' },
-                        { label: 'Monthly income', value: formData.monthlyIncome ? `$${Number(formData.monthlyIncome).toLocaleString()}/mo` : '—' },
+                        { label: 'Program',             value: 'Child Care Assistance Program' },
+                        { label: 'Administered by',     value: 'Local Dept. of Social Services' },
+                        { label: 'Household size',      value: formData.householdSize ? `${formData.householdSize} ${Number(formData.householdSize) === 1 ? 'person' : 'people'}` : '—' },
+                        { label: 'Your monthly income', value: formData.monthlyIncome ? `$${Number(formData.monthlyIncome).toLocaleString()}/mo` : '—' },
+                        { label: '2026 income limit',   value: incomeLimit != null ? `$${incomeLimit.toLocaleString()}/mo` : '—' },
                       ].map(r => (
                         <div key={r.label} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm">
                           <div className="flex items-center gap-2">
