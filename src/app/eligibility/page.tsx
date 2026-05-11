@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown } from 'lucide-react'
+import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown, Check } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { AppLogo } from '@/components/AppLogo'
 
@@ -29,10 +29,14 @@ const NY_COUNTIES = [
 interface FormData {
   address:            string
   placeId:            string
+  dateOfBirth:        string
+  maritalStatus:      string
+  language:           string
   childSpecialNeeds:  string
   childAged18:        string
   fosterParent:       string
   employed:           string
+  employerName:       string
   jobSearchOrTraining: string
   dssActivities:      string
   vocationalProgram:  string
@@ -47,6 +51,7 @@ interface FormData {
   assets:             string
   householdSize:      string
   monthlyIncome:      string
+  benefits:           string[]
   firstName:          string
   lastName:           string
   email:              string
@@ -62,12 +67,13 @@ interface PlaceSuggestion {
 
 const QUESTION_STEPS = [
   'address',
+  'dateOfBirth', 'maritalStatus', 'language',
   'childSpecialNeeds', 'childAged18', 'fosterParent',
-  'employed', 'jobSearchOrTraining', 'dssActivities',
+  'employed', 'employerName', 'jobSearchOrTraining', 'dssActivities',
   'vocationalProgram', 'college', 'basicEducation', 'hsOrGed',
   'familyDuties', 'disability', 'domesticViolence',
   'substanceProgram', 'homeless', 'assets',
-  'incomeIntro', 'income',
+  'incomeIntro', 'income', 'benefits',
   'contact',
 ] as const
 
@@ -77,12 +83,13 @@ type Step = QuestionStep | 'loading' | 'result'
 function defaultFormData(): FormData {
   return {
     address: '', placeId: '',
+    dateOfBirth: '', maritalStatus: '', language: '',
     childSpecialNeeds: '', childAged18: '', fosterParent: '',
-    employed: '', jobSearchOrTraining: '', dssActivities: '',
+    employed: '', employerName: '', jobSearchOrTraining: '', dssActivities: '',
     vocationalProgram: '', college: '', basicEducation: '', hsOrGed: '',
     familyDuties: '', disability: '', domesticViolence: '',
     substanceProgram: '', homeless: '', assets: '',
-    householdSize: '', monthlyIncome: '',
+    householdSize: '', monthlyIncome: '', benefits: [],
     firstName: '', lastName: '', email: '', phone: '',
   }
 }
@@ -151,9 +158,9 @@ function formatPhone(raw: string): string {
 // ─── Progress ─────────────────────────────────────────────────────────────────
 
 function stepProgress(stepIdx: number): number {
-  if (stepIdx <= 4)  return 25
-  if (stepIdx <= 9)  return 50
-  if (stepIdx <= 14) return 75
+  if (stepIdx <= 6)  return 25
+  if (stepIdx <= 12) return 50
+  if (stepIdx <= 18) return 75
   return 90
 }
 
@@ -220,6 +227,39 @@ function BiggerButton({ children, onClick, disabled = false }: {
 // ─── Assistant Drawer ─────────────────────────────────────────────────────────
 
 type Msg = { id: string; role: 'user' | 'assistant'; content: string }
+
+const BENEFIT_OPTIONS = [
+  'Medicaid',
+  'SNAP (food stamps)',
+  'Housing Vouchers or Assistance',
+  'HEAP (Home Energy Assistance)',
+  'WIC',
+  'Social Security Income (SSI) or other federal assistance',
+  'Head Start or Early Head Start',
+  'Cash Assistance (TANF)',
+  'None of these',
+]
+
+function CheckItem({ label, checked, onClick }: { label: string; checked: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-base font-medium transition-all ${
+        checked
+          ? 'border-[#0ea5e9] bg-sky-50 text-[#0ea5e9]'
+          : 'border-gray-200 bg-white text-gray-700 hover:border-[#0ea5e9]'
+      }`}
+    >
+      <div className={`h-5 w-5 rounded shrink-0 border-2 flex items-center justify-center transition-colors ${
+        checked ? 'border-[#0ea5e9] bg-[#0ea5e9]' : 'border-gray-300'
+      }`}>
+        {checked && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
+      </div>
+      {label}
+    </button>
+  )
+}
 
 function CountySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false)
@@ -389,8 +429,22 @@ export default function EligibilityPage() {
     setFormData(prev => ({ ...prev, [k]: v }))
   }
 
+  function resolveNextIdx(from: number): number {
+    let next = from + 1
+    // Skip employerName if not employed
+    if (QUESTION_STEPS[next] === 'employerName' && formData.employed !== 'Yes') next++
+    return next
+  }
+
+  function resolvePrevIdx(from: number): number {
+    let prev = from - 1
+    // Skip back over employerName if not employed
+    if (QUESTION_STEPS[prev] === 'employerName' && formData.employed !== 'Yes') prev--
+    return prev
+  }
+
   function goNext() {
-    const nextIdx = stepIdx + 1
+    const nextIdx = resolveNextIdx(stepIdx)
     setAnimating(true)
     setTimeout(() => {
       if (nextIdx < QUESTION_STEPS.length) {
@@ -406,7 +460,7 @@ export default function EligibilityPage() {
 
   function goBack() {
     if (stepIdx === 0) return
-    const prevIdx = stepIdx - 1
+    const prevIdx = resolvePrevIdx(stepIdx)
     setAnimating(true)
     setTimeout(() => {
       setStep(QUESTION_STEPS[prevIdx])
@@ -438,10 +492,14 @@ export default function EligibilityPage() {
 
   const canContinue: Partial<Record<QuestionStep, boolean>> = {
     address:            !!formData.address,
+    dateOfBirth:        !!formData.dateOfBirth,
+    maritalStatus:      !!formData.maritalStatus,
+    language:           !!formData.language,
     childSpecialNeeds:  !!formData.childSpecialNeeds,
     childAged18:        !!formData.childAged18,
     fosterParent:       !!formData.fosterParent,
     employed:           !!formData.employed,
+    employerName:       true,
     jobSearchOrTraining: !!formData.jobSearchOrTraining,
     dssActivities:      !!formData.dssActivities,
     vocationalProgram:  !!formData.vocationalProgram,
@@ -454,6 +512,7 @@ export default function EligibilityPage() {
     substanceProgram:   !!formData.substanceProgram,
     homeless:           !!formData.homeless,
     assets:             !!formData.assets,
+    benefits:           formData.benefits.length > 0,
     incomeIntro:        true,
     income:             !!(formData.householdSize && formData.monthlyIncome),
     contact:            !!(formData.firstName && formData.lastName && formData.email && formData.phone),
@@ -532,9 +591,13 @@ export default function EligibilityPage() {
                       {[
                         { label: 'Program',             value: 'Child Care Assistance Program' },
                         { label: 'Administered by',     value: 'Local Dept. of Social Services' },
+                        { label: 'Date of birth',       value: formData.dateOfBirth || '—' },
+                        { label: 'Marital status',      value: formData.maritalStatus || '—' },
+                        { label: 'Primary language',    value: formData.language || '—' },
                         { label: 'Household size',      value: formData.householdSize ? `${formData.householdSize} ${Number(formData.householdSize) === 1 ? 'person' : 'people'}` : '—' },
                         { label: 'Your monthly income', value: formData.monthlyIncome ? `$${Number(formData.monthlyIncome).toLocaleString()}/mo` : '—' },
                         { label: '2026 income limit',   value: incomeLimit != null ? `$${incomeLimit.toLocaleString()}/mo` : '—' },
+                        { label: 'Benefits received',   value: formData.benefits.length > 0 ? formData.benefits.join(', ') : '—' },
                       ].map(r => (
                         <div key={r.label} className="flex items-center justify-between rounded-lg px-2 py-1.5 text-sm">
                           <div className="flex items-center gap-2">
@@ -646,6 +709,52 @@ export default function EligibilityPage() {
                   </div>
                 )}
 
+                {/* DATE OF BIRTH */}
+                {currentStep === 'dateOfBirth' && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">What is your date of birth?</h2>
+                    <input
+                      type="text"
+                      value={formData.dateOfBirth}
+                      onChange={e => update('dateOfBirth', e.target.value)}
+                      placeholder="MM-DD-YYYY"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
+                    />
+                    <div className="h-[68px]" />
+                    <BiggerButton onClick={goNext} disabled={!formData.dateOfBirth}>CONTINUE →</BiggerButton>
+                  </div>
+                )}
+
+                {/* MARITAL STATUS */}
+                {currentStep === 'maritalStatus' && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">What is your marital status?</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['Single', 'Married', 'Divorced', 'Separated', 'Widowed'].map(o => (
+                        <BigButton key={o} label={o} selected={formData.maritalStatus === o}
+                          onClick={() => { update('maritalStatus', o); setTimeout(goNext, 120) }} />
+                      ))}
+                    </div>
+                    <div className="h-[68px]" />
+                    <BiggerButton onClick={goNext} disabled={!formData.maritalStatus}>CONTINUE →</BiggerButton>
+                  </div>
+                )}
+
+                {/* PRIMARY LANGUAGE */}
+                {currentStep === 'language' && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">What is your primary language?</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                      {['English', 'Spanish', 'Haitian Creole', 'Other'].map(o => (
+                        <BigButton key={o} label={o} selected={formData.language === o}
+                          onClick={() => { update('language', o); setTimeout(goNext, 120) }} />
+                      ))}
+                    </div>
+                    <div className="h-[68px]" />
+                    <BiggerButton onClick={goNext} disabled={!formData.language}>CONTINUE →</BiggerButton>
+                  </div>
+                )}
+
                 {/* CHILD SPECIAL NEEDS */}
                 {currentStep === 'childSpecialNeeds' && (
                   <div>
@@ -703,6 +812,22 @@ export default function EligibilityPage() {
                     </div>
                     <div className="h-[68px]" />
                     <BiggerButton onClick={goNext} disabled={!formData.employed}>CONTINUE →</BiggerButton>
+                  </div>
+                )}
+
+                {/* EMPLOYER NAME — only shown if employed = Yes */}
+                {currentStep === 'employerName' && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-6">What is your employer&apos;s name?</h2>
+                    <input
+                      type="text"
+                      value={formData.employerName}
+                      onChange={e => update('employerName', e.target.value)}
+                      placeholder="Employer name"
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
+                    />
+                    <div className="h-[68px]" />
+                    <BiggerButton onClick={goNext}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -939,6 +1064,38 @@ export default function EligibilityPage() {
                       </div>
                     </div>
                     <BiggerButton onClick={goNext} disabled={!canContinue.income}>CONTINUE →</BiggerButton>
+                  </div>
+                )}
+
+                {/* BENEFITS */}
+                {currentStep === 'benefits' && (
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Do you or any adult applying with you currently receive any of the following?</h2>
+                    <p className="text-base text-gray-500 mb-6">Select all that apply.</p>
+                    <div className="space-y-2">
+                      {BENEFIT_OPTIONS.map(benefit => {
+                        const isNone = benefit === 'None of these'
+                        const checked = formData.benefits.includes(benefit)
+                        return (
+                          <CheckItem
+                            key={benefit}
+                            label={benefit}
+                            checked={checked}
+                            onClick={() => {
+                              if (isNone) {
+                                update('benefits', checked ? [] : ['None of these'])
+                              } else {
+                                const next = checked
+                                  ? formData.benefits.filter(b => b !== benefit)
+                                  : [...formData.benefits.filter(b => b !== 'None of these'), benefit]
+                                update('benefits', next)
+                              }
+                            }}
+                          />
+                        )
+                      })}
+                    </div>
+                    <BiggerButton onClick={goNext} disabled={!canContinue.benefits} >CONTINUE →</BiggerButton>
                   </div>
                 )}
 
