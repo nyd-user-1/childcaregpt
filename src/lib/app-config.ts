@@ -6,8 +6,7 @@
  */
 
 import {
-  MessageCircle, LayoutDashboard, Rocket, BarChart3, Map,
-  Building2, School, Hash, Landmark, ClipboardList,
+  MessageCircle, LayoutDashboard, Rocket, BarChart3, Map, ClipboardList,
 } from 'lucide-react'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
@@ -33,10 +32,10 @@ export const PATH_NAV: Record<string, string> = {
   '/':          'Chat',
   '/charts':    'Charts',
   '/maps':      'Maps',
-  '/county':    'County',
-  '/facility':  'Facility',
-  '/zip-code':  'Zip Code',
-  '/city':      'City',
+  '/county':    'Counties',
+  '/facility':  'Facilities',
+  '/zip-code':  'Zip Codes',
+  '/city':      'Cities',
   '/launchpad': 'Launchpad',
   '/report':      'Report',
   '/eligibility': 'Eligibility',
@@ -64,10 +63,6 @@ export const SIDEBAR_NAV_TOP: NavItem[] = [
   { label: 'Chat',      icon: MessageCircle,   href: '/'          },
   { label: 'Charts',    icon: LayoutDashboard, href: '/charts'    },
   { label: 'Maps',      icon: Map,             href: '/maps'      },
-  { label: 'County',    icon: Building2,       href: '/county'    },
-  { label: 'Facility',  icon: School,          href: '/facility'  },
-  { label: 'Zip Code',  icon: Hash,            href: '/zip-code'  },
-  { label: 'City',      icon: Landmark,        href: '/city'      },
   { label: 'Launchpad', icon: Rocket,          href: '/launchpad' },
 ]
 
@@ -76,12 +71,15 @@ export const SIDEBAR_NAV_BOTTOM: NavItem[] = [
   { label: 'Eligibility', icon: ClipboardList, href: '/eligibility' },
 ]
 
-export const SIDEBAR_DATA_ITEMS: string[] = [
-  'Counties', 'Cities', 'Facilities', 'Zip Codes',
+export type DataItem = { label: string; href: string }
+
+export const SIDEBAR_DATA_ITEMS: DataItem[] = [
+  { label: 'Counties',   href: '/county'   },
+  { label: 'Cities',     href: '/city'     },
+  { label: 'Facilities', href: '/facility' },
+  { label: 'Zip Codes',  href: '/zip-code' },
 ]
 
-export const SIDEBAR_MAP_ITEMS: string[] = [
-  'NY Counties', 'Cost Map',
-]
+export const SIDEBAR_MAP_ITEMS: DataItem[] = []
 
 export const SIDEBAR_FOOTER_LABEL = 'Glossary'

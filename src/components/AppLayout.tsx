@@ -36,11 +36,11 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
   }, [pathname])
 
   const activeNav = PATH_NAV[pathname] ?? (
-    pathname.startsWith('/county')    ? 'County'    :
-    pathname.startsWith('/facility')  ? 'Facility'  :
-    pathname.startsWith('/zip-code')  ? 'Zip Code'  :
-    pathname.startsWith('/zip/')      ? 'Zip Code'  :
-    pathname.startsWith('/city')      ? 'City'      :
+    pathname.startsWith('/county')    ? 'Counties'  :
+    pathname.startsWith('/facility')  ? 'Facilities':
+    pathname.startsWith('/zip-code')  ? 'Zip Codes' :
+    pathname.startsWith('/zip/')      ? 'Zip Codes' :
+    pathname.startsWith('/city')      ? 'Cities'    :
     pathname.startsWith('/launchpad') ? 'Launchpad' :
     pathname.startsWith('/chart/')    ? 'Charts'    : undefined
   )

@@ -59,10 +59,16 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
             </button>
             {dataOpen && (
               <div className="ml-[30px] border-l border-[var(--border)] pl-3 space-y-0.5">
-                {SIDEBAR_DATA_ITEMS.map(item => (
-                  <div key={item} className="flex items-center rounded-lg px-3 py-2 text-[14px] font-medium text-[var(--muted)] hover:bg-[var(--inp-bg)] hover:text-[var(--txt)] cursor-pointer">
-                    {item}
-                  </div>
+                {SIDEBAR_DATA_ITEMS.map(({ label, href }) => (
+                  <Link key={label} href={href}
+                    className={cn(
+                      'flex items-center rounded-lg px-3 py-2 text-[14px] font-medium transition-colors',
+                      activeLabel === label
+                        ? 'text-[var(--txt)] bg-[var(--inp-bg)]'
+                        : 'text-[var(--muted)] hover:bg-[var(--inp-bg)] hover:text-[var(--txt)]'
+                    )}>
+                    {label}
+                  </Link>
                 ))}
               </div>
             )}
@@ -81,10 +87,11 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
             </button>
             {mapOpen && (
               <div className="ml-[30px] border-l border-[var(--border)] pl-3 space-y-0.5">
-                {SIDEBAR_MAP_ITEMS.map(item => (
-                  <div key={item} className="flex items-center rounded-lg px-3 py-2 text-[14px] font-medium text-[var(--muted)] hover:bg-[var(--inp-bg)] hover:text-[var(--txt)] cursor-pointer">
-                    {item}
-                  </div>
+                {SIDEBAR_MAP_ITEMS.map(({ label, href }) => (
+                  <Link key={label} href={href}
+                    className="flex items-center rounded-lg px-3 py-2 text-[14px] font-medium text-[var(--muted)] hover:bg-[var(--inp-bg)] hover:text-[var(--txt)] transition-colors">
+                    {label}
+                  </Link>
                 ))}
               </div>
             )}
