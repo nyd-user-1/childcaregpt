@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle } from 'lucide-react'
+import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { AppLogo } from '@/components/AppLogo'
 
@@ -220,6 +220,55 @@ function BiggerButton({ children, onClick, disabled = false }: {
 // ─── Assistant Drawer ─────────────────────────────────────────────────────────
 
 type Msg = { id: string; role: 'user' | 'assistant'; content: string }
+
+function CountySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  return (
+    <div className="relative mt-4" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(v => !v)}
+        className={`w-full flex items-center justify-between rounded-xl border-2 bg-white px-4 py-3 text-base transition-all ${
+          open ? 'border-[#0ea5e9] shadow-none' : 'border-gray-200'
+        }`}
+      >
+        <span className={value ? 'text-gray-700' : 'text-gray-400'}>{value || 'Select your county…'}</span>
+        <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] z-20 overflow-hidden border border-gray-100">
+          <div className="max-h-60 overflow-y-auto no-scrollbar">
+            {NY_COUNTIES.map(county => (
+              <button
+                key={county}
+                type="button"
+                onClick={() => { onChange(county); setOpen(false) }}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors border-b border-gray-50 last:border-0 ${
+                  value === county
+                    ? 'bg-sky-50 text-[#0ea5e9] font-medium'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {county}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function AssistantContent({ open, onClose, formData }: {
   open: boolean; onClose: () => void; formData: FormData
@@ -507,14 +556,7 @@ export default function EligibilityPage() {
                       : 'Select your county for other childcare resources near you.'}
                   </p>
 
-                  <select
-                    value={selectedCounty}
-                    onChange={e => setSelectedCounty(e.target.value)}
-                    className="mt-4 w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-base text-gray-700 outline-none focus:border-[#0ea5e9]"
-                  >
-                    <option value="">Select your county…</option>
-                    {NY_COUNTIES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <CountySelect value={selectedCounty} onChange={setSelectedCounty} />
 
                   <button
                     className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white transition-colors"
