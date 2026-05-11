@@ -180,7 +180,7 @@ function ProgressBar({ stepIdx }: { stepIdx: number }) {
   )
 }
 
-function CardOption({ label, selected, onClick }: {
+function BigButton({ label, selected, onClick }: {
   label: string; selected: boolean; onClick: () => void
 }) {
   return (
@@ -199,7 +199,7 @@ function CardOption({ label, selected, onClick }: {
   )
 }
 
-function AccentButton({ children, onClick, disabled = false }: {
+function BiggerButton({ children, onClick, disabled = false }: {
   children: React.ReactNode; onClick?: () => void; disabled?: boolean
 }) {
   return (
@@ -597,9 +597,9 @@ export default function EligibilityPage() {
                       )}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.address}>
+                    <BiggerButton onClick={goNext} disabled={!formData.address}>
                       CHECK MY ELIGIBILITY →
-                    </AccentButton>
+                    </BiggerButton>
                     <p className="mt-2 text-xs text-gray-400">*Screening based on NYS CCAP eligibility criteria. Your answers will not be saved.</p>
                   </div>
                 )}
@@ -610,12 +610,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you have a child younger than 18 with special needs or under court supervision in need of child care?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.childSpecialNeeds === o}
+                        <BigButton key={o} label={o} selected={formData.childSpecialNeeds === o}
                           onClick={() => { update('childSpecialNeeds', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.childSpecialNeeds}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.childSpecialNeeds}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -625,12 +625,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you have a child aged 18 with special needs or under court supervision who attends high school or job-specific training?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.childAged18 === o}
+                        <BigButton key={o} label={o} selected={formData.childAged18 === o}
                           onClick={() => { update('childAged18', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.childAged18}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.childAged18}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -640,12 +640,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you a foster parent in need of care for a foster child?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.fosterParent === o}
+                        <BigButton key={o} label={o} selected={formData.fosterParent === o}
                           onClick={() => { update('fosterParent', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.fosterParent}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.fosterParent}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -655,12 +655,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you work?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.employed === o}
+                        <BigButton key={o} label={o} selected={formData.employed === o}
                           onClick={() => { update('employed', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.employed}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.employed}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -670,12 +670,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you looking for a job or going to a training program for work?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.jobSearchOrTraining === o}
+                        <BigButton key={o} label={o} selected={formData.jobSearchOrTraining === o}
                           onClick={() => { update('jobSearchOrTraining', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.jobSearchOrTraining}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.jobSearchOrTraining}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -685,12 +685,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you participate in activities required by your local Department of Social Services?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.dssActivities === o}
+                        <BigButton key={o} label={o} selected={formData.dssActivities === o}
                           onClick={() => { update('dssActivities', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.dssActivities}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.dssActivities}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -700,12 +700,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you need help paying for child care while attending a trade or vocational program?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.vocationalProgram === o}
+                        <BigButton key={o} label={o} selected={formData.vocationalProgram === o}
                           onClick={() => { update('vocationalProgram', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.vocationalProgram}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.vocationalProgram}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -715,12 +715,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you attending a community college, two-year college, or four-year college?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.college === o}
+                        <BigButton key={o} label={o} selected={formData.college === o}
                           onClick={() => { update('college', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.college}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.college}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -730,12 +730,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you need help paying for child care while taking classes to learn to read, write, do math, or speak English?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.basicEducation === o}
+                        <BigButton key={o} label={o} selected={formData.basicEducation === o}
                           onClick={() => { update('basicEducation', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.basicEducation}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.basicEducation}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -745,12 +745,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you need help paying for child care while taking high school or GED classes?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.hsOrGed === o}
+                        <BigButton key={o} label={o} selected={formData.hsOrGed === o}
                           onClick={() => { update('hsOrGed', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.hsOrGed}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.hsOrGed}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -760,12 +760,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you have family duties that take you away from home?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.familyDuties === o}
+                        <BigButton key={o} label={o} selected={formData.familyDuties === o}
                           onClick={() => { update('familyDuties', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.familyDuties}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.familyDuties}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -775,12 +775,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you need help paying for child care because you are not physically or mentally able to care for a child?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.disability === o}
+                        <BigButton key={o} label={o} selected={formData.disability === o}
                           onClick={() => { update('disability', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.disability}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.disability}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -790,12 +790,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you a victim of domestic violence in need of child care?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.domesticViolence === o}
+                        <BigButton key={o} label={o} selected={formData.domesticViolence === o}
                           onClick={() => { update('domesticViolence', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.domesticViolence}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.domesticViolence}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -805,12 +805,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you currently attending drug or alcohol treatment programs?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.substanceProgram === o}
+                        <BigButton key={o} label={o} selected={formData.substanceProgram === o}
                           onClick={() => { update('substanceProgram', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.substanceProgram}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.substanceProgram}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -820,12 +820,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you currently experiencing homelessness? This can include going through a short-term emergency.</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.homeless === o}
+                        <BigButton key={o} label={o} selected={formData.homeless === o}
                           onClick={() => { update('homeless', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.homeless}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.homeless}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -835,12 +835,12 @@ export default function EligibilityPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you have family resources or assets worth more than one million dollars?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.assets === o}
+                        <BigButton key={o} label={o} selected={formData.assets === o}
                           onClick={() => { update('assets', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.assets}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.assets}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -855,7 +855,7 @@ export default function EligibilityPage() {
                       We know that money is a very private matter, but we need to ask about it to see if you might be able to receive help paying for child care.
                     </p>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -896,7 +896,7 @@ export default function EligibilityPage() {
                         <p className="mt-1.5 text-xs text-gray-400">Include income from work and all other sources for everyone age 18 or older in your household.</p>
                       </div>
                     </div>
-                    <AccentButton onClick={goNext} disabled={!canContinue.income}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!canContinue.income}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -930,9 +930,9 @@ export default function EligibilityPage() {
                         By submitting this form, you agree to receive SMS messages from ChildcareGPT at the phone number provided. Message &amp; data rates may apply. Reply STOP to opt out and HELP for help.
                       </label>
                     </div>
-                    <AccentButton onClick={goNext} disabled={!canContinue.contact}>
+                    <BiggerButton onClick={goNext} disabled={!canContinue.contact}>
                       GET MY ELIGIBILITY RESULTS →
-                    </AccentButton>
+                    </BiggerButton>
                     <p className="mt-3 text-center text-xs text-gray-400">
                       Your answers will not be shared with government agencies without your consent.
                     </p>

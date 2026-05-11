@@ -150,6 +150,18 @@ This is a pixel-perfect port of SolarGPT. When in doubt, read the SolarGPT sourc
 ### Navigation
 `TabGroup` — underline-style tab navigation bar
 
+### Step Forms (`/report`, `/eligibility`)
+| Name | Description |
+|------|-------------|
+| `BigButton` | Large selectable answer tile — 2-col grid, toggles selected (solid accent) / unselected (bordered). Used for every question option (Yes/No, 2-option, 4-option). Same component regardless of grid size. |
+| `BiggerButton` | Full-width primary action button — "CONTINUE →", "GET MY CHILDCARE REPORT →", etc. Solid accent fill, semibold uppercase, disabled state goes gray. |
+| `ProgressBar` | Bottom-of-form step progress bar + percentage label. |
+
+### Tables
+| Name | Description |
+|------|-------------|
+| `ColumnHeader` | Sortable table column label with hover tooltip and optional "Learn more" link. Used in all index page DataTables. |
+
 ### Slot Views (parallel route @detail)
 `DetailSlotCounty` — compact county detail rendered in the `@detail` slot on LaunchpadPage. No map placeholder, no section H2s. Uses same components as `DetailPageCounty`: H1, ButtonGroup, InfoTableCounty, CardLandscapeMini carousel.
 

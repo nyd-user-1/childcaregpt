@@ -119,7 +119,7 @@ function ProgressBar({ stepIdx }: { stepIdx: number }) {
   )
 }
 
-function CardOption({ label, tooltip, selected, onClick }: {
+function BigButton({ label, tooltip, selected, onClick }: {
   label: string; tooltip?: string; selected: boolean; onClick: () => void
 }) {
   return (
@@ -148,7 +148,7 @@ function CardOption({ label, tooltip, selected, onClick }: {
   )
 }
 
-function AccentButton({ children, onClick, disabled = false }: {
+function BiggerButton({ children, onClick, disabled = false }: {
   children: React.ReactNode; onClick?: () => void; disabled?: boolean
 }) {
   return (
@@ -518,9 +518,9 @@ export default function ReportPage() {
                       )}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.address}>
+                    <BiggerButton onClick={goNext} disabled={!formData.address}>
                       GET MY CHILDCARE REPORT →
-                    </AccentButton>
+                    </BiggerButton>
                     <p className="mt-2 text-xs text-gray-400">*Supported by data from NYS OCFS and DOL.</p>
                   </div>
                 )}
@@ -531,12 +531,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">How many children need care?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['1 child', '2 children', '3 children', '4+ children'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.numChildren === o}
+                        <BigButton key={o} label={o} selected={formData.numChildren === o}
                           onClick={() => { update('numChildren', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.numChildren}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.numChildren}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -546,12 +546,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">What are the ages of your children?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Infant (0–12 mo)', 'Toddler (1–3 yr)', 'Preschool (3–5 yr)', 'School-age (5+ yr)'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.ageGroup === o}
+                        <BigButton key={o} label={o} selected={formData.ageGroup === o}
                           onClick={() => { update('ageGroup', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.ageGroup}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.ageGroup}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -561,12 +561,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">What type of care are you looking for?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Full-time', 'Part-time', 'Before & After School', 'Occasional / Drop-in'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.careType === o}
+                        <BigButton key={o} label={o} selected={formData.careType === o}
                           onClick={() => { update('careType', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.careType}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.careType}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -576,11 +576,11 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">What&apos;s your weekly childcare budget?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {Object.keys(BUDGET_MAP).map(o => (
-                        <CardOption key={o} label={o} selected={formData.budget === o}
+                        <BigButton key={o} label={o} selected={formData.budget === o}
                           onClick={() => { update('budget', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
-                    <AccentButton onClick={goNext} disabled={!formData.budget}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.budget}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -590,12 +590,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">When do you need care to start?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['ASAP', '1–3 months', '3–6 months', 'Just exploring'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.startDate === o}
+                        <BigButton key={o} label={o} selected={formData.startDate === o}
                           onClick={() => { update('startDate', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.startDate}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.startDate}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -605,12 +605,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">What matters most in a provider?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Location / Proximity', 'Cost / Affordability', 'Curriculum / Education', 'Flexible Hours'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.priority === o}
+                        <BigButton key={o} label={o} selected={formData.priority === o}
                           onClick={() => { update('priority', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.priority}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.priority}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -620,12 +620,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Are you interested in subsidy assistance?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Yes, definitely', 'Possibly', 'Not sure', 'No'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.subsidy === o}
+                        <BigButton key={o} label={o} selected={formData.subsidy === o}
                           onClick={() => { update('subsidy', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.subsidy}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.subsidy}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -635,12 +635,12 @@ export default function ReportPage() {
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you have a preference for care setting?</h2>
                     <div className="grid grid-cols-2 gap-3">
                       {['Day Care Center', 'Family Day Care', 'Group Family Care', 'No preference'].map(o => (
-                        <CardOption key={o} label={o} selected={formData.settingPref === o}
+                        <BigButton key={o} label={o} selected={formData.settingPref === o}
                           onClick={() => { update('settingPref', o); setTimeout(goNext, 120) }} />
                       ))}
                     </div>
                     <div className="h-[68px]" />
-                    <AccentButton onClick={goNext} disabled={!formData.settingPref}>CONTINUE →</AccentButton>
+                    <BiggerButton onClick={goNext} disabled={!formData.settingPref}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -674,9 +674,9 @@ export default function ReportPage() {
                         By submitting this form, you agree to receive SMS messages from ChildcareGPT at the phone number provided. Message &amp; data rates may apply. Reply STOP to opt out and HELP for help.
                       </label>
                     </div>
-                    <AccentButton onClick={goNext} disabled={!canContinue.contact}>
+                    <BiggerButton onClick={goNext} disabled={!canContinue.contact}>
                       Find My Childcare Options →
-                    </AccentButton>
+                    </BiggerButton>
                     <p className="mt-3 text-center text-xs text-gray-400">
                       By clicking &quot;Find My Childcare Options&quot;, I provide my express consent to be contacted by ChildcareGPT and its partners. Consent is not a condition of service.
                     </p>
