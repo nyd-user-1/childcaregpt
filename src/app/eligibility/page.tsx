@@ -72,7 +72,7 @@ const QUESTION_STEPS = [
   'address',
   'dateOfBirth', 'maritalStatus', 'language',
   'childSpecialNeeds', 'childAged18', 'fosterParent',
-  'employed', 'employerName', 'jobSearchOrTraining', 'dssActivities',
+  'employed', 'jobSearchOrTraining', 'dssActivities',
   'vocationalProgram', 'college', 'basicEducation', 'hsOrGed',
   'familyDuties', 'disability', 'domesticViolence',
   'substanceProgram', 'homeless', 'assets',
@@ -437,28 +437,15 @@ export default function EligibilityPage() {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [smsConsent, setSmsConsent]   = useState(true)
   const [selectedCounty, setSelectedCounty] = useState('')
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const incomeRef    = useRef<HTMLInputElement>(null)
 
   function update<K extends keyof FormData>(k: K, v: FormData[K]) {
     setFormData(prev => ({ ...prev, [k]: v }))
   }
 
-  function resolveNextIdx(from: number): number {
-    let next = from + 1
-    // Skip employerName if not employed
-    if (QUESTION_STEPS[next] === 'employerName' && formData.employed !== 'Yes') next++
-    return next
-  }
-
-  function resolvePrevIdx(from: number): number {
-    let prev = from - 1
-    // Skip back over employerName if not employed
-    if (QUESTION_STEPS[prev] === 'employerName' && formData.employed !== 'Yes') prev--
-    return prev
-  }
-
   function goNext() {
-    const nextIdx = resolveNextIdx(stepIdx)
+    const nextIdx = stepIdx + 1
     setAnimating(true)
     setTimeout(() => {
       if (nextIdx < QUESTION_STEPS.length) {
@@ -482,7 +469,7 @@ export default function EligibilityPage() {
 
   function goBack() {
     if (stepIdx === 0) return
-    const prevIdx = resolvePrevIdx(stepIdx)
+    const prevIdx = stepIdx - 1
     setAnimating(true)
     setTimeout(() => {
       setStep(QUESTION_STEPS[prevIdx])
@@ -521,7 +508,6 @@ export default function EligibilityPage() {
     childAged18:        !!formData.childAged18,
     fosterParent:       !!formData.fosterParent,
     employed:           !!formData.employed,
-    employerName:       true,
     jobSearchOrTraining: !!formData.jobSearchOrTraining,
     dssActivities:      !!formData.dssActivities,
     vocationalProgram:  !!formData.vocationalProgram,
@@ -722,6 +708,7 @@ export default function EligibilityPage() {
                           type="text"
                           value={formData.address}
                           onChange={e => { update('address', e.target.value); update('placeId', ''); fetchSuggestions(e.target.value) }}
+                          onKeyDown={e => { if (e.key === 'Enter' && formData.address) goNext() }}
                           placeholder="Enter an address"
                           className="flex-1 text-lg text-gray-700 outline-none bg-transparent"
                         />
@@ -851,29 +838,27 @@ export default function EligibilityPage() {
                   <div>
                     <h2 className="text-3xl font-bold text-gray-900 mb-6">Do you work?</h2>
                     <div className="grid grid-cols-2 gap-3">
-                      {['Yes', 'No'].map(o => (
-                        <BigButton key={o} label={o} selected={formData.employed === o}
-                          onClick={() => { update('employed', o); setTimeout(goNext, 120) }} />
-                      ))}
+                      <BigButton label="Yes" selected={formData.employed === 'Yes'}
+                        onClick={() => update('employed', 'Yes')} />
+                      <BigButton label="No" selected={formData.employed === 'No'}
+                        onClick={() => { update('employed', 'No'); update('employerName', ''); setTimeout(goNext, 120) }} />
                     </div>
-                    <div className="h-[68px]" />
+                    {formData.employed === 'Yes' && (
+                      <div className="mt-5">
+                        <p className="text-lg font-semibold text-gray-700 mb-3">What is your employer&apos;s name?</p>
+                        <input
+                          type="text"
+                          autoFocus
+                          value={formData.employerName}
+                          onChange={e => update('employerName', e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter') goNext() }}
+                          placeholder="Employer name"
+                          className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
+                        />
+                      </div>
+                    )}
+                    <div className="h-[60px]" />
                     <BiggerButton onClick={goNext} disabled={!formData.employed}>CONTINUE →</BiggerButton>
-                  </div>
-                )}
-
-                {/* EMPLOYER NAME — only shown if employed = Yes */}
-                {currentStep === 'employerName' && (
-                  <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-6">What is your employer&apos;s name?</h2>
-                    <input
-                      type="text"
-                      value={formData.employerName}
-                      onChange={e => update('employerName', e.target.value)}
-                      placeholder="Employer name"
-                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
-                    />
-                    <div className="h-[68px]" />
-                    <BiggerButton onClick={goNext}>CONTINUE →</BiggerButton>
                   </div>
                 )}
 
@@ -1085,8 +1070,10 @@ export default function EligibilityPage() {
                           type="number"
                           min="1"
                           max="20"
+                          autoFocus
                           value={formData.householdSize}
                           onChange={e => update('householdSize', e.target.value)}
+                          onKeyDown={e => { if (e.key === 'Enter' && formData.householdSize) incomeRef.current?.focus() }}
                           placeholder="e.g. 3"
                           className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
                         />
@@ -1098,10 +1085,12 @@ export default function EligibilityPage() {
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400">$</span>
                           <input
+                            ref={incomeRef}
                             type="number"
                             min="0"
                             value={formData.monthlyIncome}
                             onChange={e => update('monthlyIncome', e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && canContinue.income) goNext() }}
                             placeholder="e.g. 3500"
                             className="w-full rounded-xl border-2 border-gray-200 bg-white pl-8 pr-4 py-3 text-lg text-gray-700 placeholder:text-gray-300 outline-none focus:border-[#0ea5e9]"
                           />
