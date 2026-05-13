@@ -721,15 +721,8 @@ export default function ApplicationPage() {
     tf('sig_applicant_print_name',  printName)
     tf('sig_applicant_date_signed', dateSigned)
 
-    // Set all text fields to auto font size (0 = auto in AcroForm spec)
+    // Regenerate appearance streams so checkboxes render visually checked
     const helv = await pdfDoc.embedFont(StandardFonts.Helvetica)
-    form.getFields().forEach(field => {
-      try {
-        const da = field.acroField.getDefaultAppearance() ?? ''
-        // Replace any explicit font size (e.g. "8 Tf") with 0 (auto)
-        field.acroField.setDefaultAppearance(da.replace(/[\d.]+ Tf/, '0 Tf'))
-      } catch {}
-    })
     form.updateFieldAppearances(helv)
 
     const pdfBytes = await pdfDoc.save()
