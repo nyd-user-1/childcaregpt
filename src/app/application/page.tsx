@@ -96,14 +96,16 @@ function formatDob(raw: string): string {
 // ─── Field components ─────────────────────────────────────────────────────────
 
 function Field({
-  label, value, onChange, prefilled = false, placeholder = '', type = 'text', half = false, noUppercase = false,
+  label, value, onChange, prefilled = false, placeholder = '', type = 'text', half = false, noUppercase = false, warned = false,
 }: {
   label: string; value: string; onChange: (v: string) => void
-  prefilled?: boolean; placeholder?: string; type?: string; half?: boolean; noUppercase?: boolean
+  prefilled?: boolean; placeholder?: string; type?: string; half?: boolean; noUppercase?: boolean; warned?: boolean
 }) {
+  const shouldWarn = warned && !value
   return (
     <div className={half ? 'flex-1 min-w-0' : 'w-full'}>
       <label className={`block text-xs font-semibold text-gray-500 mb-1 ${noUppercase ? '' : 'uppercase tracking-wide'}`}>{label}</label>
+      <span className={shouldWarn ? 'warn-pulse rounded-lg block' : 'block'}>
       <input
         type={type}
         value={value}
@@ -115,6 +117,7 @@ function Field({
             : 'border-gray-200 bg-white text-gray-700 focus:border-[#0ea5e9]'
         }`}
       />
+      </span>
     </div>
   )
 }
@@ -304,7 +307,7 @@ export default function ApplicationPage() {
 
   // Household members
   const [members, setMembers] = useState<HouseholdMember[]>(
-    Array.from({ length: 12 }, () => ({ name: '', dob: '', sex: '', relationship: '', needsCare: '', citizen: '', specialNeeds: '', bothParents: '', parentAvailable: 'No', parentReason: '', parentReasonOther: '' }))
+    Array.from({ length: 12 }, (_, i) => ({ name: '', dob: '', sex: '', relationship: i === 0 ? 'Self' : '', needsCare: '', citizen: '', specialNeeds: '', bothParents: '', parentAvailable: 'No', parentReason: '', parentReasonOther: '' }))
   )
   const [visibleRows, setVisibleRows] = useState(4)
 
@@ -317,7 +320,7 @@ export default function ApplicationPage() {
   const [newJobStartDate,        setNewJobStartDate]        = useState('')
   const [jobScheduleChanges,     setJobScheduleChanges]     = useState('No')
   const [workSchedule,           setWorkSchedule]           = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
-  const [multipleJobs,           setMultipleJobs]           = useState('')
+  const [multipleJobs,           setMultipleJobs]           = useState('No')
   const [inTraining,     setInTraining]     = useState('')
   const [trainingName,   setTrainingName]   = useState('')
   const [trainingHours,  setTrainingHours]  = useState('')
@@ -425,7 +428,7 @@ export default function ApplicationPage() {
   useEffect(() => {
     const hasAbsentParent = members.slice(0, visibleRows).some(m => m.needsCare === 'Y' && m.bothParents === 'N')
     const tabSections: Record<number, string[]> = {
-      0: ['about', ...(elig?.benefits?.length ? ['benefits'] : [])],
+      0: ['about', 'benefits'],
       1: [...(!!homeless ? ['circumstances'] : []), 'members', ...(hasAbsentParent ? ['absentParent'] : [])],
       2: ['activities', ...(members.slice(1, visibleRows).some(m => m.name.trim() && m.relationship.toLowerCase().includes('adult')) ? ['activities2'] : [])],
       3: !!incomeAmount ? ['income'] : [],
@@ -761,62 +764,70 @@ export default function ApplicationPage() {
             {/* ── Tab 0: About ── */}
             {activeTab === 0 && (
               <>
-              <SectionCard title="Tell us about yourself." prefilled={true} status={sectionStatus['about']} onConfirm={() => confirmSection('about')} collapsed={collapsedSections.has('about')} onToggle={() => toggleSection('about')}>
+              <SectionCard title="Tell us about yourself." prefilled={true} status={sectionStatus['about']} warned={warnedSections.has('about')} onConfirm={() => {
+                  const ok = firstName && lastName && street && city && stateField && zip && county && phone && dateOfBirth && language && maritalStatus
+                  ok ? confirmSection('about') : warnSection('about')
+                }} collapsed={collapsedSections.has('about')} onToggle={() => toggleSection('about')}>
+                {(() => { const w = warnedSections.has('about'); return (
+                <>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-2"><Field label="First Name" value={firstName} onChange={setFirstName} prefilled={prefilled(firstName)} /></div>
-                  <div className="col-span-2"><Field label="Last Name"  value={lastName}  onChange={setLastName}  prefilled={prefilled(lastName)}  /></div>
+                  <div className="col-span-2"><Field label="First Name" value={firstName} onChange={setFirstName} prefilled={prefilled(firstName)} warned={w} /></div>
+                  <div className="col-span-2"><Field label="Last Name"  value={lastName}  onChange={setLastName}  prefilled={prefilled(lastName)}  warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-2"><Field label="Street Address" value={street} onChange={setStreet} prefilled={prefilled(street)} /></div>
-                  <div className="col-span-1"><Field label="City"  value={city}       onChange={setCity}       prefilled={!!city} placeholder="City" /></div>
-                  <div className="col-span-1"><Field label="State" value={stateField} onChange={setStateField} prefilled={!!stateField} placeholder="NY" /></div>
+                  <div className="col-span-2"><Field label="Street Address" value={street} onChange={setStreet} prefilled={prefilled(street)} warned={w} /></div>
+                  <div className="col-span-1"><Field label="City"  value={city}       onChange={setCity}       prefilled={!!city} placeholder="City" warned={w} /></div>
+                  <div className="col-span-1"><Field label="State" value={stateField} onChange={setStateField} prefilled={!!stateField} placeholder="NY" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-1"><Field label="Zip Code"      value={zip}    onChange={setZip}    prefilled={!!zip} placeholder="00000" /></div>
-                  <div className="col-span-1"><Field label="County"        value={county} onChange={setCounty} prefilled={prefilled(county)} /></div>
-                  <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={v => setPhone(formatPhone(v))}  prefilled={prefilled(phone)} type="tel" /></div>
+                  <div className="col-span-1"><Field label="Zip Code" value={zip} onChange={v => setZip(v.replace(/\D/g,'').slice(0,5))} prefilled={!!zip} placeholder="00000" type="tel" warned={w} /></div>
+                  <div className="col-span-1"><Field label="County"        value={county} onChange={setCounty} prefilled={prefilled(county)} warned={w} /></div>
+                  <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={v => setPhone(formatPhone(v))}  prefilled={prefilled(phone)} type="tel" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-2"><Field label="Email (optional)" value={email}       onChange={setEmail}       prefilled={prefilled(email)} type="email" /></div>
-                  <div className="col-span-2"><Field label="Date of Birth"    value={dateOfBirth} onChange={v => setDateOfBirth(formatDob(v))} prefilled={prefilled(dateOfBirth)} placeholder="MM-DD-YYYY" /></div>
+                  <div className="col-span-2"><Field label="Email (optional)" value={email} onChange={setEmail} prefilled={prefilled(email)} type="email" /></div>
+                  <div className="col-span-2"><Field label="Date of Birth"    value={dateOfBirth} onChange={v => setDateOfBirth(formatDob(v))} prefilled={prefilled(dateOfBirth)} placeholder="MM-DD-YYYY" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2">
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Primary Language</label>
-                    <div className="flex flex-wrap gap-2">
+                    <span className={w && !language ? 'warn-pulse rounded-lg inline-flex flex-wrap gap-2' : 'inline-flex flex-wrap gap-2'}>
                       {['English', 'Spanish', 'Haitian', 'Other'].map(l => (
                         <button key={l} type="button" onClick={() => setLanguage(l)}
                           className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
                             language === l
                               ? 'border-[#0ea5e9] bg-sky-50 text-gray-800'
-                              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm active:ring-2 active:ring-[#0284c7] active:ring-offset-1 active:border-[#0284c7]'
+                              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
                           }`}>
                           {l}
                         </button>
                       ))}
-                    </div>
+                    </span>
                   </div>
                   <div className="col-span-2">
                     <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Marital Status</label>
-                    <div className="flex flex-wrap gap-2">
+                    <span className={w && !maritalStatus ? 'warn-pulse rounded-lg inline-flex flex-wrap gap-2' : 'inline-flex flex-wrap gap-2'}>
                       {['Single', 'Married', 'Divorced', 'Separated', 'Widowed'].map(m => (
                         <button key={m} type="button" onClick={() => setMaritalStatus(m)}
                           className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
                             maritalStatus === m
                               ? 'border-[#0ea5e9] bg-sky-50 text-gray-800'
-                              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm active:ring-2 active:ring-[#0284c7] active:ring-offset-1 active:border-[#0284c7]'
+                              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
                           }`}>
                           {m}
                         </button>
                       ))}
-                    </div>
+                    </span>
                   </div>
                 </div>
+                </>
+                )})()}
               </SectionCard>
 
+              {sectionStatus['about'] === 'confirmed' && (
               <SectionCard
                 title="Do you or any adult applying with you receive any of the following benefits?"
-                prefilled={!!(elig?.benefits?.length)}
+                prefilled={true}
                 status={sectionStatus['benefits']}
                 warned={warnedSections.has('benefits')}
                 onConfirm={() => {
@@ -828,7 +839,7 @@ export default function ApplicationPage() {
               >
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.entries(benefits).map(([label, checked]) => (
-                    <label key={label} className="flex items-center gap-2 cursor-pointer">
+                    <label key={label} className="flex items-center gap-2 cursor-pointer rounded-xl px-2 py-1 -mx-2 -my-1 hover:bg-gray-100 transition-colors">
                       <input
                         type="radio"
                         name={`benefit-${label}`}
@@ -852,6 +863,7 @@ export default function ApplicationPage() {
                   ))}
                 </div>
               </SectionCard>
+              )}
               </>
             )}
 
@@ -861,7 +873,7 @@ export default function ApplicationPage() {
               <SectionCard title="Tell us about your household's circumstances." subtitle="Do any of these apply to you or any adult(s) applying with you?" prefilled={true} status={sectionStatus['circumstances']} warned={warnedSections.has('circumstances')} onConfirm={confirmCircumstances} collapsed={collapsedSections.has('circumstances')} onToggle={() => toggleSection('circumstances')}>
                 <div className="space-y-3">
                   {[
-                    { label: 'Homeless (no fixed, regular and adequate place to stay at night)', val: homeless, set: setHomeless, key: 'homeless', pre: prefilled(homeless) },
+                    { label: 'Homeless (no fixed, regular and adequate place to stay at night)', val: homeless, set: setHomeless, key: 'homeless', pre: false },
                     { label: 'A parent is on active duty (serving full time) in the U.S. Military', val: military, set: setMilitary, key: 'military', pre: false },
                     { label: 'A parent is a member of the National Guard or Military Reserve Unit', val: natGuard, set: setNatGuard, key: 'natGuard', pre: false },
                     { label: 'Receiving or applying for other child care funding', val: otherFunding, set: setOtherFunding, key: 'otherFunding', pre: false },
@@ -1009,24 +1021,23 @@ export default function ApplicationPage() {
                                 </select>
                               </td>
                               <td className="px-2 py-1.5">
-                                <input id={`member-rel-${i}`} value={m.relationship}
-                                  onChange={e => updateMember(i, 'relationship', e.target.value)}
-                                  onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                      if (m.needsCare === 'Y') {
-                                        setTimeout(() => document.getElementById(`member-sn-${i}`)?.focus(), 0)
-                                      } else if (i + 1 < visibleRows) {
-                                        focusNext('nextName')
-                                      } else if (i + 1 < 12) {
-                                        setVisibleRows(v => Math.min(v + 1, 12))
-                                        setTimeout(() => document.getElementById(`member-name-${i + 1}`)?.focus(), 50)
-                                      }
-                                    }
-                                  }}
-                                  placeholder={i === 0 ? 'Self' : 'e.g. Child'} className={cellClass(isPrefilled)} />
+                                {i === 0 ? (
+                                  <input value="Self" readOnly className={`w-full rounded border px-2 py-1 text-xs border-[#0ea5e9] bg-sky-50 text-gray-800 outline-none`} />
+                                ) : (
+                                  <select id={`member-rel-${i}`} value={m.relationship}
+                                    onChange={e => {
+                                      updateMember(i, 'relationship', e.target.value)
+                                      if (e.target.value && m.needsCare === 'Y' && i + 1 < visibleRows) focusNext('nextName')
+                                    }}
+                                    className={selectClass}>
+                                    <option value="">—</option>
+                                    <option value="Child">Child</option>
+                                    <option value="Adult">Adult</option>
+                                  </select>
+                                )}
                               </td>
                             </tr>
-                            {isComplete && m.needsCare === 'Y' && (
+                            {isComplete && m.needsCare === 'Y' && i > 0 && (
                               <tr className={`border-b border-dashed border-gray-100 ${rowBg}`}>
                                 <td className="px-2 py-1.5 text-[#0ea5e9] flex items-center gap-1.5 text-[10px] text-gray-400 italic">
                                   <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-[#0ea5e9]" />
@@ -1201,7 +1212,7 @@ export default function ApplicationPage() {
                         />
                         <input
                           value={hoursPerWeek}
-                          onChange={e => setHoursPerWeek(e.target.value)}
+                          onChange={e => setHoursPerWeek(e.target.value.replace(/\D/g,'').slice(0,3))}
                           placeholder="Total Hours Per Week"
                           className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${
                             hoursPerWeek ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
@@ -1215,25 +1226,37 @@ export default function ApplicationPage() {
                         <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
                           <span className="text-sm text-gray-700">Does your work schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
-                            {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
-                                <input type="radio" name="jobScheduleChanges" value={o} checked={jobScheduleChanges === o}
-                                  onChange={() => setJobScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
-                                {o}
-                              </label>
-                            ))}
+                            {['Yes', 'No'].map(o => {
+                              const isYellow = o === 'No' && !!jobScheduleChanges && !touched.has('jobScheduleChanges')
+                              return (
+                                <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                  <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
+                                    <input type="radio" name="jobScheduleChanges" value={o} checked={jobScheduleChanges === o}
+                                      onChange={() => { setJobScheduleChanges(o); markTouched('jobScheduleChanges') }}
+                                      style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  </span>
+                                  {o}
+                                </label>
+                              )
+                            })}
                           </div>
                         </div>
                         <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
                           <span className="text-sm text-gray-700">Do you have more than one job?</span>
                           <div className="flex gap-4 shrink-0">
-                            {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
-                                <input type="radio" name="multipleJobs" value={o} checked={multipleJobs === o}
-                                  onChange={() => setMultipleJobs(o)} style={{ accentColor: '#0ea5e9' }} />
-                                {o}
-                              </label>
-                            ))}
+                            {['Yes', 'No'].map(o => {
+                              const isYellow = o === 'No' && !!multipleJobs && !touched.has('multipleJobs')
+                              return (
+                                <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                  <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
+                                    <input type="radio" name="multipleJobs" value={o} checked={multipleJobs === o}
+                                      onChange={() => { setMultipleJobs(o); markTouched('multipleJobs') }}
+                                      style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  </span>
+                                  {o}
+                                </label>
+                              )
+                            })}
                           </div>
                         </div>
                       </div>
@@ -1316,7 +1339,7 @@ export default function ApplicationPage() {
                       <div className="grid grid-cols-2 gap-6">
                         <input value={trainingName} onChange={e => setTrainingName(e.target.value)} placeholder="Training Program / Facility Name"
                           className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${trainingName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
-                        <input value={trainingHours} onChange={e => setTrainingHours(e.target.value)} placeholder="Total Hours Per Week"
+                        <input value={trainingHours} onChange={e => setTrainingHours(e.target.value.replace(/\D/g,'').slice(0,3))} placeholder="Total Hours Per Week"
                           className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${trainingHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
                       </div>
                       {trainingName && trainingHours && (
@@ -1326,13 +1349,19 @@ export default function ApplicationPage() {
                         <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
                           <span className="text-sm text-gray-700">Does your training schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
-                            {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
-                                <input type="radio" name="trainingScheduleChanges" value={o} checked={trainingScheduleChanges === o}
-                                  onChange={() => setTrainingScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
-                                {o}
-                              </label>
-                            ))}
+                            {['Yes', 'No'].map(o => {
+                              const isYellow = o === 'No' && !!trainingScheduleChanges && !touched.has('trainingScheduleChanges')
+                              return (
+                                <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
+                                  <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
+                                    <input type="radio" name="trainingScheduleChanges" value={o} checked={trainingScheduleChanges === o}
+                                      onChange={() => { setTrainingScheduleChanges(o); markTouched('trainingScheduleChanges') }}
+                                      style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  </span>
+                                  {o}
+                                </label>
+                              )
+                            })}
                           </div>
                         </div>
                       </div>
@@ -1388,7 +1417,7 @@ export default function ApplicationPage() {
                       <div className="grid grid-cols-2 gap-6">
                         <input value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="School or College Name"
                           className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${schoolName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
-                        <input value={schoolHours} onChange={e => setSchoolHours(e.target.value)} placeholder="Total Hours Per Week"
+                        <input value={schoolHours} onChange={e => setSchoolHours(e.target.value.replace(/\D/g,'').slice(0,3))} placeholder="Total Hours Per Week"
                           className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${schoolHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
                       </div>
                       {schoolName && schoolHours && (
@@ -1398,13 +1427,18 @@ export default function ApplicationPage() {
                         <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
                           <span className="text-sm text-gray-700">Does your class schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
-                            {['Yes', 'No'].map(o => (
+                            {['Yes', 'No'].map(o => {
+                              const isYellow = o === 'No' && !!collegeScheduleChanges && !touched.has('collegeScheduleChanges')
+                              return (
                               <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
+                                <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                 <input type="radio" name="collegeScheduleChanges" value={o} checked={collegeScheduleChanges === o}
-                                  onChange={() => setCollegeScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                  onChange={() => { setCollegeScheduleChanges(o); markTouched('collegeScheduleChanges') }} style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                </span>
                                 {o}
                               </label>
-                            ))}
+                              )
+                            })}
                           </div>
                         </div>
                       </div>
