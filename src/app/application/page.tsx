@@ -463,7 +463,7 @@ export default function ApplicationPage() {
       0: ['about', 'benefits'],
       1: [...(!!homeless ? ['circumstances'] : []), 'members', ...(hasAbsentParent ? ['absentParent'] : [])],
       2: ['activities', ...(members.slice(1, visibleRows).some(m => m.name.trim() && m.relationship.toLowerCase().includes('adult')) ? ['activities2'] : [])],
-      3: !!incomeAmount ? ['income'] : [],
+      3: ['income'],
     }
     const required = tabSections[activeTab] ?? []
     if (required.length > 0 && required.every(k => sectionStatus[k] === 'confirmed')) {
@@ -477,13 +477,15 @@ export default function ApplicationPage() {
     setTouched(prev => { const next = new Set(prev); next.add(key); return next })
   }
 
-  // Auto-populate Who? fields with applicant name; update as name is typed (tracks prev auto-value so manual edits are preserved)
+  // Auto-populate Who? fields when user arrives at income tab (name is complete by then; avoids per-keystroke firing)
   useEffect(() => {
+    if (activeTab !== 3) return
     const fullName = `${firstName} ${lastName}`.trim()
+    if (!fullName) return
     const prev = lastAutoWho1.current
     setIncomeWho1(cur => Object.fromEntries(Object.entries(cur).map(([k, v]) => [k, (v === prev || v === '') ? fullName : v])))
     lastAutoWho1.current = fullName
-  }, [firstName, lastName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Load & pre-fill from eligibility ────────────────────────────────────
   useEffect(() => {
