@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { NY_COUNTIES } from '@/lib/ny-counties'
@@ -136,7 +136,6 @@ function SkeletonCard() {
 
 export function ProviderSection() {
   const pathname = usePathname()
-  const router = useRouter()
   const [activeTab, setActiveTab] = useState(0)
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [fetchedFor, setFetchedFor] = useState<{ county: string | null; tab: number }>({ county: null, tab: 0 })
@@ -189,9 +188,9 @@ export function ProviderSection() {
             {facilities.map((f, i) => {
               const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
               return (
-                <button key={f.facility_id}
-                  onClick={() => slug && router.push(`/launchpad/${slug}?facility=${f.facility_id}`, { scroll: false })}
-                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md text-left"
+                <Link key={f.facility_id}
+                  href={`/facility/${f.profile_url ?? f.facility_id}`}
+                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md"
                   style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
                   <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2 py-1">
@@ -201,7 +200,7 @@ export function ProviderSection() {
                     <p className="text-sm font-bold text-white leading-snug">{f.facility_name}</p>
                     <p className="text-[10px] text-white/70">{f.city}</p>
                   </div>
-                </button>
+                </Link>
               )
             })}
           </div>
