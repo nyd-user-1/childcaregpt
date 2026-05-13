@@ -42,14 +42,19 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
     pathname.startsWith('/zip/')      ? 'Zip Codes' :
     pathname.startsWith('/city')      ? 'Cities'    :
     pathname.startsWith('/launchpad') ? 'Launchpad' :
+    pathname.startsWith('/console')   ? 'Console'   :
     pathname.startsWith('/chart/')    ? 'Charts'    : undefined
   )
   const title = PATH_TITLE[pathname] ?? (
     pathname.startsWith('/launchpad') ? 'Launchpad' :
+    pathname.startsWith('/console')   ? 'Console'   :
     pathname.startsWith('/chart/')    ? 'Charts'    : undefined
   )
 
-  const navIdx  = NAV_CYCLE.indexOf(pathname)
+  // For sub-routes (e.g. /console/suffolk, /launchpad/albany), find the parent NAV_CYCLE entry
+  const navIdx = NAV_CYCLE.indexOf(pathname) !== -1
+    ? NAV_CYCLE.indexOf(pathname)
+    : NAV_CYCLE.findIndex(p => p !== '/' && pathname.startsWith(p + '/'))
   const n       = NAV_CYCLE.length
   const prevNav = navIdx >= 0 ? NAV_CYCLE[(navIdx - 1 + n) % n] : null
   const nextNav = navIdx >= 0 ? NAV_CYCLE[(navIdx + 1) % n]     : null

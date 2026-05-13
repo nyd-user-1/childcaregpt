@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { NY_COUNTIES } from '@/lib/ny-counties'
 import { cn } from '@/lib/utils'
@@ -12,6 +13,11 @@ export default function ConsolePage() {
   const router = useRouter()
   const pathname = usePathname()
   const activeSlug = pathname.startsWith('/console/') ? pathname.split('/console/')[1].split('?')[0] : null
+
+  // Default to Suffolk on initial load
+  useEffect(() => {
+    if (pathname === '/console') router.replace('/console/suffolk', { scroll: false })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="w-[44%] min-w-0 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden flex flex-col">
