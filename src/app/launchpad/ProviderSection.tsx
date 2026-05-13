@@ -191,7 +191,7 @@ export function ProviderSection() {
               const facilitySlug = f.profile_url ?? f.facility_id
               return (
                 <button key={f.facility_id}
-                  onClick={() => slug && router.push(`/launchpad/${slug}/${facilitySlug}`, { scroll: false })}
+                  onClick={() => slug && router.push(`/launchpad/${slug}?facility=${encodeURIComponent(facilitySlug)}`, { scroll: false })}
                   className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md text-left"
                   style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
