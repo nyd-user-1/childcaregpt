@@ -1291,6 +1291,7 @@ export default function ApplicationPage() {
                                   <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                     <input type="radio" name="jobScheduleChanges" value={o} checked={jobScheduleChanges === o}
                                       onChange={() => { setJobScheduleChanges(o); markTouched('jobScheduleChanges') }}
+                                      onClick={() => { setJobScheduleChanges(o); markTouched('jobScheduleChanges') }}
                                       style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
                                   </span>
                                   {o}
@@ -1309,6 +1310,7 @@ export default function ApplicationPage() {
                                   <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                     <input type="radio" name="multipleJobs" value={o} checked={multipleJobs === o}
                                       onChange={() => { setMultipleJobs(o); markTouched('multipleJobs') }}
+                                      onClick={() => { setMultipleJobs(o); markTouched('multipleJobs') }}
                                       style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
                                   </span>
                                   {o}
@@ -1414,6 +1416,7 @@ export default function ApplicationPage() {
                                   <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                     <input type="radio" name="trainingScheduleChanges" value={o} checked={trainingScheduleChanges === o}
                                       onChange={() => { setTrainingScheduleChanges(o); markTouched('trainingScheduleChanges') }}
+                                      onClick={() => markTouched('trainingScheduleChanges')}
                                       style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
                                   </span>
                                   {o}
@@ -1491,7 +1494,9 @@ export default function ApplicationPage() {
                               <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
                                 <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                 <input type="radio" name="collegeScheduleChanges" value={o} checked={collegeScheduleChanges === o}
-                                  onChange={() => { setCollegeScheduleChanges(o); markTouched('collegeScheduleChanges') }} style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  onChange={() => { setCollegeScheduleChanges(o); markTouched('collegeScheduleChanges') }}
+                                  onClick={() => markTouched('collegeScheduleChanges')}
+                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
                                 </span>
                                 {o}
                               </label>
