@@ -388,8 +388,9 @@ export default function ApplicationPage() {
   }
 
   // Signature
-  const [printName,      setPrintName]      = useState('')
-  const [dateSigned,     setDateSigned]     = useState('')
+  const [printName,          setPrintName]          = useState('')
+  const [dateSigned,         setDateSigned]         = useState('')
+  const [attestationChecked, setAttestationChecked] = useState(false)
 
   // Confirmation tracking
   const [touched, setTouched] = useState<Set<string>>(new Set())
@@ -702,22 +703,27 @@ export default function ApplicationPage() {
     tf('college_sched_thu', classSchedule['thu']); tf('college_sched_fri', classSchedule['fri'])
     tf('college_sched_sat', classSchedule['sat'])
 
-    // ── PAGE 4 ───────────────────────────────────────────────────────────────
+    // ── PAGE 4: Income ───────────────────────────────────────────────────────
     const incomeSources: [string, string][] = [
       ['work', 'work'], ['selfEmp', 'self_employment'], ['childSupport', 'child_support'],
       ['alimony', 'alimony'], ['unemp', 'unemployment'], ['ssa', 'social_security'],
       ['disability', 'disability'], ['rental', 'rental'], ['dividends', 'dividends'],
-      ['pension', 'pensions'], ['pa', 'public_assistance'],
+      ['pension', 'pensions'], ['pa', 'public_assistance'], ['other', 'other'],
     ]
     incomeSources.forEach(([key, field]) => {
-      yn(`income_${field}`, incomeSelections[key] === 'yes' ? 'Yes' : 'No')
+      cb(`income_${field}_yes`, incomeSelections[key] === 'yes')
+      cb(`income_${field}_no`,  incomeSelections[key] === 'no')
+      tf(`income_${field}_who1`,   incomeWho1[key] || '')
+      tf(`income_${field}_amount1`, incomeAmt1[key] || (key === 'work' && incomeAmount ? `$${Number(incomeAmount).toLocaleString()}` : ''))
+      tf(`income_${field}_period1`, incomePer1[key] || (key === 'work' ? incomePeriod || '' : ''))
+      tf(`income_${field}_who2`,   incomeWho2[key] || '')
+      tf(`income_${field}_amount2`, incomeAmt2[key] || '')
+      tf(`income_${field}_period2`, incomePer2[key] || '')
     })
-    if (incomeAmount) {
-      tf('income_work_amount1', `$${Number(incomeAmount).toLocaleString()}`)
-      tf('income_work_period1', incomePeriod || '')
-    }
+    if (incomeOtherLabel) tf('income_other_label', incomeOtherLabel)
 
-    // ── SIGNATURE ────────────────────────────────────────────────────────────
+    // ── PAGE 5: Signature ─────────────────────────────────────────────────────
+    cb('attestation_agree', attestationChecked)
     tf('sig_applicant_print_name',  printName)
     tf('sig_applicant_date_signed', dateSigned)
 
@@ -1857,7 +1863,10 @@ export default function ApplicationPage() {
                 <SectionCard title="Attestation and Signature">
                   <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-xs text-gray-600 leading-relaxed space-y-2">
                     <p>By submitting this application, I agree that I have read and understand the notices above, I want to apply for child care assistance, and I have been honest on this application to the best of my knowledge.</p>
-                    <p className="font-semibold">I attest that the information I provided on this application is correct and complete to the best of my knowledge.</p>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" checked={attestationChecked} onChange={e => setAttestationChecked(e.target.checked)} style={{ accentColor: '#0ea5e9' }} className="mt-0.5 shrink-0" />
+                      <span className="font-semibold">I attest that the information I provided on this application is correct and complete to the best of my knowledge.</span>
+                    </label>
                   </div>
                   <Row>
                     <Field label="Print Name" value={printName} onChange={setPrintName} prefilled={prefilled(printName)} half />
