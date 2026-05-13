@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# data / working files — not source code
+*.csv
+/*.pdf
+/For Review/
