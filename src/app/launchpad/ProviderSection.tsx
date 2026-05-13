@@ -121,23 +121,38 @@ const PROVIDER_TABS = [
   'Small Day Care Center',
 ]
 
+function SkeletonCard() {
+  return (
+    <div className="aspect-[4/3] rounded-2xl overflow-hidden relative bg-gray-200 animate-pulse">
+      <div className="absolute inset-0 bg-gradient-to-t from-gray-300/60 via-transparent to-transparent" />
+      <div className="absolute top-3 right-3 w-9 h-5 rounded-full bg-gray-300" />
+      <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 space-y-1.5">
+        <div className="h-3 w-3/4 rounded-full bg-gray-300" />
+        <div className="h-2 w-1/3 rounded-full bg-gray-300" />
+      </div>
+    </div>
+  )
+}
+
 export function ProviderSection() {
   const pathname = usePathname()
   const [activeTab, setActiveTab] = useState(0)
   const [facilities, setFacilities] = useState<Facility[]>([])
-  const [loading, setLoading] = useState(false)
+  const [fetchedFor, setFetchedFor] = useState<{ county: string | null; tab: number }>({ county: null, tab: 0 })
 
   const slug = pathname.startsWith('/launchpad/') ? pathname.slice('/launchpad/'.length) : null
   const countyRow = slug ? NY_COUNTIES.find(c => c.slug === slug) : null
   const county = countyRow?.county ?? null
 
+  // isStale is true the moment county or tab changes — shows skeleton immediately without waiting for useEffect
+  const isStale = county !== null && (fetchedFor.county !== county || fetchedFor.tab !== activeTab)
+
   useEffect(() => {
-    if (!county) { setFacilities([]); return }
-    setLoading(true)
+    if (!county) { setFacilities([]); setFetchedFor({ county: null, tab: activeTab }); return }
     fetch(`/api/facilities?county=${encodeURIComponent(county)}&program_type=${PROGRAM_TYPES[activeTab]}&limit=200`)
       .then(r => r.json())
-      .then(d => { setFacilities(d.data ?? []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then(d => { setFacilities(d.data ?? []); setFetchedFor({ county, tab: activeTab }) })
+      .catch(() => setFetchedFor({ county, tab: activeTab }))
   }, [county, activeTab])
 
   const label = PROVIDER_TABS[activeTab]
@@ -160,11 +175,9 @@ export function ProviderSection() {
       </div>
 
       {county ? (
-        loading ? (
+        isStale ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[4/3] rounded-2xl bg-gray-100 animate-pulse" />
-            ))}
+            {Array.from({ length: 12 }).map((_, i) => <SkeletonCard key={i} />)}
           </div>
         ) : facilities.length === 0 ? (
           <p className="text-sm text-[var(--muted)] py-8 text-center">
