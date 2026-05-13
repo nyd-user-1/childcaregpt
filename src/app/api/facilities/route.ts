@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         program_type, facility_status, total_capacity,
         infant_capacity, toddler_capacity, preschool_capacity,
         school_age_capacity, provider_name, license_expiration_date,
-        profile_url, phone_number
+        profile_url, phone_number, latitude, longitude
       FROM facilities
       WHERE facility_id = ${facilityId}
       LIMIT 1
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
             program_type, facility_status, total_capacity,
             infant_capacity, toddler_capacity, preschool_capacity,
             school_age_capacity, provider_name, license_expiration_date,
-            profile_url
+            profile_url, latitude, longitude
           FROM facilities
           WHERE (
             facility_name ILIKE ${pattern}
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest) {
             program_type, facility_status, total_capacity,
             infant_capacity, toddler_capacity, preschool_capacity,
             school_age_capacity, provider_name, license_expiration_date,
-            profile_url
+            profile_url, latitude, longitude
           FROM facilities
           WHERE
             (${county}::text      IS NULL OR county         ILIKE ${county})

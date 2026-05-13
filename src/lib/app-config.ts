@@ -6,7 +6,7 @@
  */
 
 import {
-  MessageCircle, LayoutDashboard, Rocket, BarChart3, Map, ClipboardList,
+  MessageCircle, LayoutDashboard, Rocket, BarChart3, Map, ClipboardList, MonitorDot,
 } from 'lucide-react'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
@@ -25,6 +25,7 @@ export const NAV_CYCLE = [
   '/zip-code',
   '/city',
   '/launchpad',
+  '/console',
 ]
 
 // ── Sidebar active-label lookup (exact path → label) ──────────────────────
@@ -37,6 +38,7 @@ export const PATH_NAV: Record<string, string> = {
   '/zip-code':  'Zip Codes',
   '/city':      'Cities',
   '/launchpad': 'Launchpad',
+  '/console':   'Console',
   '/report':      'Report',
   '/eligibility': 'Eligibility',
   '/glossary':    'Glossary',
@@ -51,6 +53,7 @@ export const PATH_TITLE: Record<string, string> = {
   '/zip-code':    'ZIP Codes',
   '/city':        'Cities',
   '/launchpad':   'Launchpad',
+  '/console':     'Console',
   '/report':       'Report',
   '/eligibility':  'Eligibility',
   '/application':  'Application',
@@ -65,6 +68,7 @@ export const SIDEBAR_NAV_TOP: NavItem[] = [
   { label: 'Charts',    icon: LayoutDashboard, href: '/charts'    },
   { label: 'Maps',      icon: Map,             href: '/maps'      },
   { label: 'Launchpad', icon: Rocket,          href: '/launchpad' },
+  { label: 'Console',   icon: MonitorDot,      href: '/console'   },
 ]
 
 export const SIDEBAR_NAV_BOTTOM: NavItem[] = [
