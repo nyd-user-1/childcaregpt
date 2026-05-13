@@ -96,10 +96,10 @@ function formatDob(raw: string): string {
 // ─── Field components ─────────────────────────────────────────────────────────
 
 function Field({
-  label, value, onChange, prefilled = false, placeholder = '', type = 'text', half = false, noUppercase = false, warned = false,
+  label, value, onChange, prefilled = false, placeholder = '', type = 'text', half = false, noUppercase = false, warned = false, id,
 }: {
   label: string; value: string; onChange: (v: string) => void
-  prefilled?: boolean; placeholder?: string; type?: string; half?: boolean; noUppercase?: boolean; warned?: boolean
+  prefilled?: boolean; placeholder?: string; type?: string; half?: boolean; noUppercase?: boolean; warned?: boolean; id?: string
 }) {
   const shouldWarn = warned && !value
   return (
@@ -107,6 +107,7 @@ function Field({
       <label className={`block text-xs font-semibold text-gray-500 mb-1 ${noUppercase ? '' : 'uppercase tracking-wide'}`}>{label}</label>
       <span className={shouldWarn ? 'warn-pulse rounded-lg block' : 'block'}>
       <input
+        id={id}
         type={type}
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -139,9 +140,9 @@ function CheckField({ label, checked, onChange, prefilled = false }: {
   )
 }
 
-function SectionCard({ title, subtitle, prefilled, status, warned, onConfirm, collapsed, onToggle, children }: {
+function SectionCard({ title, subtitle, prefilled, status, warned, ready, onConfirm, collapsed, onToggle, children }: {
   title: string; subtitle?: string; prefilled?: boolean
-  status?: 'confirmed' | 'flagged'; warned?: boolean; onConfirm?: () => void
+  status?: 'confirmed' | 'flagged'; warned?: boolean; ready?: boolean; onConfirm?: () => void
   collapsed?: boolean; onToggle?: () => void; children: React.ReactNode
 }) {
   const hasStatus = !!status
@@ -166,6 +167,8 @@ function SectionCard({ title, subtitle, prefilled, status, warned, onConfirm, co
                   ? 'bg-yellow-50 border-yellow-400 text-yellow-600 cursor-pointer ring-2 ring-yellow-300 ring-offset-1'
                   : warned
                   ? 'bg-yellow-50 border-yellow-400 text-yellow-600 cursor-pointer warn-pulse'
+                  : ready
+                  ? 'bg-sky-50 border-[#0ea5e9] text-[#0ea5e9] cursor-pointer ready-pulse'
                   : 'bg-sky-50 border-[#0ea5e9] text-[#0ea5e9] cursor-pointer hover:bg-sky-100 hover:ring-2 hover:ring-[#0ea5e9] hover:ring-offset-1'
               }`}
             >
@@ -365,11 +368,18 @@ export default function ApplicationPage() {
   const [incomeAmount,   setIncomeAmount]   = useState('')
   const [incomePeriod,   setIncomePeriod]   = useState('month')
 
-  const INCOME_KEYS = ['work', 'selfEmp', 'childSupport', 'alimony', 'unemp', 'ssa', 'disability', 'rental', 'dividends', 'pension', 'pa']
+  const INCOME_KEYS = ['work', 'selfEmp', 'childSupport', 'alimony', 'unemp', 'ssa', 'disability', 'rental', 'dividends', 'pension', 'pa', 'other']
   const [incomeSelections, setIncomeSelections] = useState<Record<string, 'yes' | 'no'>>(() =>
     Object.fromEntries(INCOME_KEYS.map(k => [k, 'no'])) as Record<string, 'yes' | 'no'>
   )
   const [incomeConfirmed, setIncomeConfirmed] = useState<Set<string>>(new Set())
+  const [incomeWho1,   setIncomeWho1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomeAmt1,   setIncomeAmt1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomePer1,   setIncomePer1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomeWho2,   setIncomeWho2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomeAmt2,   setIncomeAmt2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomePer2,   setIncomePer2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomeOtherLabel, setIncomeOtherLabel] = useState('')
 
   function selectIncome(key: string, val: 'yes' | 'no') {
     setIncomeSelections(prev => ({ ...prev, [key]: val }))
@@ -417,7 +427,7 @@ export default function ApplicationPage() {
   // Auto-confirm warned sections once their yellow items are all clicked
   useEffect(() => {
     if (warnedSections.has('circumstances') && ['military','natGuard','otherFunding'].every(k => touched.has(k))) confirmSection('circumstances')
-    if (warnedSections.has('activities') && ['lookingForWork','inTraining','inCollege'].every(k => touched.has(k))) confirmSection('activities')
+    if (warnedSections.has('activities') && checkActivitiesOk()) confirmSection('activities')
   }, [touched]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -538,6 +548,18 @@ export default function ApplicationPage() {
 
   const hasPrefill = !!elig
   const prefilled = (val: string) => filled(val)
+
+  function checkActivitiesOk() {
+    if (inTraining === '' || inCollege === '') return false
+    if (inTraining === 'No' && startingTraining === '') return false
+    if (inCollege === 'No' && startingCollege === '') return false
+    if (employed === 'No' || employed === '') {
+      if (startingNewJob === '') return false
+      if (startingNewJob === 'No' && lookingForWork === '') return false
+    }
+    return true
+  }
+
   const hasOtherAdult = members.slice(1, visibleRows).some(m => m.name.trim() && m.relationship.toLowerCase().includes('adult'))
 
   function rowStyle(_key: string, _val: string): string {
@@ -697,8 +719,15 @@ export default function ApplicationPage() {
     tf('sig_applicant_print_name',  printName)
     tf('sig_applicant_date_signed', dateSigned)
 
-    // Regenerate appearance streams so checkboxes render visually checked
+    // Set all text fields to auto font size (0 = auto in AcroForm spec)
     const helv = await pdfDoc.embedFont(StandardFonts.Helvetica)
+    form.getFields().forEach(field => {
+      try {
+        const da = field.acroField.getDefaultAppearance() ?? ''
+        // Replace any explicit font size (e.g. "8 Tf") with 0 (auto)
+        field.acroField.setDefaultAppearance(da.replace(/[\d.]+ Tf/, '0 Tf'))
+      } catch {}
+    })
     form.updateFieldAppearances(helv)
 
     const pdfBytes = await pdfDoc.save()
@@ -756,6 +785,8 @@ export default function ApplicationPage() {
             .slide-back    { animation: slideInLeft  0.38s ease-out; }
             @keyframes warn-pulse { 0%, 100% { box-shadow: 0 0 0 2px rgba(234,179,8,0.5); } 50% { box-shadow: 0 0 0 5px rgba(234,179,8,0.08); } }
             .warn-pulse { animation: warn-pulse 1.4s ease-in-out infinite; }
+            @keyframes ready-pulse { 0%, 100% { box-shadow: 0 0 0 2px rgba(14,165,233,0.6); } 50% { box-shadow: 0 0 0 5px rgba(14,165,233,0.1); } }
+            .ready-pulse { animation: ready-pulse 1.4s ease-in-out infinite; }
           `}</style>
 
           <div key={animKey} className={slideDir === 'forward' ? 'slide-forward' : 'slide-back'}>
@@ -764,7 +795,7 @@ export default function ApplicationPage() {
             {/* ── Tab 0: About ── */}
             {activeTab === 0 && (
               <>
-              <SectionCard title="Tell us about yourself." prefilled={true} status={sectionStatus['about']} warned={warnedSections.has('about')} onConfirm={() => {
+              <SectionCard title="Tell us about yourself." prefilled={true} status={sectionStatus['about']} warned={warnedSections.has('about')} ready={!sectionStatus['about'] && !warnedSections.has('about') && !!(firstName && lastName && street && city && stateField && zip && county && phone && dateOfBirth && language && maritalStatus)} onConfirm={() => {
                   const ok = firstName && lastName && street && city && stateField && zip && county && phone && dateOfBirth && language && maritalStatus
                   ok ? confirmSection('about') : warnSection('about')
                 }} collapsed={collapsedSections.has('about')} onToggle={() => toggleSection('about')}>
@@ -780,8 +811,8 @@ export default function ApplicationPage() {
                   <div className="col-span-1"><Field label="State" value={stateField} onChange={setStateField} prefilled={!!stateField} placeholder="NY" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-1"><Field label="Zip Code" value={zip} onChange={v => setZip(v.replace(/\D/g,'').slice(0,5))} prefilled={!!zip} placeholder="00000" type="tel" warned={w} /></div>
-                  <div className="col-span-1"><Field label="County"        value={county} onChange={setCounty} prefilled={prefilled(county)} warned={w} /></div>
+                  <div className="col-span-1"><Field label="Zip Code" value={zip} onChange={v => { const z = v.replace(/\D/g,'').slice(0,5); setZip(z); if (z.length === 5) setTimeout(() => document.getElementById('county-field')?.focus(), 0) }} prefilled={!!zip} placeholder="00000" type="tel" warned={w} /></div>
+                  <div className="col-span-1"><Field id="county-field" label="County" value={county} onChange={setCounty} prefilled={prefilled(county)} warned={w} /></div>
                   <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={v => setPhone(formatPhone(v))}  prefilled={prefilled(phone)} type="tel" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
@@ -1178,7 +1209,7 @@ export default function ApplicationPage() {
             {/* ── Tab 2: Job / Activities ── */}
             {activeTab === 2 && (
               <>
-              <SectionCard title="Tell us about your job and other activities." prefilled={true} status={sectionStatus['activities']} warned={warnedSections.has('activities')} onConfirm={() => { const ok = ['lookingForWork','inTraining','inCollege'].every(k => touched.has(k)); ok ? confirmSection('activities') : warnSection('activities') }}>
+              <SectionCard title="Tell us about your job and other activities." prefilled={true} status={sectionStatus['activities']} warned={warnedSections.has('activities')} onConfirm={() => { checkActivitiesOk() ? confirmSection('activities') : warnSection('activities') }}>
 
                 {/* Employment — three bordered rows */}
                 <div className="space-y-3">
@@ -1700,21 +1731,29 @@ export default function ApplicationPage() {
 
             {/* ── Tab 3: Household Income ── */}
             {activeTab === 3 && (
-              <SectionCard title="Tell us about your household income." prefilled={!!incomeAmount} status={sectionStatus['income']} onConfirm={() => confirmSection('income')}>
+              <SectionCard title="Tell us about your household income." prefilled={true} status={sectionStatus['income']} onConfirm={() => confirmSection('income')}>
                 <div className="overflow-x-auto -mx-2">
-                  <table className="w-full text-sm min-w-[600px]">
+                  <table className="w-full text-sm min-w-[900px]">
                     <thead>
                       <tr className="border-b border-gray-100">
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500">Income Source</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-12">Yes</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-12">No</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-32">Gross Amount</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-28">Period</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-500" rowSpan={2}>Income Source</th>
+                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10" rowSpan={2}>Yes</th>
+                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10" rowSpan={2}>No</th>
+                        <th className="text-center px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>Person 1</th>
+                        <th className="text-center px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>Person 2</th>
+                      </tr>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>
                       </tr>
                     </thead>
                     <tbody>
                       {[
-                        { label: 'Income From Work (wages, salary, overtime, tips)', key: 'work', preAmt: incomeAmount, prePeriod: incomePeriod },
+                        { label: 'Income From Work (wages, salary, overtime, tips)', key: 'work' },
                         { label: 'Net Self-Employment Income', key: 'selfEmp' },
                         { label: 'Child Support Payments (received)', key: 'childSupport' },
                         { label: 'Alimony / Spousal Support (received)', key: 'alimony' },
@@ -1725,50 +1764,82 @@ export default function ApplicationPage() {
                         { label: 'Dividends / Interest / Stocks / Bonds', key: 'dividends' },
                         { label: 'Pensions / Annuities', key: 'pension' },
                         { label: 'Public Assistance / Safety Net Benefits', key: 'pa' },
-                      ].map(({ label, key, preAmt, prePeriod }) => {
-                        const isPre = !!preAmt
-                        return (
-                          <tr key={key} className={`border-b border-gray-50 ${isPre ? 'bg-sky-50' : ''}`}>
-                            <td className={`px-3 py-2 text-sm ${isPre ? 'font-medium text-[#0ea5e9]' : 'text-gray-700'}`}>
-                              {label}
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                                <input type="radio" name={key} value="yes"
-                                  checked={incomeSelections[key] === 'yes'}
-                                  onChange={() => selectIncome(key, 'yes')}
-                                  style={{ accentColor: '#0ea5e9' }} />
-                              </label>
-                            </td>
-                            <td className="px-3 py-2 text-center">
-                              <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                                <input type="radio" name={key} value="no"
-                                  checked={incomeSelections[key] === 'no'}
-                                  onChange={() => selectIncome(key, 'no')}
-                                  onClick={() => selectIncome(key, 'no')}
-                                  style={{ accentColor: incomeConfirmed.has(key) ? '#0ea5e9' : '#eab308' }} />
-                              </label>
-                            </td>
-                            <td className="px-3 py-2">
-                              <input
-                                defaultValue={preAmt ? `$${Number(preAmt).toLocaleString()}` : ''}
-                                placeholder="$0"
-                                className={`w-full rounded border px-2 py-1 text-sm outline-none ${isPre ? 'border-[#0ea5e9] bg-sky-50' : 'border-gray-200 focus:border-[#0ea5e9]'}`}
-                              />
-                            </td>
-                            <td className="px-3 py-2">
-                              <select defaultValue={prePeriod || ''}
-                                className="w-full rounded border border-gray-200 px-1 py-1 text-sm outline-none focus:border-[#0ea5e9]">
-                                <option value="">—</option>
-                                <option value="week">Weekly</option>
-                                <option value="biweek">Bi-weekly</option>
-                                <option value="month">Monthly</option>
-                                <option value="year">Annual</option>
-                              </select>
-                            </td>
-                          </tr>
-                        )
-                      })}
+                      ].map(({ label, key }) => (
+                        <tr key={key} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="px-3 py-2 text-sm text-gray-700">{label}</td>
+                          <td className="px-3 py-2 text-center">
+                            <label className="inline-flex items-center justify-center p-2 cursor-pointer">
+                              <input type="radio" name={key} value="yes" checked={incomeSelections[key] === 'yes'} onChange={() => selectIncome(key, 'yes')} style={{ accentColor: '#0ea5e9' }} />
+                            </label>
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <label className="inline-flex items-center justify-center p-2 cursor-pointer">
+                              <input type="radio" name={key} value="no" checked={incomeSelections[key] === 'no'} onChange={() => selectIncome(key, 'no')} style={{ accentColor: incomeConfirmed.has(key) ? '#0ea5e9' : '#eab308' }} />
+                            </label>
+                          </td>
+                          <td className="px-2 py-1.5 border-l border-gray-100">
+                            <input value={incomeWho1[key]} onChange={e => setIncomeWho1(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <input value={incomeAmt1[key]} onChange={e => setIncomeAmt1(p => ({...p, [key]: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <select value={incomePer1[key]} onChange={e => setIncomePer1(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                              <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
+                            </select>
+                          </td>
+                          <td className="px-2 py-1.5 border-l border-gray-100">
+                            <input value={incomeWho2[key]} onChange={e => setIncomeWho2(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <input value={incomeAmt2[key]} onChange={e => setIncomeAmt2(p => ({...p, [key]: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          </td>
+                          <td className="px-2 py-1.5">
+                            <select value={incomePer2[key]} onChange={e => setIncomePer2(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                              <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
+                            </select>
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Other row */}
+                      <tr className="border-b border-gray-50 hover:bg-gray-50">
+                        <td className="px-3 py-2 text-sm text-gray-700 flex items-center gap-2">
+                          <span className="shrink-0">Other</span>
+                          <input value={incomeOtherLabel} onChange={e => setIncomeOtherLabel(e.target.value)} placeholder="Please specify" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-36" />
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <label className="inline-flex items-center justify-center p-2 cursor-pointer">
+                            <input type="radio" name="other" value="yes" checked={incomeSelections['other'] === 'yes'} onChange={() => selectIncome('other', 'yes')} style={{ accentColor: '#0ea5e9' }} />
+                          </label>
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <label className="inline-flex items-center justify-center p-2 cursor-pointer">
+                            <input type="radio" name="other" value="no" checked={incomeSelections['other'] === 'no'} onChange={() => selectIncome('other', 'no')} style={{ accentColor: incomeConfirmed.has('other') ? '#0ea5e9' : '#eab308' }} />
+                          </label>
+                        </td>
+                        <td className="px-2 py-1.5 border-l border-gray-100">
+                          <input value={incomeWho1['other']} onChange={e => setIncomeWho1(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input value={incomeAmt1['other']} onChange={e => setIncomeAmt1(p => ({...p, other: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <select value={incomePer1['other']} onChange={e => setIncomePer1(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                            <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
+                          </select>
+                        </td>
+                        <td className="px-2 py-1.5 border-l border-gray-100">
+                          <input value={incomeWho2['other']} onChange={e => setIncomeWho2(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <input value={incomeAmt2['other']} onChange={e => setIncomeAmt2(p => ({...p, other: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <select value={incomePer2['other']} onChange={e => setIncomePer2(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                            <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
+                          </select>
+                        </td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
