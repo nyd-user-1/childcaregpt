@@ -382,9 +382,28 @@ export default function ApplicationPage() {
   const [incomeOtherLabel, setIncomeOtherLabel] = useState('')
   const [showPerson2, setShowPerson2] = useState(false)
 
+  const incomeDragging = useRef(false)
+  const incomeDragCol  = useRef<'yes' | 'no'>('no')
+
+  useEffect(() => {
+    const stop = () => { incomeDragging.current = false }
+    document.addEventListener('mouseup', stop)
+    return () => document.removeEventListener('mouseup', stop)
+  }, [])
+
   function selectIncome(key: string, val: 'yes' | 'no') {
     setIncomeSelections(prev => ({ ...prev, [key]: val }))
     setIncomeConfirmed(prev => { const next = new Set(prev); next.add(key); return next })
+  }
+
+  function startIncomeDrag(key: string, col: 'yes' | 'no') {
+    incomeDragging.current = true
+    incomeDragCol.current  = col
+    selectIncome(key, col)
+  }
+
+  function enterIncomeCell(key: string, col: 'yes' | 'no') {
+    if (incomeDragging.current && incomeDragCol.current === col) selectIncome(key, col)
   }
 
   // Signature
@@ -1778,12 +1797,18 @@ export default function ApplicationPage() {
                       ].map(({ label, key }) => (
                         <tr key={key} className="border-b border-gray-50 hover:bg-gray-50">
                           <td className="px-3 py-2 text-sm text-gray-700">{label}</td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2 text-center select-none"
+                            onMouseDown={e => { e.preventDefault(); startIncomeDrag(key, 'yes') }}
+                            onMouseEnter={() => enterIncomeCell(key, 'yes')}
+                          >
                             <label className="inline-flex items-center justify-center p-2 cursor-pointer">
                               <input type="radio" name={key} value="yes" checked={incomeSelections[key] === 'yes'} onChange={() => selectIncome(key, 'yes')} style={{ accentColor: '#0ea5e9' }} />
                             </label>
                           </td>
-                          <td className="px-3 py-2 text-center">
+                          <td className="px-3 py-2 text-center select-none"
+                            onMouseDown={e => { e.preventDefault(); startIncomeDrag(key, 'no') }}
+                            onMouseEnter={() => enterIncomeCell(key, 'no')}
+                          >
                             <label className="inline-flex items-center justify-center p-2 cursor-pointer">
                               <input type="radio" name={key} value="no" checked={incomeSelections[key] === 'no'} onChange={() => selectIncome(key, 'no')} onClick={() => selectIncome(key, 'no')} style={{ accentColor: incomeConfirmed.has(key) ? '#0ea5e9' : '#eab308' }} />
                             </label>
@@ -1818,12 +1843,18 @@ export default function ApplicationPage() {
                           <span className="shrink-0">Other</span>
                           <input value={incomeOtherLabel} onChange={e => setIncomeOtherLabel(e.target.value)} placeholder="Please specify" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-36" />
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2 text-center select-none"
+                          onMouseDown={e => { e.preventDefault(); startIncomeDrag('other', 'yes') }}
+                          onMouseEnter={() => enterIncomeCell('other', 'yes')}
+                        >
                           <label className="inline-flex items-center justify-center p-2 cursor-pointer">
                             <input type="radio" name="other" value="yes" checked={incomeSelections['other'] === 'yes'} onChange={() => selectIncome('other', 'yes')} style={{ accentColor: '#0ea5e9' }} />
                           </label>
                         </td>
-                        <td className="px-3 py-2 text-center">
+                        <td className="px-3 py-2 text-center select-none"
+                          onMouseDown={e => { e.preventDefault(); startIncomeDrag('other', 'no') }}
+                          onMouseEnter={() => enterIncomeCell('other', 'no')}
+                        >
                           <label className="inline-flex items-center justify-center p-2 cursor-pointer">
                             <input type="radio" name="other" value="no" checked={incomeSelections['other'] === 'no'} onChange={() => selectIncome('other', 'no')} onClick={() => selectIncome('other', 'no')} style={{ accentColor: incomeConfirmed.has('other') ? '#0ea5e9' : '#eab308' }} />
                           </label>
