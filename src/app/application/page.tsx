@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
-import { Download, ArrowLeft, ArrowRight, CornerDownRight } from 'lucide-react'
+import { Download, ArrowLeft, ArrowRight, CornerDownRight, RotateCcw } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { PDFDocument, StandardFonts } from 'pdf-lib'
 
@@ -77,6 +77,13 @@ function PortalTooltip({ text, children }: { text: string; children: React.React
       )}
     </span>
   )
+}
+
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 10)
+  if (d.length <= 3) return d.length ? `(${d}` : ''
+  if (d.length <= 6) return `(${d.slice(0,3)}) ${d.slice(3)}`
+  return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`
 }
 
 function formatDob(raw: string): string {
@@ -183,7 +190,7 @@ function ScheduleGrid({ label, schedule, onChange }: {
 }) {
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+      {label && <p className="text-sm text-gray-700">{label}</p>}
       <div className="grid grid-cols-7 gap-1.5">
         {DAYS.map(day => (
           <div key={day}>
@@ -308,7 +315,7 @@ export default function ApplicationPage() {
   const [lookingForWork, setLookingForWork] = useState('')
   const [startingNewJob,         setStartingNewJob]         = useState('')
   const [newJobStartDate,        setNewJobStartDate]        = useState('')
-  const [jobScheduleChanges,     setJobScheduleChanges]     = useState('')
+  const [jobScheduleChanges,     setJobScheduleChanges]     = useState('No')
   const [workSchedule,           setWorkSchedule]           = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
   const [multipleJobs,           setMultipleJobs]           = useState('')
   const [inTraining,     setInTraining]     = useState('')
@@ -316,15 +323,40 @@ export default function ApplicationPage() {
   const [trainingHours,  setTrainingHours]  = useState('')
   const [startingTraining,       setStartingTraining]       = useState('')
   const [trainingStartDate,      setTrainingStartDate]      = useState('')
-  const [trainingScheduleChanges,setTrainingScheduleChanges]= useState('')
+  const [trainingScheduleChanges,setTrainingScheduleChanges]= useState('No')
   const [trainingSchedule,       setTrainingSchedule]       = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
   const [inCollege,      setInCollege]      = useState('')
   const [schoolName,     setSchoolName]     = useState('')
   const [schoolHours,    setSchoolHours]    = useState('')
   const [startingCollege,        setStartingCollege]        = useState('')
   const [collegeStartDate,       setCollegeStartDate]       = useState('')
-  const [collegeScheduleChanges, setCollegeScheduleChanges] = useState('')
+  const [collegeScheduleChanges, setCollegeScheduleChanges] = useState('No')
   const [classSchedule,          setClassSchedule]          = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
+
+  // Adult 2 Activities
+  const [a2Employed,             setA2Employed]             = useState('')
+  const [a2EmployerName,         setA2EmployerName]         = useState('')
+  const [a2HoursPerWeek,         setA2HoursPerWeek]         = useState('')
+  const [a2StartingNewJob,       setA2StartingNewJob]       = useState('')
+  const [a2NewJobStartDate,      setA2NewJobStartDate]      = useState('')
+  const [a2JobScheduleChanges,   setA2JobScheduleChanges]   = useState('No')
+  const [a2WorkSchedule,         setA2WorkSchedule]         = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
+  const [a2MultipleJobs,         setA2MultipleJobs]         = useState('')
+  const [a2LookingForWork,       setA2LookingForWork]       = useState('')
+  const [a2InTraining,           setA2InTraining]           = useState('')
+  const [a2TrainingName,         setA2TrainingName]         = useState('')
+  const [a2TrainingHours,        setA2TrainingHours]        = useState('')
+  const [a2StartingTraining,     setA2StartingTraining]     = useState('')
+  const [a2TrainingStartDate,    setA2TrainingStartDate]    = useState('')
+  const [a2TrainingScheduleChanges, setA2TrainingScheduleChanges] = useState('No')
+  const [a2TrainingSchedule,     setA2TrainingSchedule]     = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
+  const [a2InCollege,            setA2InCollege]            = useState('')
+  const [a2SchoolName,           setA2SchoolName]           = useState('')
+  const [a2SchoolHours,          setA2SchoolHours]          = useState('')
+  const [a2StartingCollege,      setA2StartingCollege]      = useState('')
+  const [a2CollegeStartDate,     setA2CollegeStartDate]     = useState('')
+  const [a2CollegeScheduleChanges, setA2CollegeScheduleChanges] = useState('No')
+  const [a2ClassSchedule,        setA2ClassSchedule]        = useState<Record<string,string>>({ sun:'',mon:'',tue:'',wed:'',thu:'',fri:'',sat:'' })
 
   // Income
   const [incomeAmount,   setIncomeAmount]   = useState('')
@@ -391,12 +423,11 @@ export default function ApplicationPage() {
 
   // Auto-advance tab when all confirmable sections on current tab are confirmed
   useEffect(() => {
-    if (!hasPrefill) return
     const hasAbsentParent = members.slice(0, visibleRows).some(m => m.needsCare === 'Y' && m.bothParents === 'N')
     const tabSections: Record<number, string[]> = {
       0: ['about', ...(elig?.benefits?.length ? ['benefits'] : [])],
       1: [...(!!homeless ? ['circumstances'] : []), 'members', ...(hasAbsentParent ? ['absentParent'] : [])],
-      2: ['activities'],
+      2: ['activities', ...(members.slice(1, visibleRows).some(m => m.name.trim() && m.relationship.toLowerCase().includes('adult')) ? ['activities2'] : [])],
       3: !!incomeAmount ? ['income'] : [],
     }
     const required = tabSections[activeTab] ?? []
@@ -420,11 +451,11 @@ export default function ApplicationPage() {
 
     setFirstName(d.firstName || '')
     setLastName(d.lastName || '')
-    setPhone(d.phone || '')
+    setPhone(formatPhone(d.phone || ''))
     setPhoneType('Cell')
     setEmail(d.email || '')
     setCounty(d.county || '')
-    setDateOfBirth(d.dateOfBirth || '')
+    setDateOfBirth(formatDob(d.dateOfBirth || ''))
     setMaritalStatus(d.maritalStatus || '')
     setLanguage(d.language || '')
     setEmployerName(d.employerName || '')
@@ -443,17 +474,17 @@ export default function ApplicationPage() {
     if (d.homeless) { setHomeless(d.homeless); newTouched.add('homeless') }
 
     if (d.employed) { setEmployed(d.employed); newTouched.add('employed') }
-    else setEmployed('No')
+    else setEmployed('')
 
     if (d.jobSearchOrTraining === 'Yes') { setLookingForWork('Yes'); newTouched.add('lookingForWork') }
-    else setLookingForWork('No')
+    else setLookingForWork('')
 
     const hasTraining = (['vocationalProgram', 'basicEducation', 'hsOrGed', 'substanceProgram'] as (keyof EligData)[]).some(k => d[k] === 'Yes')
     if (hasTraining) { setInTraining('Yes'); newTouched.add('inTraining') }
-    else setInTraining('No')
+    else setInTraining('')
 
     if (d.college === 'Yes') { setInCollege('Yes'); newTouched.add('inCollege') }
-    else setInCollege('No')
+    else setInCollege('')
 
     setTouched(newTouched)
 
@@ -503,7 +534,8 @@ export default function ApplicationPage() {
   }
 
   const hasPrefill = !!elig
-  const prefilled = (val: string) => hasPrefill && filled(val)
+  const prefilled = (val: string) => filled(val)
+  const hasOtherAdult = members.slice(1, visibleRows).some(m => m.name.trim() && m.relationship.toLowerCase().includes('adult'))
 
   function rowStyle(_key: string, _val: string): string {
     return 'border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors'
@@ -521,9 +553,7 @@ export default function ApplicationPage() {
   const unconfirmedMap: Record<string, string> = {
     military, natGuard, otherFunding, lookingForWork, inTraining, inCollege,
   }
-  const unconfirmedCount = hasPrefill
-    ? Object.entries(unconfirmedMap).filter(([k, v]) => v && !touched.has(k)).length
-    : 0
+  const unconfirmedCount = Object.entries(unconfirmedMap).filter(([k, v]) => v && !touched.has(k)).length
 
   async function exportPDF() {
     try {
@@ -696,11 +726,13 @@ export default function ApplicationPage() {
               <p className="text-xs text-gray-400 mt-1">OCFS-6025 (Rev. 06/2024)</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              {hasPrefill && (
-                <div className="flex items-center gap-1.5 rounded-lg bg-sky-50 border border-[#0ea5e9] px-3 py-1.5">
-                  <span className="text-xs font-semibold text-[#0ea5e9]">✓ Pre-filled</span>
-                </div>
-              )}
+              <button
+                onClick={() => { localStorage.removeItem('ccap-eligibility-data'); window.location.reload() }}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                Restart
+              </button>
               <button
                 onClick={exportPDF}
                 className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
@@ -729,24 +761,24 @@ export default function ApplicationPage() {
             {/* ── Tab 0: About ── */}
             {activeTab === 0 && (
               <>
-              <SectionCard title="Tell us about yourself." prefilled={hasPrefill} status={sectionStatus['about']} onConfirm={() => confirmSection('about')} collapsed={collapsedSections.has('about')} onToggle={() => toggleSection('about')}>
+              <SectionCard title="Tell us about yourself." prefilled={true} status={sectionStatus['about']} onConfirm={() => confirmSection('about')} collapsed={collapsedSections.has('about')} onToggle={() => toggleSection('about')}>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2"><Field label="First Name" value={firstName} onChange={setFirstName} prefilled={prefilled(firstName)} /></div>
                   <div className="col-span-2"><Field label="Last Name"  value={lastName}  onChange={setLastName}  prefilled={prefilled(lastName)}  /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2"><Field label="Street Address" value={street} onChange={setStreet} prefilled={prefilled(street)} /></div>
-                  <div className="col-span-1"><Field label="City"  value={city}       onChange={setCity}       prefilled={hasPrefill && !!city} placeholder="City" /></div>
-                  <div className="col-span-1"><Field label="State" value={stateField} onChange={setStateField} prefilled={hasPrefill} placeholder="NY" /></div>
+                  <div className="col-span-1"><Field label="City"  value={city}       onChange={setCity}       prefilled={!!city} placeholder="City" /></div>
+                  <div className="col-span-1"><Field label="State" value={stateField} onChange={setStateField} prefilled={!!stateField} placeholder="NY" /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-1"><Field label="Zip Code"      value={zip}    onChange={setZip}    prefilled={hasPrefill && !!zip} placeholder="00000" /></div>
+                  <div className="col-span-1"><Field label="Zip Code"      value={zip}    onChange={setZip}    prefilled={!!zip} placeholder="00000" /></div>
                   <div className="col-span-1"><Field label="County"        value={county} onChange={setCounty} prefilled={prefilled(county)} /></div>
-                  <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={setPhone}  prefilled={prefilled(phone)} type="tel" /></div>
+                  <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={v => setPhone(formatPhone(v))}  prefilled={prefilled(phone)} type="tel" /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2"><Field label="Email (optional)" value={email}       onChange={setEmail}       prefilled={prefilled(email)} type="email" /></div>
-                  <div className="col-span-2"><Field label="Date of Birth"    value={dateOfBirth} onChange={setDateOfBirth} prefilled={prefilled(dateOfBirth)} placeholder="MM-DD-YYYY" /></div>
+                  <div className="col-span-2"><Field label="Date of Birth"    value={dateOfBirth} onChange={v => setDateOfBirth(formatDob(v))} prefilled={prefilled(dateOfBirth)} placeholder="MM-DD-YYYY" /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2">
@@ -826,7 +858,7 @@ export default function ApplicationPage() {
             {/* ── Tab 1: Household ── */}
             {activeTab === 1 && (
               <>
-              <SectionCard title="Tell us about your household's circumstances." subtitle="Do any of these apply to you or any adult(s) applying with you?" prefilled={hasPrefill && !!homeless} status={sectionStatus['circumstances']} warned={warnedSections.has('circumstances')} onConfirm={confirmCircumstances} collapsed={collapsedSections.has('circumstances')} onToggle={() => toggleSection('circumstances')}>
+              <SectionCard title="Tell us about your household's circumstances." subtitle="Do any of these apply to you or any adult(s) applying with you?" prefilled={true} status={sectionStatus['circumstances']} warned={warnedSections.has('circumstances')} onConfirm={confirmCircumstances} collapsed={collapsedSections.has('circumstances')} onToggle={() => toggleSection('circumstances')}>
                 <div className="space-y-3">
                   {[
                     { label: 'Homeless (no fixed, regular and adequate place to stay at night)', val: homeless, set: setHomeless, key: 'homeless', pre: prefilled(homeless) },
@@ -844,7 +876,7 @@ export default function ApplicationPage() {
                       </span>
                       <div className="flex gap-4 shrink-0">
                         {['Yes', 'No'].map(o => {
-                          const isYellow = o === 'No' && hasPrefill && val && !touched.has(key)
+                          const isYellow = o === 'No' && !!val && !touched.has(key)
                           const shouldPulse = isYellow && warnedSections.has('circumstances')
                           return (
                             <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
@@ -900,7 +932,7 @@ export default function ApplicationPage() {
               <SectionCard
                 title="Tell us about everyone in your home."
                 subtitle="Complete remaining rows for all household members."
-                prefilled={hasPrefill}
+                prefilled={true}
                 status={sectionStatus['members']}
                 onConfirm={() => {
                   const missingSex = members.slice(0, visibleRows).some(m => m.name && !m.sex)
@@ -1134,7 +1166,8 @@ export default function ApplicationPage() {
 
             {/* ── Tab 2: Job / Activities ── */}
             {activeTab === 2 && (
-              <SectionCard title="Tell us about your job and other activities." prefilled={hasPrefill} status={sectionStatus['activities']} warned={warnedSections.has('activities')} onConfirm={() => { const ok = ['lookingForWork','inTraining','inCollege'].every(k => touched.has(k)); ok ? confirmSection('activities') : warnSection('activities') }}>
+              <>
+              <SectionCard title="Tell us about your job and other activities." prefilled={true} status={sectionStatus['activities']} warned={warnedSections.has('activities')} onConfirm={() => { const ok = ['lookingForWork','inTraining','inCollege'].every(k => touched.has(k)); ok ? confirmSection('activities') : warnSection('activities') }}>
 
                 {/* Employment — three bordered rows */}
                 <div className="space-y-3">
@@ -1146,7 +1179,7 @@ export default function ApplicationPage() {
                       {['Yes', 'No'].map(o => (
                         <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
                           <input type="radio" name="employed" value={o} checked={employed === o}
-                            onChange={() => { setEmployed(o); markTouched('employed') }}
+                            onChange={() => { setEmployed(o); markTouched('employed'); if (o !== 'No') { setStartingNewJob(''); setLookingForWork('') } }}
                             style={{ accentColor: '#0ea5e9' }} />
                           {o}
                         </label>
@@ -1156,58 +1189,119 @@ export default function ApplicationPage() {
 
                   {/* Sub-fields when working = Yes */}
                   {employed === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-4 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <Field label="Employer Name" value={employerName} onChange={setEmployerName} prefilled={prefilled(employerName)} />
-                        <Field label="Total Hours Per Week" value={hoursPerWeek} onChange={setHoursPerWeek} placeholder="e.g. 40" />
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-6">
+                        <input
+                          value={employerName}
+                          onChange={e => setEmployerName(e.target.value)}
+                          placeholder="Employer Name"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${
+                            employerName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
+                          }`}
+                        />
+                        <input
+                          value={hoursPerWeek}
+                          onChange={e => setHoursPerWeek(e.target.value)}
+                          placeholder="Total Hours Per Week"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${
+                            hoursPerWeek ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
+                          }`}
+                        />
                       </div>
-                      <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-2.5">
-                        <span className="text-sm text-gray-700">Does your schedule change week to week?</span>
-                        <div className="flex gap-4 shrink-0">
-                          {['Yes', 'No'].map(o => (
-                            <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
-                              <input type="radio" name="jobScheduleChanges" value={o} checked={jobScheduleChanges === o}
-                                onChange={() => setJobScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
-                              {o}
-                            </label>
-                          ))}
+                      {employerName && hoursPerWeek && (
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                        <ScheduleGrid label="" schedule={workSchedule} onChange={setWorkSchedule} />
+                        <hr className="border-gray-200 my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Does your work schedule change week to week?</span>
+                          <div className="flex gap-4 shrink-0">
+                            {['Yes', 'No'].map(o => (
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <input type="radio" name="jobScheduleChanges" value={o} checked={jobScheduleChanges === o}
+                                  onChange={() => setJobScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
                         </div>
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Do you have more than one job?</span>
+                          <div className="flex gap-4 shrink-0">
+                            {['Yes', 'No'].map(o => (
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <input type="radio" name="multipleJobs" value={o} checked={multipleJobs === o}
+                                  onChange={() => setMultipleJobs(o)} style={{ accentColor: '#0ea5e9' }} />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Row 2: Are you about to start a new job? — only when not working */}
+                  {employed === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingNewJob', startingNewJob)}`}>
+                      <span className="text-sm text-gray-700">Are you about to start a new job?</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="startingNewJob" value={o} checked={startingNewJob === o}
+                              onChange={() => { setStartingNewJob(o); if (o !== 'No') setLookingForWork('') }} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                        {startingNewJob === 'Yes' && (
+                          <input value={newJobStartDate} onChange={e => setNewJobStartDate(formatDob(e.target.value))}
+                            placeholder="MM-DD-YYYY"
+                            className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* Row 2: Are you about to start a new job? */}
-                  <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingNewJob', startingNewJob)}`}>
-                    <span className="text-sm text-gray-700">Are you about to start a new job?</span>
-                    <div className="flex items-center gap-4 shrink-0">
-                      {['Yes', 'No'].map(o => (
-                        <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
-                          <input type="radio" name="startingNewJob" value={o} checked={startingNewJob === o}
-                            onChange={() => setStartingNewJob(o)} style={{ accentColor: '#0ea5e9' }} />
-                          {o}
-                        </label>
-                      ))}
-                      {startingNewJob === 'Yes' && (
-                        <input value={newJobStartDate} onChange={e => setNewJobStartDate(e.target.value)}
-                          placeholder="MM-DD-YYYY"
-                          className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
-                      )}
+                  {/* Row 3: Are you looking for work? — only when not working and not about to start */}
+                  {employed === 'No' && startingNewJob === 'No' && (
+                    <div onClick={() => markTouched('lookingForWork')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('lookingForWork', lookingForWork)}`}>
+                      <span className="text-sm text-gray-700">Looking for work</span>
+                      <div className="flex gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => {
+                          const isYellow = o === 'No' && !!lookingForWork && !touched.has('lookingForWork')
+                          const shouldPulse = isYellow && warnedSections.has('activities')
+                          return (
+                            <label key={o} onClick={o === 'Yes' ? e => e.stopPropagation() : undefined} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                              <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
+                                <input type="radio" name="lookingForWork" value={o} checked={lookingForWork === o}
+                                  onChange={() => { setLookingForWork(o); markTouched('lookingForWork') }}
+                                  onClick={() => markTouched('lookingForWork')}
+                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                              </span>
+                              {o}
+                            </label>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Row 3: Are you looking for work? */}
-                  <div onClick={() => markTouched('lookingForWork')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('lookingForWork', lookingForWork)}`}>
-                    <span className="text-sm text-gray-700">Looking for work</span>
+                </div>
+
+                {/* Training */}
+                <div className="space-y-3">
+                  <div onClick={() => markTouched('inTraining')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('inTraining', inTraining)}`}>
+                    <span className="text-sm text-gray-700">Do you need child care because you are in a training program?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => {
-                        const isYellow = o === 'No' && hasPrefill && lookingForWork && !touched.has('lookingForWork')
+                        const isYellow = o === 'No' && !!inTraining && !touched.has('inTraining')
                         const shouldPulse = isYellow && warnedSections.has('activities')
                         return (
-                          <label key={o} onClick={o === 'Yes' ? e => e.stopPropagation() : undefined} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
                             <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
-                              <input type="radio" name="lookingForWork" value={o} checked={lookingForWork === o}
-                                onChange={() => { setLookingForWork(o); markTouched('lookingForWork') }}
-                                onClick={() => markTouched('lookingForWork')}
+                              <input type="radio" name="inTraining" value={o} checked={inTraining === o}
+                                onChange={() => { setInTraining(o); markTouched('inTraining'); if (o !== 'No') setStartingTraining('') }}
+                                onClick={() => markTouched('inTraining')}
                                 style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
                             </span>
                             {o}
@@ -1217,57 +1311,23 @@ export default function ApplicationPage() {
                     </div>
                   </div>
 
-                </div>
-
-                {/* Training */}
-                <div onClick={() => markTouched('inTraining')} className={`rounded-xl border p-4 space-y-3 transition-colors cursor-pointer ${blockStyle('inTraining', inTraining)}`}>
-                  <div className="flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-4">
-                      <p className="text-sm font-semibold text-gray-700">Training program</p>
-                      <div className="flex gap-3">
-                        {['Yes', 'No'].map(o => {
-                          const isYellow = o === 'No' && hasPrefill && inTraining && !touched.has('inTraining')
-                          const shouldPulse = isYellow && warnedSections.has('activities')
-                          return (
-                            <label key={o} onClick={o === 'Yes' ? e => e.stopPropagation() : undefined} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                              <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
-                                <input type="radio" name="inTraining" value={o} checked={inTraining === o}
-                                  onChange={() => { setInTraining(o); markTouched('inTraining') }}
-                                  onClick={() => markTouched('inTraining')}
-                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
-                              </span>
-                              {o}
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600" onClick={e => e.stopPropagation()}>
-                      <span>About to start?</span>
-                      {['Yes', 'No'].map(o => (
-                        <label key={o} className="flex items-center gap-1 text-sm cursor-pointer">
-                          <input type="radio" name="startingTraining" value={o} checked={startingTraining === o}
-                            onChange={() => setStartingTraining(o)} style={{ accentColor: '#0ea5e9' }} />
-                          {o}
-                        </label>
-                      ))}
-                      {startingTraining === 'Yes' && (
-                        <input value={trainingStartDate} onChange={e => setTrainingStartDate(e.target.value)}
-                          placeholder="Start date MM-DD-YYYY"
-                          className="ml-1 rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9] w-36" />
-                      )}
-                    </div>
-                  </div>
                   {inTraining === 'Yes' && (
-                    <>
-                      <div className="grid grid-cols-4 gap-3">
-                        <div className="col-span-2"><Field label="Training Program / Facility Name" value={trainingName} onChange={setTrainingName} /></div>
-                        <div className="col-span-1"><Field label="Total Hours Per Week" value={trainingHours} onChange={setTrainingHours} placeholder="e.g. 20" /></div>
-                        <div className="col-span-1 flex flex-col justify-end pb-0.5">
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Schedule changes weekly?</span>
-                          <div className="flex gap-3">
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-6">
+                        <input value={trainingName} onChange={e => setTrainingName(e.target.value)} placeholder="Training Program / Facility Name"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${trainingName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                        <input value={trainingHours} onChange={e => setTrainingHours(e.target.value)} placeholder="Total Hours Per Week"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${trainingHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                      </div>
+                      {trainingName && trainingHours && (
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                        <ScheduleGrid label="" schedule={trainingSchedule} onChange={setTrainingSchedule} />
+                        <hr className="border-gray-200 my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Does your training schedule change week to week?</span>
+                          <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1 text-sm cursor-pointer" onClick={e => e.stopPropagation()}>
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
                                 <input type="radio" name="trainingScheduleChanges" value={o} checked={trainingScheduleChanges === o}
                                   onChange={() => setTrainingScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
                                 {o}
@@ -1276,60 +1336,70 @@ export default function ApplicationPage() {
                           </div>
                         </div>
                       </div>
-                      <ScheduleGrid label="Typical Training Schedule" schedule={trainingSchedule} onChange={setTrainingSchedule} />
-                    </>
+                      )}
+                    </div>
+                  )}
+
+                  {inTraining === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingTraining', startingTraining)}`}>
+                      <span className="text-sm text-gray-700">Are you about to start a training program?</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="startingTraining" value={o} checked={startingTraining === o}
+                              onChange={() => setStartingTraining(o)} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                        {startingTraining === 'Yes' && (
+                          <input value={trainingStartDate} onChange={e => setTrainingStartDate(formatDob(e.target.value))}
+                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
 
                 {/* College */}
-                <div onClick={() => markTouched('inCollege')} className={`rounded-xl border p-4 space-y-3 transition-colors cursor-pointer ${blockStyle('inCollege', inCollege)}`}>
-                  <div className="flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-4">
-                      <p className="text-sm font-semibold text-gray-700">College / classes</p>
-                      <div className="flex gap-3">
-                        {['Yes', 'No'].map(o => {
-                          const isYellow = o === 'No' && hasPrefill && inCollege && !touched.has('inCollege')
-                          const shouldPulse = isYellow && warnedSections.has('activities')
-                          return (
-                            <label key={o} onClick={o === 'Yes' ? e => e.stopPropagation() : undefined} className="flex items-center gap-1.5 text-sm cursor-pointer">
-                              <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
-                                <input type="radio" name="inCollege" value={o} checked={inCollege === o}
-                                  onChange={() => { setInCollege(o); markTouched('inCollege') }}
-                                  onClick={() => markTouched('inCollege')}
-                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
-                              </span>
-                              {o}
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600" onClick={e => e.stopPropagation()}>
-                      <span>About to start?</span>
-                      {['Yes', 'No'].map(o => (
-                        <label key={o} className="flex items-center gap-1 text-sm cursor-pointer">
-                          <input type="radio" name="startingCollege" value={o} checked={startingCollege === o}
-                            onChange={() => setStartingCollege(o)} style={{ accentColor: '#0ea5e9' }} />
-                          {o}
-                        </label>
-                      ))}
-                      {startingCollege === 'Yes' && (
-                        <input value={collegeStartDate} onChange={e => setCollegeStartDate(e.target.value)}
-                          placeholder="Start date MM-DD-YYYY"
-                          className="ml-1 rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9] w-36" />
-                      )}
+                <div className="space-y-3">
+                  <div onClick={() => markTouched('inCollege')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('inCollege', inCollege)}`}>
+                    <span className="text-sm text-gray-700">Do you need child care because you are attending college or classes?</span>
+                    <div className="flex gap-4 shrink-0">
+                      {['Yes', 'No'].map(o => {
+                        const isYellow = o === 'No' && !!inCollege && !touched.has('inCollege')
+                        const shouldPulse = isYellow && warnedSections.has('activities')
+                        return (
+                          <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
+                              <input type="radio" name="inCollege" value={o} checked={inCollege === o}
+                                onChange={() => { setInCollege(o); markTouched('inCollege'); if (o !== 'No') setStartingCollege('') }}
+                                onClick={() => markTouched('inCollege')}
+                                style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                            </span>
+                            {o}
+                          </label>
+                        )
+                      })}
                     </div>
                   </div>
+
                   {inCollege === 'Yes' && (
-                    <>
-                      <div className="grid grid-cols-4 gap-3">
-                        <div className="col-span-2"><Field label="School or College Name" value={schoolName} onChange={setSchoolName} /></div>
-                        <div className="col-span-1"><Field label="Total Hours Per Week" value={schoolHours} onChange={setSchoolHours} placeholder="e.g. 15" /></div>
-                        <div className="col-span-1 flex flex-col justify-end pb-0.5">
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Schedule changes weekly?</span>
-                          <div className="flex gap-3">
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-6">
+                        <input value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="School or College Name"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${schoolName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                        <input value={schoolHours} onChange={e => setSchoolHours(e.target.value)} placeholder="Total Hours Per Week"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${schoolHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                      </div>
+                      {schoolName && schoolHours && (
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                        <ScheduleGrid label="" schedule={classSchedule} onChange={setClassSchedule} />
+                        <hr className="border-gray-200 my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Does your class schedule change week to week?</span>
+                          <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1 text-sm cursor-pointer" onClick={e => e.stopPropagation()}>
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
                                 <input type="radio" name="collegeScheduleChanges" value={o} checked={collegeScheduleChanges === o}
                                   onChange={() => setCollegeScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
                                 {o}
@@ -1338,11 +1408,260 @@ export default function ApplicationPage() {
                           </div>
                         </div>
                       </div>
-                      <ScheduleGrid label="Typical Class Schedule" schedule={classSchedule} onChange={setClassSchedule} />
-                    </>
+                      )}
+                    </div>
+                  )}
+
+                  {inCollege === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingCollege', startingCollege)}`}>
+                      <span className="text-sm text-gray-700">Are you about to start college or classes?</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="startingCollege" value={o} checked={startingCollege === o}
+                              onChange={() => setStartingCollege(o)} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                        {startingCollege === 'Yes' && (
+                          <input value={collegeStartDate} onChange={e => setCollegeStartDate(formatDob(e.target.value))}
+                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               </SectionCard>
+
+              {/* ── Adult 2 Activities (conditional) ── */}
+              {hasOtherAdult && (
+              <SectionCard title="Tell us about the other adult(s) applying with you and their activities." status={sectionStatus['activities2']} onConfirm={() => confirmSection('activities2')}>
+
+                {/* Employment */}
+                <div className="space-y-3">
+                  <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2Employed', a2Employed)}`}>
+                    <span className="text-sm text-gray-700">Do they need child care because they are working?</span>
+                    <div className="flex gap-4 shrink-0">
+                      {['Yes', 'No'].map(o => (
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <input type="radio" name="a2_employed" value={o} checked={a2Employed === o}
+                            onChange={() => { setA2Employed(o); if (o !== 'No') { setA2StartingNewJob(''); setA2LookingForWork('') } }}
+                            style={{ accentColor: '#0ea5e9' }} />
+                          {o}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {a2Employed === 'Yes' && (
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-6">
+                        <input value={a2EmployerName} onChange={e => setA2EmployerName(e.target.value)} placeholder="Employer Name"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${a2EmployerName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                        <input value={a2HoursPerWeek} onChange={e => setA2HoursPerWeek(e.target.value)} placeholder="Total Hours Per Week"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${a2HoursPerWeek ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                      </div>
+                      {a2EmployerName && a2HoursPerWeek && (
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                        <ScheduleGrid label="" schedule={a2WorkSchedule} onChange={setA2WorkSchedule} />
+                        <hr className="border-gray-200 my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Does their work schedule change week to week?</span>
+                          <div className="flex gap-4 shrink-0">
+                            {['Yes', 'No'].map(o => (
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <input type="radio" name="a2_jobScheduleChanges" value={o} checked={a2JobScheduleChanges === o}
+                                  onChange={() => setA2JobScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Do they have more than one job?</span>
+                          <div className="flex gap-4 shrink-0">
+                            {['Yes', 'No'].map(o => (
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <input type="radio" name="a2_multipleJobs" value={o} checked={a2MultipleJobs === o}
+                                  onChange={() => setA2MultipleJobs(o)} style={{ accentColor: '#0ea5e9' }} />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  )}
+
+                  {a2Employed === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2StartingNewJob', a2StartingNewJob)}`}>
+                      <span className="text-sm text-gray-700">Are they about to start a new job?</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="a2_startingNewJob" value={o} checked={a2StartingNewJob === o}
+                              onChange={() => { setA2StartingNewJob(o); if (o !== 'No') setA2LookingForWork('') }} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                        {a2StartingNewJob === 'Yes' && (
+                          <input value={a2NewJobStartDate} onChange={e => setA2NewJobStartDate(formatDob(e.target.value))}
+                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {a2Employed === 'No' && a2StartingNewJob === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2LookingForWork', a2LookingForWork)}`}>
+                      <span className="text-sm text-gray-700">Looking for work</span>
+                      <div className="flex gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="a2_lookingForWork" value={o} checked={a2LookingForWork === o}
+                              onChange={() => setA2LookingForWork(o)} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Training */}
+                <div className="space-y-3">
+                  <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2InTraining', a2InTraining)}`}>
+                    <span className="text-sm text-gray-700">Do they need child care because they are in a training program?</span>
+                    <div className="flex gap-4 shrink-0">
+                      {['Yes', 'No'].map(o => (
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <input type="radio" name="a2_inTraining" value={o} checked={a2InTraining === o}
+                            onChange={() => { setA2InTraining(o); if (o !== 'No') setA2StartingTraining('') }}
+                            style={{ accentColor: '#0ea5e9' }} />
+                          {o}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {a2InTraining === 'Yes' && (
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-6">
+                        <input value={a2TrainingName} onChange={e => setA2TrainingName(e.target.value)} placeholder="Training Program / Facility Name"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${a2TrainingName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                        <input value={a2TrainingHours} onChange={e => setA2TrainingHours(e.target.value)} placeholder="Total Hours Per Week"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${a2TrainingHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                      </div>
+                      {a2TrainingName && a2TrainingHours && (
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                        <ScheduleGrid label="" schedule={a2TrainingSchedule} onChange={setA2TrainingSchedule} />
+                        <hr className="border-gray-200 my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Does their training schedule change week to week?</span>
+                          <div className="flex gap-4 shrink-0">
+                            {['Yes', 'No'].map(o => (
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <input type="radio" name="a2_trainingScheduleChanges" value={o} checked={a2TrainingScheduleChanges === o}
+                                  onChange={() => setA2TrainingScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  )}
+
+                  {a2InTraining === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2StartingTraining', a2StartingTraining)}`}>
+                      <span className="text-sm text-gray-700">Are they about to start a training program?</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="a2_startingTraining" value={o} checked={a2StartingTraining === o}
+                              onChange={() => setA2StartingTraining(o)} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                        {a2StartingTraining === 'Yes' && (
+                          <input value={a2TrainingStartDate} onChange={e => setA2TrainingStartDate(formatDob(e.target.value))}
+                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* College */}
+                <div className="space-y-3">
+                  <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2InCollege', a2InCollege)}`}>
+                    <span className="text-sm text-gray-700">Do they need child care because they are attending college or classes?</span>
+                    <div className="flex gap-4 shrink-0">
+                      {['Yes', 'No'].map(o => (
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <input type="radio" name="a2_inCollege" value={o} checked={a2InCollege === o}
+                            onChange={() => { setA2InCollege(o); if (o !== 'No') setA2StartingCollege('') }}
+                            style={{ accentColor: '#0ea5e9' }} />
+                          {o}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {a2InCollege === 'Yes' && (
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                      <div className="grid grid-cols-2 gap-6">
+                        <input value={a2SchoolName} onChange={e => setA2SchoolName(e.target.value)} placeholder="School or College Name"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${a2SchoolName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                        <input value={a2SchoolHours} onChange={e => setA2SchoolHours(e.target.value)} placeholder="Total Hours Per Week"
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${a2SchoolHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                      </div>
+                      {a2SchoolName && a2SchoolHours && (
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                        <ScheduleGrid label="" schedule={a2ClassSchedule} onChange={setA2ClassSchedule} />
+                        <hr className="border-gray-200 my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
+                          <span className="text-sm text-gray-700">Does their class schedule change week to week?</span>
+                          <div className="flex gap-4 shrink-0">
+                            {['Yes', 'No'].map(o => (
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <input type="radio" name="a2_collegeScheduleChanges" value={o} checked={a2CollegeScheduleChanges === o}
+                                  onChange={() => setA2CollegeScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                {o}
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      )}
+                    </div>
+                  )}
+
+                  {a2InCollege === 'No' && (
+                    <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2StartingCollege', a2StartingCollege)}`}>
+                      <span className="text-sm text-gray-700">Are they about to start college or classes?</span>
+                      <div className="flex items-center gap-4 shrink-0">
+                        {['Yes', 'No'].map(o => (
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <input type="radio" name="a2_startingCollege" value={o} checked={a2StartingCollege === o}
+                              onChange={() => setA2StartingCollege(o)} style={{ accentColor: '#0ea5e9' }} />
+                            {o}
+                          </label>
+                        ))}
+                        {a2StartingCollege === 'Yes' && (
+                          <input value={a2CollegeStartDate} onChange={e => setA2CollegeStartDate(formatDob(e.target.value))}
+                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+              </SectionCard>
+              )}
+              </>
             )}
 
             {/* ── Tab 3: Household Income ── */}
