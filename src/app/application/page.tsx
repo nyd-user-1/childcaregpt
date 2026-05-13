@@ -104,7 +104,7 @@ function Field({
   const shouldWarn = warned && !value
   return (
     <div className={half ? 'flex-1 min-w-0' : 'w-full'}>
-      <label className={`block text-xs font-semibold text-gray-500 mb-1 ${noUppercase ? '' : 'uppercase tracking-wide'}`}>{label}</label>
+      <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
       <span className={shouldWarn ? 'warn-pulse rounded-lg block' : 'block'}>
       <input
         id={id}
@@ -380,6 +380,7 @@ export default function ApplicationPage() {
   const [incomeAmt2,   setIncomeAmt2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
   const [incomePer2,   setIncomePer2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
   const [incomeOtherLabel, setIncomeOtherLabel] = useState('')
+  const [showPerson2, setShowPerson2] = useState(false)
 
   function selectIncome(key: string, val: 'yes' | 'no') {
     setIncomeSelections(prev => ({ ...prev, [key]: val }))
@@ -426,7 +427,7 @@ export default function ApplicationPage() {
 
   // Auto-confirm warned sections once their yellow items are all clicked
   useEffect(() => {
-    if (warnedSections.has('circumstances') && ['military','natGuard','otherFunding'].every(k => touched.has(k))) confirmSection('circumstances')
+    if (warnedSections.has('circumstances') && !!homeless && !!military && !!natGuard && !!otherFunding) confirmSection('circumstances')
     if (warnedSections.has('activities') && checkActivitiesOk()) confirmSection('activities')
   }, [touched]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -485,6 +486,7 @@ export default function ApplicationPage() {
     const newTouched = new Set<string>()
 
     if (d.homeless) { setHomeless(d.homeless); newTouched.add('homeless') }
+    else setHomeless('No')
 
     if (d.employed) { setEmployed(d.employed); newTouched.add('employed') }
     else setEmployed('')
@@ -571,7 +573,7 @@ export default function ApplicationPage() {
   }
 
   function confirmCircumstances() {
-    const ok = ['military', 'natGuard', 'otherFunding'].every(k => touched.has(k))
+    const ok = !!homeless && !!military && !!natGuard && !!otherFunding
     ok ? confirmSection('circumstances') : warnSection('circumstances')
   }
 
@@ -816,12 +818,12 @@ export default function ApplicationPage() {
                   <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={v => setPhone(formatPhone(v))}  prefilled={prefilled(phone)} type="tel" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-2"><Field label="Email (optional)" value={email} onChange={setEmail} prefilled={prefilled(email)} type="email" /></div>
+                  <div className="col-span-2"><Field label="Email (optional)" value={email} onChange={v => setEmail(v.toLowerCase())} prefilled={prefilled(email)} type="email" /></div>
                   <div className="col-span-2"><Field label="Date of Birth"    value={dateOfBirth} onChange={v => setDateOfBirth(formatDob(v))} prefilled={prefilled(dateOfBirth)} placeholder="MM-DD-YYYY" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Primary Language</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-2">Primary Language</label>
                     <span className={w && !language ? 'warn-pulse rounded-lg inline-flex flex-wrap gap-2' : 'inline-flex flex-wrap gap-2'}>
                       {['English', 'Spanish', 'Haitian', 'Other'].map(l => (
                         <button key={l} type="button" onClick={() => setLanguage(l)}
@@ -836,7 +838,7 @@ export default function ApplicationPage() {
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Marital Status</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-2">Marital Status</label>
                     <span className={w && !maritalStatus ? 'warn-pulse rounded-lg inline-flex flex-wrap gap-2' : 'inline-flex flex-wrap gap-2'}>
                       {['Single', 'Married', 'Divorced', 'Separated', 'Widowed'].map(m => (
                         <button key={m} type="button" onClick={() => setMaritalStatus(m)}
@@ -901,7 +903,7 @@ export default function ApplicationPage() {
             {/* ── Tab 1: Household ── */}
             {activeTab === 1 && (
               <>
-              <SectionCard title="Tell us about your household's circumstances." subtitle="Do any of these apply to you or any adult(s) applying with you?" prefilled={true} status={sectionStatus['circumstances']} warned={warnedSections.has('circumstances')} onConfirm={confirmCircumstances} collapsed={collapsedSections.has('circumstances')} onToggle={() => toggleSection('circumstances')}>
+              <SectionCard title="Tell us about your household's circumstances." subtitle="Do any of these apply to you or any adult(s) applying with you?" prefilled={true} status={sectionStatus['circumstances']} warned={warnedSections.has('circumstances')} ready={!sectionStatus['circumstances'] && !warnedSections.has('circumstances') && !!homeless && !!military && !!natGuard && !!otherFunding} onConfirm={confirmCircumstances} collapsed={collapsedSections.has('circumstances')} onToggle={() => toggleSection('circumstances')}>
                 <div className="space-y-3">
                   {[
                     { label: 'Homeless (no fixed, regular and adequate place to stay at night)', val: homeless, set: setHomeless, key: 'homeless', pre: false },
@@ -1209,7 +1211,7 @@ export default function ApplicationPage() {
             {/* ── Tab 2: Job / Activities ── */}
             {activeTab === 2 && (
               <>
-              <SectionCard title="Tell us about your job and other activities." prefilled={true} status={sectionStatus['activities']} warned={warnedSections.has('activities')} onConfirm={() => { checkActivitiesOk() ? confirmSection('activities') : warnSection('activities') }}>
+              <SectionCard title="Tell us about your job and other activities." prefilled={true} status={sectionStatus['activities']} warned={warnedSections.has('activities')} ready={!sectionStatus['activities'] && !warnedSections.has('activities') && checkActivitiesOk()} onConfirm={() => { checkActivitiesOk() ? confirmSection('activities') : warnSection('activities') }}>
 
                 {/* Employment — three bordered rows */}
                 <div className="space-y-3">
@@ -1739,16 +1741,26 @@ export default function ApplicationPage() {
                         <th className="text-left px-3 py-2 font-semibold text-gray-500" rowSpan={2}>Income Source</th>
                         <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10" rowSpan={2}>Yes</th>
                         <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10" rowSpan={2}>No</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>Person 1</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>Person 2</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>
+                          <div className="flex items-center justify-between">
+                            <span>Person 1</span>
+                            {!showPerson2 && (
+                              <div className="relative group">
+                                <button type="button" onClick={() => setShowPerson2(true)} className="text-gray-400 hover:text-[#0ea5e9] transition-colors text-base leading-none font-bold">+</button>
+                                <div className="pointer-events-none absolute right-0 top-6 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">Add a person</div>
+                              </div>
+                            )}
+                          </div>
+                        </th>
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>Person 2</th>}
                       </tr>
                       <tr className="border-b border-gray-100">
                         <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>
                         <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>
                         <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>}
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>}
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -1788,17 +1800,17 @@ export default function ApplicationPage() {
                               <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                             </select>
                           </td>
-                          <td className="px-2 py-1.5 border-l border-gray-100">
+                          {showPerson2 && <td className="px-2 py-1.5 border-l border-gray-100">
                             <input value={incomeWho2[key]} onChange={e => setIncomeWho2(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
-                          </td>
-                          <td className="px-2 py-1.5">
+                          </td>}
+                          {showPerson2 && <td className="px-2 py-1.5">
                             <input value={incomeAmt2[key]} onChange={e => setIncomeAmt2(p => ({...p, [key]: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
-                          </td>
-                          <td className="px-2 py-1.5">
+                          </td>}
+                          {showPerson2 && <td className="px-2 py-1.5">
                             <select value={incomePer2[key]} onChange={e => setIncomePer2(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
                               <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                             </select>
-                          </td>
+                          </td>}
                         </tr>
                       ))}
                       {/* Other row */}
@@ -1828,17 +1840,17 @@ export default function ApplicationPage() {
                             <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                           </select>
                         </td>
-                        <td className="px-2 py-1.5 border-l border-gray-100">
+                        {showPerson2 && <td className="px-2 py-1.5 border-l border-gray-100">
                           <input value={incomeWho2['other']} onChange={e => setIncomeWho2(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
-                        </td>
-                        <td className="px-2 py-1.5">
+                        </td>}
+                        {showPerson2 && <td className="px-2 py-1.5">
                           <input value={incomeAmt2['other']} onChange={e => setIncomeAmt2(p => ({...p, other: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
-                        </td>
-                        <td className="px-2 py-1.5">
+                        </td>}
+                        {showPerson2 && <td className="px-2 py-1.5">
                           <select value={incomePer2['other']} onChange={e => setIncomePer2(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
                             <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                           </select>
-                        </td>
+                        </td>}
                       </tr>
                     </tbody>
                   </table>
