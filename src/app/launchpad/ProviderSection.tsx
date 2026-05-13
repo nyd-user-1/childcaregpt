@@ -1,12 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { NY_COUNTIES } from '@/lib/ny-counties'
 
-type Provider = { name: string; county: string }
+type Facility = {
+  facility_id: string
+  facility_name: string
+  city: string
+  profile_url: string
+}
 
-const PROVIDERS: Record<string, Provider[]> = {
+type StaticProvider = { name: string; county: string }
+
+const STATIC_PROVIDERS: Record<string, StaticProvider[]> = {
   'Family Day Care': [
     { name: "Sunshine Family Care",        county: 'Albany'      },
     { name: "Little Stars FDC",            county: 'Bronx'       },
@@ -104,6 +113,7 @@ const CARD_GRADIENTS = [
   ['#f472b6', '#be185d'],
 ]
 
+const PROGRAM_TYPES = ['FDC', 'GFDC', 'SACC', 'SDCC']
 const PROVIDER_TABS = [
   'Family Day Care',
   'Group Family Day Care',
@@ -112,8 +122,26 @@ const PROVIDER_TABS = [
 ]
 
 export function ProviderSection() {
+  const pathname = usePathname()
   const [activeTab, setActiveTab] = useState(0)
-  const currentProviders = PROVIDERS[PROVIDER_TABS[activeTab]]
+  const [facilities, setFacilities] = useState<Facility[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const slug = pathname.startsWith('/launchpad/') ? pathname.slice('/launchpad/'.length) : null
+  const countyRow = slug ? NY_COUNTIES.find(c => c.slug === slug) : null
+  const county = countyRow?.county ?? null
+
+  useEffect(() => {
+    if (!county) { setFacilities([]); return }
+    setLoading(true)
+    fetch(`/api/facilities?county=${encodeURIComponent(county)}&program_type=${PROGRAM_TYPES[activeTab]}&limit=200`)
+      .then(r => r.json())
+      .then(d => { setFacilities(d.data ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [county, activeTab])
+
+  const label = PROVIDER_TABS[activeTab]
+  const abbr = PROGRAM_TYPES[activeTab]
 
   return (
     <div>
@@ -131,26 +159,61 @@ export function ProviderSection() {
         ))}
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
-        {currentProviders.map((p, i) => {
-          const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
-          return (
-            <Link key={`${p.name}-${i}`}
-              href={`/county/${p.county.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-              className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md"
-              style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2 py-1">
-                <span className="text-xs font-bold text-white">{PROVIDER_TABS[activeTab].split(' ').map(w => w[0]).join('')}</span>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
-                <p className="text-sm font-bold text-white leading-snug">{p.name}</p>
-                <p className="text-[10px] text-white/70">{p.county}</p>
-              </div>
-            </Link>
-          )
-        })}
-      </div>
+      {county ? (
+        loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[4/3] rounded-2xl bg-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : facilities.length === 0 ? (
+          <p className="text-sm text-[var(--muted)] py-8 text-center">
+            No {label} providers found in {county} County.
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
+            {facilities.map((f, i) => {
+              const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
+              return (
+                <Link key={f.facility_id}
+                  href={`/facility/${f.profile_url}`}
+                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md"
+                  style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                  <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2 py-1">
+                    <span className="text-xs font-bold text-white">{abbr}</span>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+                    <p className="text-sm font-bold text-white leading-snug">{f.facility_name}</p>
+                    <p className="text-[10px] text-white/70">{f.city}</p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-6">
+          {STATIC_PROVIDERS[label].map((p, i) => {
+            const [light, dark] = CARD_GRADIENTS[i % CARD_GRADIENTS.length]
+            return (
+              <Link key={`${p.name}-${i}`}
+                href={`/county/${p.county.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                className="group relative aspect-[4/3] rounded-2xl overflow-hidden shadow-sm transition-shadow hover:shadow-md"
+                style={{ background: `linear-gradient(135deg, ${light}, ${dark})` }}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2 py-1">
+                  <span className="text-xs font-bold text-white">{abbr}</span>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+                  <p className="text-sm font-bold text-white leading-snug">{p.name}</p>
+                  <p className="text-[10px] text-white/70">{p.county}</p>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
