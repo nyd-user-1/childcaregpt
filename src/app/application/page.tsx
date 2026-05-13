@@ -476,6 +476,13 @@ export default function ApplicationPage() {
     setTouched(prev => { const next = new Set(prev); next.add(key); return next })
   }
 
+  // Auto-populate Who? fields with applicant name when name changes (only if field is still blank)
+  useEffect(() => {
+    const fullName = `${firstName} ${lastName}`.trim()
+    if (!fullName) return
+    setIncomeWho1(prev => Object.fromEntries(Object.entries(prev).map(([k, v]) => [k, v || fullName])))
+  }, [firstName, lastName]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Load & pre-fill from eligibility ────────────────────────────────────
   useEffect(() => {
     const raw = localStorage.getItem('ccap-eligibility-data')
@@ -1756,29 +1763,25 @@ export default function ApplicationPage() {
                   <table className={`w-full text-sm ${showPerson2 ? 'min-w-[900px]' : 'min-w-[560px]'}`}>
                     <thead>
                       <tr className="border-b border-gray-100">
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500" rowSpan={2}>Income Source</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10" rowSpan={2}>Yes</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10" rowSpan={2}>No</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>
-                          <div className="flex items-center justify-between">
-                            <span>Person 1</span>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-56">
+                          <div className="flex items-center gap-2">
+                            <span>Income Source</span>
                             {!showPerson2 && (
                               <div className="relative group">
                                 <button type="button" onClick={() => setShowPerson2(true)} className="text-gray-400 hover:text-[#0ea5e9] transition-colors text-base leading-none font-bold">+</button>
-                                <div className="pointer-events-none absolute right-0 top-6 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">Add a person</div>
+                                <div className="pointer-events-none absolute left-0 top-6 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">Add a person</div>
                               </div>
                             )}
                           </div>
                         </th>
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100" colSpan={3}>Person 2</th>}
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs border-l border-gray-100 w-28">Who?</th>}
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Gross Amt</th>}
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-400 text-xs w-24">Period</th>}
+                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10">Yes</th>
+                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10">No</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100 w-28">Who?</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Gross Amt</th>
+                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Period</th>
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100 w-28">Who?</th>}
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Gross Amt</th>}
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Period</th>}
                       </tr>
                     </thead>
                     <tbody>
