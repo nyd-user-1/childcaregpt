@@ -375,15 +375,16 @@ export default function ApplicationPage() {
   const [incomeConfirmed, setIncomeConfirmed] = useState<Set<string>>(new Set())
   const [incomeWho1,   setIncomeWho1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
   const [incomeAmt1,   setIncomeAmt1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
-  const [incomePer1,   setIncomePer1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomePer1,   setIncomePer1]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, 'year'])))
   const [incomeWho2,   setIncomeWho2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
   const [incomeAmt2,   setIncomeAmt2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
-  const [incomePer2,   setIncomePer2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, ''])))
+  const [incomePer2,   setIncomePer2]   = useState<Record<string,string>>(() => Object.fromEntries(INCOME_KEYS.map(k => [k, 'year'])))
   const [incomeOtherLabel, setIncomeOtherLabel] = useState('')
   const [showPerson2, setShowPerson2] = useState(false)
 
-  const incomeDragging = useRef(false)
-  const incomeDragCol  = useRef<'yes' | 'no'>('no')
+  const incomeDragging   = useRef(false)
+  const incomeDragCol    = useRef<'yes' | 'no'>('no')
+  const lastAutoWho1     = useRef('')
 
   useEffect(() => {
     const stop = () => { incomeDragging.current = false }
@@ -476,11 +477,12 @@ export default function ApplicationPage() {
     setTouched(prev => { const next = new Set(prev); next.add(key); return next })
   }
 
-  // Auto-populate Who? fields with applicant name when name changes (only if field is still blank)
+  // Auto-populate Who? fields with applicant name; update as name is typed (tracks prev auto-value so manual edits are preserved)
   useEffect(() => {
     const fullName = `${firstName} ${lastName}`.trim()
-    if (!fullName) return
-    setIncomeWho1(prev => Object.fromEntries(Object.entries(prev).map(([k, v]) => [k, v || fullName])))
+    const prev = lastAutoWho1.current
+    setIncomeWho1(cur => Object.fromEntries(Object.entries(cur).map(([k, v]) => [k, (v === prev || v === '') ? fullName : v])))
+    lastAutoWho1.current = fullName
   }, [firstName, lastName]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Load & pre-fill from eligibility ────────────────────────────────────
@@ -1825,7 +1827,7 @@ export default function ApplicationPage() {
                             <input value={incomeWho1[key]} onChange={e => setIncomeWho1(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                           </td>
                           <td className="px-2 py-1.5">
-                            <input value={incomeAmt1[key]} onChange={e => setIncomeAmt1(p => ({...p, [key]: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                            <input value={incomeAmt1[key] ? `$${Number(incomeAmt1[key]).toLocaleString()}` : ''} onChange={e => setIncomeAmt1(p => ({...p, [key]: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                           </td>
                           <td className="px-2 py-1.5">
                             <select value={incomePer1[key]} onChange={e => setIncomePer1(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
@@ -1836,7 +1838,7 @@ export default function ApplicationPage() {
                             <input value={incomeWho2[key]} onChange={e => setIncomeWho2(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                           </td>}
                           {showPerson2 && <td className="px-2 py-1.5">
-                            <input value={incomeAmt2[key]} onChange={e => setIncomeAmt2(p => ({...p, [key]: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                            <input value={incomeAmt2[key] ? `$${Number(incomeAmt2[key]).toLocaleString()}` : ''} onChange={e => setIncomeAmt2(p => ({...p, [key]: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                           </td>}
                           {showPerson2 && <td className="px-2 py-1.5">
                             <select value={incomePer2[key]} onChange={e => setIncomePer2(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
@@ -1871,7 +1873,7 @@ export default function ApplicationPage() {
                           <input value={incomeWho1['other']} onChange={e => setIncomeWho1(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                         </td>
                         <td className="px-2 py-1.5">
-                          <input value={incomeAmt1['other']} onChange={e => setIncomeAmt1(p => ({...p, other: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          <input value={incomeAmt1['other'] ? `$${Number(incomeAmt1['other']).toLocaleString()}` : ''} onChange={e => setIncomeAmt1(p => ({...p, other: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                         </td>
                         <td className="px-2 py-1.5">
                           <select value={incomePer1['other']} onChange={e => setIncomePer1(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
@@ -1882,7 +1884,7 @@ export default function ApplicationPage() {
                           <input value={incomeWho2['other']} onChange={e => setIncomeWho2(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                         </td>}
                         {showPerson2 && <td className="px-2 py-1.5">
-                          <input value={incomeAmt2['other']} onChange={e => setIncomeAmt2(p => ({...p, other: e.target.value}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          <input value={incomeAmt2['other'] ? `$${Number(incomeAmt2['other']).toLocaleString()}` : ''} onChange={e => setIncomeAmt2(p => ({...p, other: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
                         </td>}
                         {showPerson2 && <td className="px-2 py-1.5">
                           <select value={incomePer2['other']} onChange={e => setIncomePer2(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
