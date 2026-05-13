@@ -1734,7 +1734,7 @@ export default function ApplicationPage() {
             {activeTab === 3 && (
               <SectionCard title="Tell us about your household income." prefilled={true} status={sectionStatus['income']} onConfirm={() => confirmSection('income')}>
                 <div className="overflow-x-auto -mx-2">
-                  <table className="w-full text-sm min-w-[900px]">
+                  <table className={`w-full text-sm ${showPerson2 ? 'min-w-[900px]' : 'min-w-[560px]'}`}>
                     <thead>
                       <tr className="border-b border-gray-100">
                         <th className="text-left px-3 py-2 font-semibold text-gray-500" rowSpan={2}>Income Source</th>
@@ -1785,7 +1785,7 @@ export default function ApplicationPage() {
                           </td>
                           <td className="px-3 py-2 text-center">
                             <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                              <input type="radio" name={key} value="no" checked={incomeSelections[key] === 'no'} onChange={() => selectIncome(key, 'no')} style={{ accentColor: incomeConfirmed.has(key) ? '#0ea5e9' : '#eab308' }} />
+                              <input type="radio" name={key} value="no" checked={incomeSelections[key] === 'no'} onChange={() => selectIncome(key, 'no')} onClick={() => selectIncome(key, 'no')} style={{ accentColor: incomeConfirmed.has(key) ? '#0ea5e9' : '#eab308' }} />
                             </label>
                           </td>
                           <td className="px-2 py-1.5 border-l border-gray-100">
@@ -1825,7 +1825,7 @@ export default function ApplicationPage() {
                         </td>
                         <td className="px-3 py-2 text-center">
                           <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                            <input type="radio" name="other" value="no" checked={incomeSelections['other'] === 'no'} onChange={() => selectIncome('other', 'no')} style={{ accentColor: incomeConfirmed.has('other') ? '#0ea5e9' : '#eab308' }} />
+                            <input type="radio" name="other" value="no" checked={incomeSelections['other'] === 'no'} onChange={() => selectIncome('other', 'no')} onClick={() => selectIncome('other', 'no')} style={{ accentColor: incomeConfirmed.has('other') ? '#0ea5e9' : '#eab308' }} />
                           </label>
                         </td>
                         <td className="px-2 py-1.5 border-l border-gray-100">
