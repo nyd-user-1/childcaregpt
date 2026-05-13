@@ -31,7 +31,7 @@ function FacilityView({ facilitySlug, countySlug }: { facilitySlug: string; coun
 
   useEffect(() => {
     setFacility(null)
-    fetch(`/api/facilities?profile_url=${encodeURIComponent(facilitySlug)}`)
+    fetch(`/api/facilities?facility_id=${encodeURIComponent(facilitySlug)}`)
       .then(r => r.json())
       .then(d => setFacility(d.data?.[0] ?? null))
   }, [facilitySlug])
