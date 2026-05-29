@@ -52,10 +52,10 @@ const MAPS: MapCard[] = [
     href: '/maps/zip-code',
     kicker: 'IV',
     title: 'By ZIP Code',
-    body: 'Block-level detail — find care in your immediate neighborhood. Coming soon.',
-    stat: 'In progress',
+    body: 'Enter your ZIP or address to map every licensed provider in your immediate neighborhood, closest first.',
+    stat: 'Neighborhood search',
     icon: <MapIcon className="h-5 w-5" />,
-    ready: false,
+    ready: true,
   },
 ]
 
