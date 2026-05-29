@@ -23,7 +23,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
       'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors',
       active
         ? 'bg-[var(--paper-2)] text-[var(--paper-accent)]'
-        : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)]',
+        : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)]',
     )
   const subItem = (active: boolean) =>
     cn(
@@ -63,7 +63,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
           <>
             <button
               onClick={() => setMapOpen(v => !v)}
-              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] transition-colors"
+              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)] transition-colors"
             >
               <Map className="h-[18px] w-[18px] flex-shrink-0" />
               <span className="flex-1 text-left">Map</span>
@@ -97,7 +97,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
             'flex items-center rounded-lg border border-[var(--paper-rule)] px-3 py-2.5 text-[15px] font-medium transition-colors',
             activeLabel === SIDEBAR_FOOTER_LABEL
               ? 'bg-[var(--paper-2)] text-[var(--paper-accent)]'
-              : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)]',
+              : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)]',
           )}
         >
           {SIDEBAR_FOOTER_LABEL}
