@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { CommandPalette } from '@/components/CommandPalette'
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="h-full" style={{ fontFamily: "'DM Sans', sans-serif" }}>
         {children}
+        <CommandPalette />
       </body>
     </html>
   )
