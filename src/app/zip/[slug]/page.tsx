@@ -70,6 +70,10 @@ export default async function DetailPageZipCode({ params }: { params: Promise<{ 
     <ZipShell
       familiesPerSeat={familiesPerSeat}
       population={demand?.population ?? null}
+      childrenUnder6={demand?.childrenUnder6 ?? null}
+      oneParentUnder6={demand?.oneParentUnder6 ?? null}
+      birthsPastYear={demand?.birthsPastYear ?? null}
+      under5PovertyRate={demand?.under5PovertyRate ?? null}
       stats={{
         zip_code:           stats.zip_code as string,
         city:               stats.city as string,
