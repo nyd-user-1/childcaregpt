@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
-import { PanelLeftOpen, PanelLeftClose, ChevronLeft, ChevronRight } from 'lucide-react'
+import { flushSync } from 'react-dom'
+import { usePathname } from 'next/navigation'
+import { PanelLeftOpen, PanelLeftClose, Sun, Moon } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
 import {
   CHART_NAV_EVENT,
-  NAV_CYCLE, PATH_NAV,
+  PATH_NAV,
 } from '@/lib/app-config'
 
 type ChartNavDetail = {
@@ -20,8 +21,35 @@ type ChartNavDetail = {
 export function AppLayout({ children }: { children: React.ReactNode; showNavArrows?: boolean }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [chartNav, setChartNav] = useState<ChartNavDetail>(null)
+  const [dark, setDark] = useState(false)
   const pathname = usePathname()
-  const router = useRouter()
+
+  // Theme defaults to light (paper voice is light-first); honor a saved choice.
+  useEffect(() => {
+    const isDark = localStorage.getItem('theme') === 'dark'
+    setDark(isDark)
+    document.documentElement.classList.toggle('dark', isDark)
+  }, [])
+
+  function toggleTheme(e: React.MouseEvent) {
+    const x = e.clientX
+    const y = e.clientY
+    const next = !dark
+    const apply = () => {
+      setDark(next)
+      document.documentElement.classList.toggle('dark', next)
+      localStorage.setItem('theme', next ? 'dark' : 'light')
+    }
+    if (!document.startViewTransition) { apply(); return }
+    const endRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y))
+    const transition = document.startViewTransition(() => { flushSync(apply) })
+    transition.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`] },
+        { duration: 600, easing: 'cubic-bezier(.76,.32,.29,.99)', pseudoElement: '::view-transition-new(root)' },
+      )
+    })
+  }
 
   useEffect(() => {
     const handle = (e: Event) => setChartNav((e as CustomEvent<ChartNavDetail>).detail)
@@ -43,15 +71,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
     pathname.startsWith('/console')   ? 'Console'   :
     pathname.startsWith('/chart/')    ? 'Charts'    : undefined
   )
-  // For sub-routes (e.g. /console/suffolk, /launchpad/albany), find the parent NAV_CYCLE entry
-  const navIdx = NAV_CYCLE.indexOf(pathname) !== -1
-    ? NAV_CYCLE.indexOf(pathname)
-    : NAV_CYCLE.findIndex(p => p !== '/' && pathname.startsWith(p + '/'))
-  const n       = NAV_CYCLE.length
-  const prevNav = navIdx >= 0 ? NAV_CYCLE[(navIdx - 1 + n) % n] : null
-  const nextNav = navIdx >= 0 ? NAV_CYCLE[(navIdx + 1) % n]     : null
-
-  const navBtnCls = 'flex h-8 w-8 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
+  const themeBtnCls = 'flex h-9 w-9 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
 
   return (
     <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px]" style={{ background: 'var(--paper-ground)' }}>
@@ -76,33 +96,21 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
 
           <div className="flex-1" />
 
-          {chartNav ? (
-            <div className="flex flex-col items-end gap-0.5">
-              <div className="hidden sm:flex items-center gap-1.5">
-                <button onClick={() => router.push(chartNav.prevHref)} className={navBtnCls}>
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button onClick={() => router.push(chartNav.nextHref)} className={navBtnCls}>
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+          <div className="flex items-center gap-3">
+            {chartNav && (
               <div className="text-right">
                 <div className="tabular-nums font-bold text-3xl leading-tight" style={{ color: chartNav.color }}>
                   {chartNav.kpi}
                 </div>
                 <div className="text-xs text-[var(--paper-muted)] mt-0.5">{chartNav.kpiLabel}</div>
               </div>
-            </div>
-          ) : navIdx >= 0 ? (
-            <div className="hidden sm:flex items-center gap-1.5">
-              <button onClick={() => prevNav && router.push(prevNav)} className={navBtnCls}>
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button onClick={() => nextNav && router.push(nextNav)} className={navBtnCls}>
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            </div>
-          ) : null}
+            )}
+            <button onClick={toggleTheme} aria-label="Toggle dark mode" className={themeBtnCls}>
+              {dark
+                ? <Sun  className="h-[18px] w-[18px] fill-amber-400 text-amber-400" />
+                : <Moon className="h-[18px] w-[18px]" />}
+            </button>
+          </div>
 
         </div>
 

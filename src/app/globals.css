@@ -49,6 +49,48 @@
   --font-display: 'Fraunces', Georgia, serif;
 }
 
+/* Dark mode — warm onyx with an umber tint. Overrides the same tokens the whole
+   app already colors with, so flipping `html.dark` flips every paper surface.
+   Accent is a balanced teal that holds contrast both as text on the dark ground
+   and as a white-text fill (the eligibility CTA). */
+html.dark {
+  --bg:       #15120d;
+  --bg2:      #1a1712;
+  --surface:  #1a1712;
+  --card:     #1f1b15;
+  --card2:    #242019;
+  --border:   rgba(240, 233, 216, 0.10);
+  --border2:  rgba(240, 233, 216, 0.05);
+  --txt:      #f0e9d8;
+  --txt2:     rgba(240, 233, 216, 0.72);
+  --muted:    rgba(240, 233, 216, 0.48);
+  --muted2:   rgba(240, 233, 216, 0.28);
+  --inp-bg:   rgba(240, 233, 216, 0.06);
+  --row-hover: rgba(240, 233, 216, 0.05);
+
+  --paper:        #1a1712;  /* panel — floats above the desk */
+  --paper-2:      #242019;  /* raised inset / cards */
+  --paper-ground: #100e0a;  /* deepest desk behind the floating panels */
+  --paper-text:   #f0e9d8;  /* warm cream */
+  --paper-muted:  rgba(240, 233, 216, 0.64);
+  --paper-faint:  rgba(240, 233, 216, 0.40);
+  --paper-accent: #3f8479;  /* balanced teal — readable as text AND as a fill */
+  --paper-accent-soft: rgba(63, 132, 121, 0.18);
+  --paper-rule:   rgba(240, 233, 216, 0.13);
+  --paper-rule-soft: rgba(240, 233, 216, 0.07);
+}
+
+/* Theme toggle — the new theme is revealed as an expanding circle from the
+   click point. Disable the default view-transition cross-fade so only the
+   clip-path animation shows. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-new(root) { z-index: 9999; }
+::view-transition-old(root) { z-index: 1; }
+
 /* Staggered page-load reveal used on the editorial glossary. */
 @keyframes paper-rise {
   from { opacity: 0; transform: translateY(10px); }
