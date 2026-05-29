@@ -11,6 +11,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
     "@neondatabase/serverless": "^1.1.0",
+    "@turf/boolean-point-in-polygon": "^7.3.5",
+    "@vercel/blob": "^2.4.0",
     "@vis.gl/react-google-maps": "^1.8.3",
     "clsx": "^2.1.1",
     "jspdf": "^4.2.1",
@@ -32,6 +34,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "mapshaper": "^0.6.102",
     "pg": "^8.20.0",
     "tailwindcss": "^4",
     "typescript": "^5"

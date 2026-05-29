@@ -45,3 +45,6 @@ next-env.d.ts
 *.csv
 /*.pdf
 /For Review/
+# large raw geojson — hosted on Vercel Blob, never committed
+*.geojson
+/scripts/geojson-build/

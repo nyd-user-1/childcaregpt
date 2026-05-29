@@ -10,17 +10,18 @@ const NY_BOUNDS     = { north: 45.01, south: 40.49, east: -71.77, west: -79.76 }
 
 const MAP_STYLE = [
   { featureType: 'all',      elementType: 'labels',           stylers: [{ visibility: 'off' }] },
-  { featureType: 'water',    elementType: 'geometry',         stylers: [{ color: '#dbeafe' }] },
-  { featureType: 'landscape',elementType: 'geometry',         stylers: [{ color: '#f8f8f8' }] },
+  { featureType: 'water',    elementType: 'geometry',         stylers: [{ color: '#e7eef0' }] },
+  { featureType: 'landscape',elementType: 'geometry',         stylers: [{ color: '#f1ece2' }] },
   { featureType: 'road',     elementType: 'all',              stylers: [{ visibility: 'off' }] },
   { featureType: 'poi',      elementType: 'all',              stylers: [{ visibility: 'off' }] },
   { featureType: 'transit',  elementType: 'all',              stylers: [{ visibility: 'off' }] },
-  { featureType: 'administrative.country',  elementType: 'geometry.stroke', stylers: [{ color: '#cccccc' }, { visibility: 'on' }] },
+  { featureType: 'administrative.country',  elementType: 'geometry.stroke', stylers: [{ color: '#d8d2c6' }, { visibility: 'on' }] },
   { featureType: 'administrative.province', elementType: 'geometry.stroke', stylers: [{ visibility: 'off' }] },
 ]
 
-// Indigo scale — dark (high) → light (low)
-const COLORS = ['#312e81', '#4338ca', '#6366f1', '#818cf8', '#a5b4fc', '#e0e7ff']
+// Warm teal scale — deep (high) → pale (low). Matches the paper accent.
+const COLORS = ['#1e4d4a', '#2f6d6a', '#4f8d8a', '#83b3b0', '#bcd6d4', '#e3ecea']
+const ACCENT = '#2f6d6a'
 
 export type CountyMapRow = {
   county_fips_code: string
@@ -169,9 +170,9 @@ function NYCountyLayer({
       const dimmed    = hoveredFips !== null && !isHovered
 
       return {
-        fillColor:    row ? metricColor(value, config.thresholds) : '#e5e7eb',
-        fillOpacity:  dimmed ? 0.10 : (row ? 0.82 : 0.15),
-        strokeColor:  isHovered ? '#312e81' : '#ffffff',
+        fillColor:    row ? metricColor(value, config.thresholds) : '#e5e1d8',
+        fillOpacity:  dimmed ? 0.12 : (row ? 0.85 : 0.18),
+        strokeColor:  isHovered ? '#1e4d4a' : '#f7f4ee',
         strokeWeight: isHovered ? 2.5 : 0.8,
         strokeOpacity: 1,
         clickable: true,
@@ -232,9 +233,10 @@ export default function NYCountyMap({ data }: { data: CountyMapRow[] }) {
             onClick={() => setMetric(m)}
             className={`px-3 py-1.5 rounded-full text-[11px] font-semibold transition-colors shadow-sm whitespace-nowrap ${
               metric === m
-                ? 'bg-indigo-600 text-white shadow-indigo-200'
+                ? 'text-white'
                 : 'bg-white/92 backdrop-blur-sm text-[#444] hover:bg-white'
             }`}
+            style={metric === m ? { background: ACCENT } : undefined}
           >
             {METRIC_CONFIG[m].label}
           </button>
