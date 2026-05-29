@@ -110,7 +110,7 @@ export function CountyShell({
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
-        <div className="mx-auto max-w-3xl px-6 sm:px-10 pt-10 sm:pt-14 pb-16">
+        <div className="mx-auto max-w-3xl px-6 sm:px-10 pt-5 sm:pt-14 pb-16">
 
           {/* ── Masthead ── */}
           <div className="flex items-start justify-between gap-4">
@@ -130,11 +130,10 @@ export function CountyShell({
 
           {/* ── The answer: cost ── */}
           {hasCost ? (
-            <p className="paper-rise mt-7 max-w-[54ch] text-[var(--paper-text)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)', lineHeight: 1.5 }}>
+            <p className="paper-rise mt-5 sm:mt-7 max-w-[54ch] text-[var(--paper-text)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)', lineHeight: 1.5 }}>
               In {county} County, infant care typically runs{' '}
               <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{money(centerInfant)}/month</strong>{' '}
-              at a day care center{familyInfant != null && <> — or <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{money(familyInfant)}/month</strong> in family child care</>}.
-              Care costs less as children get older.
+              at a day care center{familyInfant != null && <> — or <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{money(familyInfant)}/month</strong> in family child care</>}.<span className="max-sm:hidden"> Care costs less as children get older.</span>
             </p>
           ) : (
             <p className="paper-rise mt-7 max-w-[54ch] text-[var(--paper-muted)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: '1.2rem', lineHeight: 1.6 }}>
@@ -145,7 +144,7 @@ export function CountyShell({
 
           {/* ── Cost by age ── */}
           {hasCost && (
-            <div className="paper-rise mt-9" style={{ animationDelay: '180ms' }}>
+            <div className="paper-rise mt-6 sm:mt-9" style={{ animationDelay: '180ms' }}>
               <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[var(--paper-faint)]" style={SANS}>
                 Typical cost per month
               </p>

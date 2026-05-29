@@ -77,7 +77,7 @@ export function ZipShell({
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
-        <div className="mx-auto max-w-3xl px-6 sm:px-10 pt-10 sm:pt-14 pb-16">
+        <div className="mx-auto max-w-3xl px-6 sm:px-10 pt-5 sm:pt-14 pb-16">
 
           {/* ── Masthead ── */}
           <div className="flex items-start justify-between gap-4">
@@ -97,7 +97,7 @@ export function ZipShell({
           </div>
 
           {/* ── The answer: what's here ── */}
-          <p className="paper-rise mt-7 max-w-[54ch] text-[var(--paper-text)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: 'clamp(1.2rem, 2.3vw, 1.55rem)', lineHeight: 1.5 }}>
+          <p className="paper-rise mt-5 sm:mt-7 max-w-[54ch] text-[var(--paper-text)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: 'clamp(1.2rem, 2.3vw, 1.55rem)', lineHeight: 1.5 }}>
             ZIP {stats.zip_code} sits in {stats.city}, {stats.county} County — with{' '}
             <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{stats.provider_count} licensed {stats.provider_count === 1 ? 'provider' : 'providers'}</strong>{' '}
             and about <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{stats.total_capacity.toLocaleString()} child care seats</strong>.
@@ -112,7 +112,7 @@ export function ZipShell({
           )}
 
           {/* ── Help paying (eligibility route) ── */}
-          <div className="paper-rise mt-9 rounded-2xl border border-[var(--paper-accent)] p-6" style={{ background: 'var(--paper-accent-soft)', animationDelay: '180ms' }}>
+          <div className="paper-rise mt-6 sm:mt-9 rounded-2xl border border-[var(--paper-accent)] p-6" style={{ background: 'var(--paper-accent-soft)', animationDelay: '180ms' }}>
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--paper-accent)', color: '#fff' }}>
                 <Sparkles className="h-4 w-4" />
