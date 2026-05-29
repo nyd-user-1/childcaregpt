@@ -90,6 +90,19 @@ export function CountyShell({
     ? Math.round((costs.mcinfant * 52 / costs.mhi) * 100)
     : null
 
+  // Snapshot table rows, ordered people → care → cost → need.
+  const snapshotRows: { label: string; value: string }[] = []
+  if (population != null)      snapshotRows.push({ label: 'Population',                   value: population.toLocaleString() })
+  if (childrenUnder6 != null)  snapshotRows.push({ label: 'Children under 6',             value: childrenUnder6.toLocaleString() })
+  if (birthsPastYear != null)  snapshotRows.push({ label: 'Babies born last year',        value: birthsPastYear.toLocaleString() })
+  if (oneParentUnder6 != null) snapshotRows.push({ label: 'Single-parent homes, under 6', value: oneParentUnder6.toLocaleString() })
+  snapshotRows.push({ label: 'Licensed providers',  value: fmtNum(stats.provider_count) })
+  snapshotRows.push({ label: 'Total licensed seats', value: fmtNum(stats.total_capacity) })
+  if (costs?.mhi != null)                  snapshotRows.push({ label: 'Median household income',   value: `$${Math.round(costs.mhi).toLocaleString()}` })
+  if (costInfantPct != null)               snapshotRows.push({ label: 'Infant care, % of income',  value: `${costInfantPct}%` })
+  if (costs?.flfpr_20to64_under6 != null)  snapshotRows.push({ label: 'Moms working, kids under 6', value: `${Math.round(costs.flfpr_20to64_under6)}%` })
+  if (under5PovertyRate != null)           snapshotRows.push({ label: 'Under-5 poverty rate',       value: `${under5PovertyRate.toFixed(1)}%` })
+
   const askHref = `/?q=${encodeURIComponent(`Find licensed child care in ${county} County`)}`
 
   const roundBtn = 'inline-flex items-center justify-center h-9 w-9 rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
@@ -226,18 +239,14 @@ export function CountyShell({
           {/* ── Snapshot ── */}
           <section className="paper-rise mt-11" style={{ animationDelay: '420ms' }}>
             <h2 className="border-b border-[var(--paper-rule)] pb-3 text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>Snapshot</h2>
-            <div className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
-              {population != null && <Stat label="Population" value={population.toLocaleString()} />}
-              {childrenUnder6 != null && <Stat label="Children under 6" value={childrenUnder6.toLocaleString()} />}
-              {birthsPastYear != null && <Stat label="Babies born last year" value={birthsPastYear.toLocaleString()} />}
-              <Stat label="Licensed providers" value={fmtNum(stats.provider_count)} />
-              <Stat label="Total licensed seats" value={fmtNum(stats.total_capacity)} />
-              {costs?.mhi != null && <Stat label="Median household income" value={`$${Math.round(costs.mhi).toLocaleString()}`} />}
-              {costInfantPct != null && <Stat label="Infant care, % of income" value={`${costInfantPct}%`} />}
-              {costs?.flfpr_20to64_under6 != null && <Stat label="Moms working (kids under 6)" value={`${Math.round(costs.flfpr_20to64_under6)}%`} />}
-              {oneParentUnder6 != null && <Stat label="Single-parent homes, under 6" value={oneParentUnder6.toLocaleString()} />}
-              {under5PovertyRate != null && <Stat label="Under-5 poverty rate" value={`${under5PovertyRate.toFixed(1)}%`} />}
-            </div>
+            <dl className="mt-3 grid grid-cols-1 gap-x-12 sm:grid-cols-2">
+              {snapshotRows.map(r => (
+                <div key={r.label} className="flex items-baseline justify-between gap-4 border-t border-[var(--paper-rule-soft)] py-3">
+                  <dt className="text-[13.5px] leading-snug text-[var(--paper-muted)]" style={SANS}>{r.label}</dt>
+                  <dd className="shrink-0 tabular-nums text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.15rem', fontWeight: 500 }}>{r.value}</dd>
+                </div>
+              ))}
+            </dl>
             <p className="mt-5 text-[11px] leading-relaxed text-[var(--paper-faint)]" style={SANS}>
               Sources: U.S. Census Bureau (ACS 2022) · NY OCFS licensed-provider data · U.S. Dept. of Labor.
             </p>
@@ -246,14 +255,5 @@ export function CountyShell({
         </div>
       </div>
     </AppLayout>
-  )
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--paper-faint)]" style={SANS}>{label}</p>
-      <p className="mt-1 tabular-nums text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.4rem', fontWeight: 500 }}>{value}</p>
-    </div>
   )
 }
