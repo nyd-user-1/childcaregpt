@@ -6,6 +6,9 @@ import { Download, ArrowLeft, ArrowRight, CornerDownRight, RotateCcw } from 'luc
 import { AppLayout } from '@/components/AppLayout'
 import { PDFDocument, StandardFonts } from 'pdf-lib'
 
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface EligData {
@@ -69,7 +72,7 @@ function PortalTooltip({ text, children }: { text: string; children: React.React
       {visible && ReactDOM.createPortal(
         <div
           style={{ position: 'absolute', top: pos.top - 4, left: pos.left, transform: 'translateY(-100%)', zIndex: 9999 }}
-          className="bg-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap pointer-events-none"
+          className="bg-[var(--paper-text)] text-[var(--paper)] text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap pointer-events-none"
         >
           {text}
         </div>,
@@ -104,7 +107,7 @@ function Field({
   const shouldWarn = warned && !value
   return (
     <div className={half ? 'flex-1 min-w-0' : 'w-full'}>
-      <label className="block text-xs font-semibold text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs font-semibold text-[var(--paper-muted)] mb-1">{label}</label>
       <span className={shouldWarn ? 'warn-pulse rounded-lg block' : 'block'}>
       <input
         id={id}
@@ -114,8 +117,8 @@ function Field({
         placeholder={placeholder}
         className={`w-full rounded-lg border px-3 py-2 text-sm outline-none transition-colors ${
           prefilled
-            ? 'border-[#0ea5e9] bg-sky-50 text-gray-800'
-            : 'border-gray-200 bg-white text-gray-700 focus:border-[#0ea5e9]'
+            ? 'border-[#2f6d6a] bg-[var(--paper-accent-soft)] text-[var(--paper-text)]'
+            : 'border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-text)] focus:border-[#2f6d6a]'
         }`}
       />
       </span>
@@ -127,13 +130,13 @@ function CheckField({ label, checked, onChange, prefilled = false }: {
   label: string; checked: boolean; onChange: (v: boolean) => void; prefilled?: boolean
 }) {
   return (
-    <label className={`flex items-center gap-2 cursor-pointer text-sm ${prefilled ? 'text-[#0ea5e9] font-medium' : 'text-gray-700'}`}>
+    <label className={`flex items-center gap-2 cursor-pointer text-sm ${prefilled ? 'text-[#2f6d6a] font-medium' : 'text-[var(--paper-text)]'}`}>
       <input
         type="checkbox"
         checked={checked}
         onChange={e => onChange(e.target.checked)}
         className="h-4 w-4 rounded"
-        style={{ accentColor: '#0ea5e9' }}
+        style={{ accentColor: '#2f6d6a' }}
       />
       {label}
     </label>
@@ -147,14 +150,14 @@ function SectionCard({ title, subtitle, prefilled, status, warned, ready, onConf
 }) {
   const hasStatus = !!status
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-visible">
+    <div className="rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper)] shadow-sm overflow-visible">
       <div
-        className={`px-6 py-4 bg-gray-50 flex items-center justify-between gap-4 rounded-t-2xl ${!collapsed ? 'border-b border-gray-100' : ''} ${hasStatus ? 'cursor-pointer select-none' : ''}`}
+        className={`px-6 py-4 bg-[var(--paper-2)] flex items-center justify-between gap-4 rounded-t-2xl ${!collapsed ? 'border-b border-[var(--paper-rule)]' : ''} ${hasStatus ? 'cursor-pointer select-none' : ''}`}
         onClick={hasStatus ? onToggle : undefined}
       >
         <div>
-          <h2 className="text-base font-bold text-gray-900">{title}</h2>
-          {subtitle && !collapsed && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+          <h2 className="text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.2rem', fontWeight: 500, letterSpacing: '-0.01em' }}>{title}</h2>
+          {subtitle && !collapsed && <p className="text-xs text-[var(--paper-muted)] mt-0.5" style={SANS}>{subtitle}</p>}
         </div>
         {prefilled && (
           <div className="relative group shrink-0">
@@ -168,13 +171,13 @@ function SectionCard({ title, subtitle, prefilled, status, warned, ready, onConf
                   : warned
                   ? 'bg-yellow-50 border-yellow-400 text-yellow-600 cursor-pointer warn-pulse'
                   : ready
-                  ? 'bg-sky-50 border-[#0ea5e9] text-[#0ea5e9] cursor-pointer ready-pulse'
-                  : 'bg-sky-50 border-[#0ea5e9] text-[#0ea5e9] cursor-pointer hover:bg-sky-100 hover:ring-2 hover:ring-[#0ea5e9] hover:ring-offset-1'
+                  ? 'bg-[var(--paper-accent-soft)] border-[#2f6d6a] text-[#2f6d6a] cursor-pointer ready-pulse'
+                  : 'bg-[var(--paper-accent-soft)] border-[#2f6d6a] text-[#2f6d6a] cursor-pointer hover:bg-[var(--paper-accent-soft)] hover:ring-2 hover:ring-[#2f6d6a] hover:ring-offset-1'
               }`}
             >
               ✓
             </button>
-            <div className="pointer-events-none absolute right-0 top-8 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">
+            <div className="pointer-events-none absolute right-0 top-8 hidden group-hover:block bg-[var(--paper-text)] text-[var(--paper)] text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">
               {warned ? 'Click the yellow items first' : status === 'confirmed' ? 'Mark as incomplete' : 'Click to confirm'}
             </div>
           </div>
@@ -196,16 +199,16 @@ function ScheduleGrid({ label, schedule, onChange }: {
 }) {
   return (
     <div className="space-y-1.5">
-      {label && <p className="text-sm text-gray-700">{label}</p>}
+      {label && <p className="text-sm text-[var(--paper-text)]">{label}</p>}
       <div className="grid grid-cols-7 gap-1.5">
         {DAYS.map(day => (
           <div key={day}>
-            <div className="text-[10px] font-semibold text-gray-400 text-center uppercase mb-1">{day}</div>
+            <div className="text-[10px] font-semibold text-[var(--paper-faint)] text-center uppercase mb-1">{day}</div>
             <input
               value={schedule[day.toLowerCase()] || ''}
               onChange={e => onChange({ ...schedule, [day.toLowerCase()]: e.target.value })}
               placeholder="—"
-              className="w-full rounded border border-gray-200 px-1 py-1 text-xs text-center outline-none focus:border-[#0ea5e9]"
+              className="w-full rounded border border-[var(--paper-rule)] px-1 py-1 text-xs text-center outline-none focus:border-[#2f6d6a]"
             />
           </div>
         ))}
@@ -216,7 +219,7 @@ function ScheduleGrid({ label, schedule, onChange }: {
 
 function PrefilledBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 border border-[#0ea5e9] px-2 py-0.5 text-[10px] font-semibold text-[#0ea5e9]">
+    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--paper-accent-soft)] border border-[#2f6d6a] px-2 py-0.5 text-[10px] font-semibold text-[#2f6d6a]">
       ✓ Pre-filled
     </span>
   )
@@ -228,7 +231,7 @@ const TABS = ['About', 'Household', 'Activities', 'Household Income', 'Signature
 
 function TabBar({ active, onChange }: { active: number; onChange: (i: number) => void }) {
   return (
-    <div className="border-b border-gray-200 mb-6">
+    <div className="border-b border-[var(--paper-rule)] mb-6">
       <nav className="flex items-center gap-0 overflow-x-auto no-scrollbar">
         {TABS.map((tab, i) => (
           <button
@@ -236,8 +239,8 @@ function TabBar({ active, onChange }: { active: number; onChange: (i: number) =>
             onClick={() => onChange(i)}
             className={`shrink-0 px-4 pb-3 pt-1 text-sm border-b-2 transition-colors whitespace-nowrap ${
               active === i
-                ? 'border-[#0ea5e9] text-gray-900 font-bold'
-                : 'border-transparent text-gray-400 hover:text-gray-700 font-medium'
+                ? 'border-[#2f6d6a] text-[var(--paper-text)] font-bold'
+                : 'border-transparent text-[var(--paper-faint)] hover:text-[var(--paper-text)] font-medium'
             }`}
           >
             {tab}
@@ -247,14 +250,14 @@ function TabBar({ active, onChange }: { active: number; onChange: (i: number) =>
           <button
             onClick={() => onChange(Math.max(0, active - 1))}
             disabled={active === 0}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-20 transition-colors"
+            className="p-1.5 rounded-lg text-[var(--paper-faint)] hover:text-[var(--paper-text)] hover:bg-[var(--paper-2)] disabled:opacity-20 transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
           </button>
           <button
             onClick={() => onChange(Math.min(TABS.length - 1, active + 1))}
             disabled={active === TABS.length - 1}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-20 transition-colors"
+            className="p-1.5 rounded-lg text-[var(--paper-faint)] hover:text-[var(--paper-text)] hover:bg-[var(--paper-2)] disabled:opacity-20 transition-colors"
           >
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
@@ -596,11 +599,11 @@ export default function ApplicationPage() {
   const hasOtherAdult = members.slice(1, visibleRows).some(m => m.name.trim() && m.relationship.toLowerCase().includes('adult'))
 
   function rowStyle(_key: string, _val: string): string {
-    return 'border-gray-100 hover:border-gray-300 hover:bg-gray-50 transition-colors'
+    return 'border-[var(--paper-rule)] hover:border-[var(--paper-rule)] hover:bg-[var(--paper-2)] transition-colors'
   }
 
   function blockStyle(_key: string, _val: string): string {
-    return 'border-gray-100'
+    return 'border-[var(--paper-rule)]'
   }
 
   function confirmCircumstances() {
@@ -779,26 +782,27 @@ export default function ApplicationPage() {
 
   return (
     <AppLayout>
-      <div className="flex-1 overflow-y-auto no-scrollbar">
+      <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
         <div className="mx-auto max-w-4xl px-5 py-8">
 
           {/* Header */}
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">NYS Application for Child Care Assistance</h1>
-              <p className="text-xs text-gray-400 mt-1">OCFS-6025 (Rev. 06/2024)</p>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={SANS}>ChildcareGPT · Application</p>
+              <h1 className="mt-2 leading-[1.08] text-[var(--paper-text)]" style={{ ...SERIF, fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)', fontWeight: 400, letterSpacing: '-0.02em' }}>NYS Application for <span style={{ fontStyle: 'italic', color: 'var(--paper-accent)' }}>Child Care Assistance.</span></h1>
+              <p className="text-xs text-[var(--paper-faint)] mt-1.5" style={SANS}>OCFS-6025 (Rev. 06/2024) · we’ll fill the official form for you</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => { localStorage.removeItem('ccap-eligibility-data'); window.location.reload() }}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-3 py-1.5 text-xs font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] transition-colors"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Restart
               </button>
               <button
                 onClick={exportPDF}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-3 py-1.5 text-xs font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] transition-colors"
               >
                 <Download className="h-3.5 w-3.5" />
                 Export
@@ -852,14 +856,14 @@ export default function ApplicationPage() {
                 </div>
                 <div className="grid grid-cols-4 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 mb-2">Primary Language</label>
+                    <label className="block text-xs font-semibold text-[var(--paper-muted)] mb-2">Primary Language</label>
                     <span className={w && !language ? 'warn-pulse rounded-lg inline-flex flex-wrap gap-2' : 'inline-flex flex-wrap gap-2'}>
                       {['English', 'Spanish', 'Haitian', 'Other'].map(l => (
                         <button key={l} type="button" onClick={() => setLanguage(l)}
                           className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
                             language === l
-                              ? 'border-[#0ea5e9] bg-sky-50 text-gray-800'
-                              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
+                              ? 'border-[#2f6d6a] bg-[var(--paper-accent-soft)] text-[var(--paper-text)]'
+                              : 'border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:border-[var(--paper-rule)] hover:shadow-sm'
                           }`}>
                           {l}
                         </button>
@@ -867,14 +871,14 @@ export default function ApplicationPage() {
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 mb-2">Marital Status</label>
+                    <label className="block text-xs font-semibold text-[var(--paper-muted)] mb-2">Marital Status</label>
                     <span className={w && !maritalStatus ? 'warn-pulse rounded-lg inline-flex flex-wrap gap-2' : 'inline-flex flex-wrap gap-2'}>
                       {['Single', 'Married', 'Divorced', 'Separated', 'Widowed'].map(m => (
                         <button key={m} type="button" onClick={() => setMaritalStatus(m)}
                           className={`rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
                             maritalStatus === m
-                              ? 'border-[#0ea5e9] bg-sky-50 text-gray-800'
-                              : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
+                              ? 'border-[#2f6d6a] bg-[var(--paper-accent-soft)] text-[var(--paper-text)]'
+                              : 'border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:border-[var(--paper-rule)] hover:shadow-sm'
                           }`}>
                           {m}
                         </button>
@@ -901,7 +905,7 @@ export default function ApplicationPage() {
               >
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {Object.entries(benefits).map(([label, checked]) => (
-                    <label key={label} className="flex items-center gap-2 cursor-pointer rounded-xl px-2 py-1 -mx-2 -my-1 hover:bg-gray-100 transition-colors">
+                    <label key={label} className="flex items-center gap-2 cursor-pointer rounded-xl px-2 py-1 -mx-2 -my-1 hover:bg-[var(--paper-2)] transition-colors">
                       <input
                         type="radio"
                         name={`benefit-${label}`}
@@ -918,9 +922,9 @@ export default function ApplicationPage() {
                         onClick={() => {
                           if (checked) setBenefits(prev => ({ ...prev, [label]: false }))
                         }}
-                        style={{ accentColor: '#0ea5e9' }}
+                        style={{ accentColor: '#2f6d6a' }}
                       />
-                      <span className={`text-sm ${checked ? 'text-[#0ea5e9] font-medium' : 'text-gray-700'}`}>{label}</span>
+                      <span className={`text-sm ${checked ? 'text-[#2f6d6a] font-medium' : 'text-[var(--paper-text)]'}`}>{label}</span>
                     </label>
                   ))}
                 </div>
@@ -945,7 +949,7 @@ export default function ApplicationPage() {
                       onClick={() => markTouched(key)}
                       className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle(key, val)}`}
                     >
-                      <span className={`text-sm ${pre ? 'font-medium text-[#0ea5e9]' : 'text-gray-700'}`}>
+                      <span className={`text-sm ${pre ? 'font-medium text-[#2f6d6a]' : 'text-[var(--paper-text)]'}`}>
                         {label}
                       </span>
                       <div className="flex gap-4 shrink-0">
@@ -953,13 +957,13 @@ export default function ApplicationPage() {
                           const isYellow = o === 'No' && !!val && !touched.has(key)
                           const shouldPulse = isYellow && warnedSections.has('circumstances')
                           return (
-                            <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                               <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                 <input type="radio" name={label} value={o}
                                   checked={val === o}
                                   onChange={() => { set(o); markTouched(key) }}
                                   onClick={() => markTouched(key)}
-                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                               </span>
                               {o}
                             </label>
@@ -970,7 +974,7 @@ export default function ApplicationPage() {
                   ))}
                   {otherFunding === 'Yes' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 ${rowStyle('otherAgency', otherAgency)}`}>
-                      <span className="text-sm text-gray-700">Other funding agency name</span>
+                      <span className="text-sm text-[var(--paper-text)]">Other funding agency name</span>
                       <input
                         autoFocus
                         value={otherAgency}
@@ -978,13 +982,13 @@ export default function ApplicationPage() {
                         onKeyDown={e => { if (e.key === 'Enter') document.getElementById('reasonForCare')?.focus() }}
                         placeholder="Agency name"
                         className={`w-1/2 border-0 border-b px-1 py-0 text-sm text-right outline-none transition-colors bg-transparent ${
-                          otherAgency ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
+                          otherAgency ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'
                         }`}
                       />
                     </div>
                   )}
                   <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 ${rowStyle('reasonForCare', reasonForCare)}`}>
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-[var(--paper-text)]">
                       Reason(s) child care is needed
                     </span>
                     <input
@@ -995,8 +999,8 @@ export default function ApplicationPage() {
                       placeholder="e.g. Employment, College"
                       className={`w-1/3 border-0 border-b px-1 py-0 text-sm text-right outline-none transition-colors bg-transparent ${
                         prefilled(reasonForCare)
-                          ? 'border-[#0ea5e9] text-gray-800'
-                          : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
+                          ? 'border-[#2f6d6a] text-[var(--paper-text)]'
+                          : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'
                       }`}
                     />
                   </div>
@@ -1019,14 +1023,14 @@ export default function ApplicationPage() {
                 <div className="overflow-x-auto -mx-2">
                   <table className="w-full text-xs min-w-[700px]">
                     <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left px-2 py-2 font-semibold text-gray-500">Name</th>
-                        <th className="text-left px-2 py-2 font-semibold text-gray-500 w-28">Date of Birth</th>
-                        <th className="text-left px-2 py-2 font-semibold text-gray-500 w-28">Sex</th>
-                        <th className="text-left px-2 py-2 font-semibold text-gray-500 w-36">
+                      <tr className="border-b border-[var(--paper-rule)]">
+                        <th className="text-left px-2 py-2 font-semibold text-[var(--paper-muted)]">Name</th>
+                        <th className="text-left px-2 py-2 font-semibold text-[var(--paper-muted)] w-28">Date of Birth</th>
+                        <th className="text-left px-2 py-2 font-semibold text-[var(--paper-muted)] w-28">Sex</th>
+                        <th className="text-left px-2 py-2 font-semibold text-[var(--paper-muted)] w-36">
                           <PortalTooltip text="Does the child need care?">Needs Care?</PortalTooltip>
                         </th>
-                        <th className="text-left px-2 py-2 font-semibold text-gray-500 w-36">
+                        <th className="text-left px-2 py-2 font-semibold text-[var(--paper-muted)] w-36">
                           <PortalTooltip text="Relationship to You">Relationship</PortalTooltip>
                         </th>
                       </tr>
@@ -1035,12 +1039,12 @@ export default function ApplicationPage() {
                       {members.slice(0, visibleRows).map((m, i) => {
                         const isPrefilled = i === 0 && !!elig
                         const isComplete = !!(m.name && m.dob.length === 10 && m.sex && m.relationship && m.needsCare)
-                        const rowBg = isPrefilled || isComplete ? 'bg-sky-50' : ''
+                        const rowBg = isPrefilled || isComplete ? 'bg-[var(--paper-accent-soft)]' : ''
                         const blue = isPrefilled || isComplete
-                        const cellClass = (pre: boolean) => `w-full rounded border px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-0 ${(pre || isComplete) ? 'border-[#0ea5e9] bg-sky-50' : 'border-gray-200 focus:border-[#0ea5e9]'}`
-                        const selectClass = `w-full rounded border px-1 py-1 text-xs outline-none focus:ring-2 focus:ring-[#0ea5e9] focus:ring-offset-0 ${blue ? 'border-[#0ea5e9] bg-sky-50' : 'border-gray-200 focus:border-[#0ea5e9]'}`
+                        const cellClass = (pre: boolean) => `w-full rounded border px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-[#2f6d6a] focus:ring-offset-0 ${(pre || isComplete) ? 'border-[#2f6d6a] bg-[var(--paper-accent-soft)]' : 'border-[var(--paper-rule)] focus:border-[#2f6d6a]'}`
+                        const selectClass = `w-full rounded border px-1 py-1 text-xs outline-none focus:ring-2 focus:ring-[#2f6d6a] focus:ring-offset-0 ${blue ? 'border-[#2f6d6a] bg-[var(--paper-accent-soft)]' : 'border-[var(--paper-rule)] focus:border-[#2f6d6a]'}`
                         const sexWarn = warnedSections.has('members') && !!m.name && !m.sex
-                        const sexClass = `w-full rounded border px-1 py-1 text-xs outline-none focus:ring-2 focus:ring-offset-0 ${sexWarn ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : blue ? 'border-[#0ea5e9] bg-sky-50 focus:ring-[#0ea5e9]' : 'border-gray-200 focus:border-[#0ea5e9] focus:ring-[#0ea5e9]'}`
+                        const sexClass = `w-full rounded border px-1 py-1 text-xs outline-none focus:ring-2 focus:ring-offset-0 ${sexWarn ? 'border-yellow-400 bg-yellow-50 focus:ring-yellow-400' : blue ? 'border-[#2f6d6a] bg-[var(--paper-accent-soft)] focus:ring-[#2f6d6a]' : 'border-[var(--paper-rule)] focus:border-[#2f6d6a] focus:ring-[#2f6d6a]'}`
 
                         function focusNext(col: 'dob' | 'sex' | 'rel' | 'care' | 'nextName') {
                           const id = col === 'nextName' ? `member-name-${i + 1}` : `member-${col}-${i}`
@@ -1049,7 +1053,7 @@ export default function ApplicationPage() {
 
                         return (
                           <React.Fragment key={i}>
-                            <tr className={`border-b border-gray-50 ${rowBg}`}>
+                            <tr className={`border-b border-[var(--paper-rule)] ${rowBg}`}>
                               <td className="px-2 py-1.5">
                                 <input id={`member-name-${i}`} value={m.name}
                                   onChange={e => updateMember(i, 'name', e.target.value)}
@@ -1084,7 +1088,7 @@ export default function ApplicationPage() {
                               </td>
                               <td className="px-2 py-1.5">
                                 {i === 0 ? (
-                                  <input value="Self" readOnly className={`w-full rounded border px-2 py-1 text-xs border-[#0ea5e9] bg-sky-50 text-gray-800 outline-none`} />
+                                  <input value="Self" readOnly className={`w-full rounded border px-2 py-1 text-xs border-[#2f6d6a] bg-[var(--paper-accent-soft)] text-[var(--paper-text)] outline-none`} />
                                 ) : (
                                   <select id={`member-rel-${i}`} value={m.relationship}
                                     onChange={e => {
@@ -1100,9 +1104,9 @@ export default function ApplicationPage() {
                               </td>
                             </tr>
                             {isComplete && m.needsCare === 'Y' && i > 0 && (
-                              <tr className={`border-b border-dashed border-gray-100 ${rowBg}`}>
-                                <td className="px-2 py-1.5 text-[#0ea5e9] flex items-center gap-1.5 text-[10px] text-gray-400 italic">
-                                  <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-[#0ea5e9]" />
+                              <tr className={`border-b border-dashed border-[var(--paper-rule)] ${rowBg}`}>
+                                <td className="px-2 py-1.5 text-[#2f6d6a] flex items-center gap-1.5 text-[10px] text-[var(--paper-faint)] italic">
+                                  <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-[#2f6d6a]" />
                                   child details
                                 </td>
                                 <td colSpan={2} className="px-2 py-1.5">
@@ -1141,8 +1145,8 @@ export default function ApplicationPage() {
                         <tr>
                           <td colSpan={5} className="px-2 py-2">
                             <button onClick={() => setVisibleRows(v => Math.min(v + 1, 12))}
-                              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#0ea5e9] transition-colors">
-                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 hover:border-[#0ea5e9] text-sm leading-none">+</span>
+                              className="flex items-center gap-1.5 text-xs text-[var(--paper-faint)] hover:text-[#2f6d6a] transition-colors">
+                              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--paper-rule)] hover:border-[#2f6d6a] text-sm leading-none">+</span>
                               Add member
                             </button>
                           </td>
@@ -1171,10 +1175,10 @@ export default function ApplicationPage() {
                   <div className="overflow-x-auto -mx-2">
                     <table className="w-full text-xs min-w-[600px]">
                       <thead>
-                        <tr className="border-b border-gray-100">
-                          <th className="text-left px-3 py-2 font-semibold text-gray-500">Name of child</th>
-                          <th className="text-left px-3 py-2 font-semibold text-gray-500 w-64">Is the parent that does not live in the home available to provide care?</th>
-                          <th className="text-left px-3 py-2 font-semibold text-gray-500">If no, please provide the reason.</th>
+                        <tr className="border-b border-[var(--paper-rule)]">
+                          <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)]">Name of child</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] w-64">Is the parent that does not live in the home available to provide care?</th>
+                          <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)]">If no, please provide the reason.</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1182,14 +1186,14 @@ export default function ApplicationPage() {
                           if (m.needsCare !== 'Y' || m.bothParents !== 'N') return null
                           const paKey = `parentAvail-${i}`
                           const paTouched = touched.has(paKey)
-                          const paColor = m.parentAvailable === 'No' && !paTouched ? '#eab308' : '#0ea5e9'
+                          const paColor = m.parentAvailable === 'No' && !paTouched ? '#eab308' : '#2f6d6a'
                           return (
-                            <tr key={i} className="border-b border-gray-50">
-                              <td className="px-3 py-2 text-sm text-gray-700 font-medium">{m.name || '—'}</td>
+                            <tr key={i} className="border-b border-[var(--paper-rule)]">
+                              <td className="px-3 py-2 text-sm text-[var(--paper-text)] font-medium">{m.name || '—'}</td>
                               <td className="px-3 py-2">
                                 <div className="flex gap-4">
                                   {['Yes', 'No'].map(o => (
-                                    <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1 -m-1">
+                                    <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1 -m-1">
                                       <input type="radio" name={`parentAvail-${i}`} value={o}
                                         checked={m.parentAvailable === o}
                                         onChange={() => { updateMember(i, 'parentAvailable', o); markTouched(paKey) }}
@@ -1209,7 +1213,7 @@ export default function ApplicationPage() {
                                   value={m.parentReason}
                                   onChange={e => updateMember(i, 'parentReason', e.target.value)}
                                   disabled={m.parentAvailable !== 'No'}
-                                  className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9] disabled:bg-gray-50 disabled:text-gray-400"
+                                  className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a] disabled:bg-[var(--paper-2)] disabled:text-[var(--paper-faint)]"
                                 >
                                   <option value="">Select…</option>
                                   <option value="Unavailable">Unavailable</option>
@@ -1222,7 +1226,7 @@ export default function ApplicationPage() {
                                     value={m.parentReasonOther}
                                     onChange={e => updateMember(i, 'parentReasonOther', e.target.value)}
                                     placeholder="Please describe…"
-                                    className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]"
+                                    className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]"
                                   />
                                 )}
                               </td>
@@ -1247,13 +1251,13 @@ export default function ApplicationPage() {
 
                   {/* Row 1: Do you need child care because you are working? */}
                   <div onClick={() => markTouched('employed')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('employed', employed)}`}>
-                    <span className="text-sm text-gray-700">Do you need child care because you are working?</span>
+                    <span className="text-sm text-[var(--paper-text)]">Do you need child care because you are working?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => (
-                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                           <input type="radio" name="employed" value={o} checked={employed === o}
                             onChange={() => { setEmployed(o); markTouched('employed'); if (o !== 'No') { setStartingNewJob(''); setLookingForWork('') } }}
-                            style={{ accentColor: '#0ea5e9' }} />
+                            style={{ accentColor: '#2f6d6a' }} />
                           {o}
                         </label>
                       ))}
@@ -1262,41 +1266,41 @@ export default function ApplicationPage() {
 
                   {/* Sub-fields when working = Yes */}
                   {employed === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                    <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 space-y-3">
                       <div className="grid grid-cols-2 gap-6">
                         <input
                           value={employerName}
                           onChange={e => setEmployerName(e.target.value)}
                           placeholder="Employer Name"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${
-                            employerName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${
+                            employerName ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'
                           }`}
                         />
                         <input
                           value={hoursPerWeek}
                           onChange={e => setHoursPerWeek(e.target.value.replace(/\D/g,'').slice(0,3))}
                           placeholder="Total Hours Per Week"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${
-                            hoursPerWeek ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${
+                            hoursPerWeek ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'
                           }`}
                         />
                       </div>
                       {employerName && hoursPerWeek && (
-                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-3 space-y-3">
                         <ScheduleGrid label="" schedule={workSchedule} onChange={setWorkSchedule} />
-                        <hr className="border-gray-200 my-5" />
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Does your work schedule change week to week?</span>
+                        <hr className="border-[var(--paper-rule)] my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Does your work schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => {
                               const isYellow = o === 'No' && !!jobScheduleChanges && !touched.has('jobScheduleChanges')
                               return (
-                                <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                                   <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                     <input type="radio" name="jobScheduleChanges" value={o} checked={jobScheduleChanges === o}
                                       onChange={() => { setJobScheduleChanges(o); markTouched('jobScheduleChanges') }}
                                       onClick={() => { setJobScheduleChanges(o); markTouched('jobScheduleChanges') }}
-                                      style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                      style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                                   </span>
                                   {o}
                                 </label>
@@ -1304,18 +1308,18 @@ export default function ApplicationPage() {
                             })}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Do you have more than one job?</span>
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Do you have more than one job?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => {
                               const isYellow = o === 'No' && !!multipleJobs && !touched.has('multipleJobs')
                               return (
-                                <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                                <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                                   <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                     <input type="radio" name="multipleJobs" value={o} checked={multipleJobs === o}
                                       onChange={() => { setMultipleJobs(o); markTouched('multipleJobs') }}
                                       onClick={() => { setMultipleJobs(o); markTouched('multipleJobs') }}
-                                      style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                      style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                                   </span>
                                   {o}
                                 </label>
@@ -1331,19 +1335,19 @@ export default function ApplicationPage() {
                   {/* Row 2: Are you about to start a new job? — only when not working */}
                   {employed === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingNewJob', startingNewJob)}`}>
-                      <span className="text-sm text-gray-700">Are you about to start a new job?</span>
+                      <span className="text-sm text-[var(--paper-text)]">Are you about to start a new job?</span>
                       <div className="flex items-center gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="startingNewJob" value={o} checked={startingNewJob === o}
-                              onChange={() => { setStartingNewJob(o); if (o !== 'No') setLookingForWork('') }} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => { setStartingNewJob(o); if (o !== 'No') setLookingForWork('') }} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
                         {startingNewJob === 'Yes' && (
                           <input value={newJobStartDate} onChange={e => setNewJobStartDate(formatDob(e.target.value))}
                             placeholder="MM-DD-YYYY"
-                            className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                            className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-28" />
                         )}
                       </div>
                     </div>
@@ -1352,18 +1356,18 @@ export default function ApplicationPage() {
                   {/* Row 3: Are you looking for work? — only when not working and not about to start */}
                   {employed === 'No' && startingNewJob === 'No' && (
                     <div onClick={() => markTouched('lookingForWork')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('lookingForWork', lookingForWork)}`}>
-                      <span className="text-sm text-gray-700">Looking for work</span>
+                      <span className="text-sm text-[var(--paper-text)]">Looking for work</span>
                       <div className="flex gap-4 shrink-0">
                         {['Yes', 'No'].map(o => {
                           const isYellow = o === 'No' && !!lookingForWork && !touched.has('lookingForWork')
                           const shouldPulse = isYellow && warnedSections.has('activities')
                           return (
-                            <label key={o} onClick={o === 'Yes' ? e => e.stopPropagation() : undefined} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                            <label key={o} onClick={o === 'Yes' ? e => e.stopPropagation() : undefined} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                               <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                 <input type="radio" name="lookingForWork" value={o} checked={lookingForWork === o}
                                   onChange={() => { setLookingForWork(o); markTouched('lookingForWork') }}
                                   onClick={() => markTouched('lookingForWork')}
-                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                               </span>
                               {o}
                             </label>
@@ -1378,18 +1382,18 @@ export default function ApplicationPage() {
                 {/* Training */}
                 <div className="space-y-3">
                   <div onClick={() => markTouched('inTraining')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('inTraining', inTraining)}`}>
-                    <span className="text-sm text-gray-700">Do you need child care because you are in a training program?</span>
+                    <span className="text-sm text-[var(--paper-text)]">Do you need child care because you are in a training program?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => {
                         const isYellow = o === 'No' && !!inTraining && !touched.has('inTraining')
                         const shouldPulse = isYellow && warnedSections.has('activities')
                         return (
-                          <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                               <input type="radio" name="inTraining" value={o} checked={inTraining === o}
                                 onChange={() => { setInTraining(o); markTouched('inTraining'); if (o !== 'No') setStartingTraining('') }}
                                 onClick={() => markTouched('inTraining')}
-                                style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                             </span>
                             {o}
                           </label>
@@ -1399,29 +1403,29 @@ export default function ApplicationPage() {
                   </div>
 
                   {inTraining === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                    <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 space-y-3">
                       <div className="grid grid-cols-2 gap-6">
                         <input value={trainingName} onChange={e => setTrainingName(e.target.value)} placeholder="Training Program / Facility Name"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${trainingName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${trainingName ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                         <input value={trainingHours} onChange={e => setTrainingHours(e.target.value.replace(/\D/g,'').slice(0,3))} placeholder="Total Hours Per Week"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${trainingHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${trainingHours ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                       </div>
                       {trainingName && trainingHours && (
-                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-3 space-y-3">
                         <ScheduleGrid label="" schedule={trainingSchedule} onChange={setTrainingSchedule} />
-                        <hr className="border-gray-200 my-5" />
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Does your training schedule change week to week?</span>
+                        <hr className="border-[var(--paper-rule)] my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Does your training schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => {
                               const isYellow = o === 'No' && !!trainingScheduleChanges && !touched.has('trainingScheduleChanges')
                               return (
-                                <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
+                                <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
                                   <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                     <input type="radio" name="trainingScheduleChanges" value={o} checked={trainingScheduleChanges === o}
                                       onChange={() => { setTrainingScheduleChanges(o); markTouched('trainingScheduleChanges') }}
                                       onClick={() => markTouched('trainingScheduleChanges')}
-                                      style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                      style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                                   </span>
                                   {o}
                                 </label>
@@ -1436,18 +1440,18 @@ export default function ApplicationPage() {
 
                   {inTraining === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingTraining', startingTraining)}`}>
-                      <span className="text-sm text-gray-700">Are you about to start a training program?</span>
+                      <span className="text-sm text-[var(--paper-text)]">Are you about to start a training program?</span>
                       <div className="flex items-center gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="startingTraining" value={o} checked={startingTraining === o}
-                              onChange={() => setStartingTraining(o)} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => setStartingTraining(o)} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
                         {startingTraining === 'Yes' && (
                           <input value={trainingStartDate} onChange={e => setTrainingStartDate(formatDob(e.target.value))}
-                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                            placeholder="MM-DD-YYYY" className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-28" />
                         )}
                       </div>
                     </div>
@@ -1457,18 +1461,18 @@ export default function ApplicationPage() {
                 {/* College */}
                 <div className="space-y-3">
                   <div onClick={() => markTouched('inCollege')} className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('inCollege', inCollege)}`}>
-                    <span className="text-sm text-gray-700">Do you need child care because you are attending college or classes?</span>
+                    <span className="text-sm text-[var(--paper-text)]">Do you need child care because you are attending college or classes?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => {
                         const isYellow = o === 'No' && !!inCollege && !touched.has('inCollege')
                         const shouldPulse = isYellow && warnedSections.has('activities')
                         return (
-                          <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <span className={shouldPulse ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                               <input type="radio" name="inCollege" value={o} checked={inCollege === o}
                                 onChange={() => { setInCollege(o); markTouched('inCollege'); if (o !== 'No') setStartingCollege('') }}
                                 onClick={() => markTouched('inCollege')}
-                                style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                             </span>
                             {o}
                           </label>
@@ -1478,29 +1482,29 @@ export default function ApplicationPage() {
                   </div>
 
                   {inCollege === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                    <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 space-y-3">
                       <div className="grid grid-cols-2 gap-6">
                         <input value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="School or College Name"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${schoolName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${schoolName ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                         <input value={schoolHours} onChange={e => setSchoolHours(e.target.value.replace(/\D/g,'').slice(0,3))} placeholder="Total Hours Per Week"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${schoolHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${schoolHours ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                       </div>
                       {schoolName && schoolHours && (
-                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-3 space-y-3">
                         <ScheduleGrid label="" schedule={classSchedule} onChange={setClassSchedule} />
-                        <hr className="border-gray-200 my-5" />
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Does your class schedule change week to week?</span>
+                        <hr className="border-[var(--paper-rule)] my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Does your class schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => {
                               const isYellow = o === 'No' && !!collegeScheduleChanges && !touched.has('collegeScheduleChanges')
                               return (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5" onClick={e => e.stopPropagation()}>
                                 <span className={isYellow ? 'warn-pulse rounded-full inline-flex' : 'inline-flex'}>
                                 <input type="radio" name="collegeScheduleChanges" value={o} checked={collegeScheduleChanges === o}
                                   onChange={() => { setCollegeScheduleChanges(o); markTouched('collegeScheduleChanges') }}
                                   onClick={() => markTouched('collegeScheduleChanges')}
-                                  style={{ accentColor: isYellow ? '#eab308' : '#0ea5e9' }} />
+                                  style={{ accentColor: isYellow ? '#eab308' : '#2f6d6a' }} />
                                 </span>
                                 {o}
                               </label>
@@ -1515,18 +1519,18 @@ export default function ApplicationPage() {
 
                   {inCollege === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('startingCollege', startingCollege)}`}>
-                      <span className="text-sm text-gray-700">Are you about to start college or classes?</span>
+                      <span className="text-sm text-[var(--paper-text)]">Are you about to start college or classes?</span>
                       <div className="flex items-center gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="startingCollege" value={o} checked={startingCollege === o}
-                              onChange={() => setStartingCollege(o)} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => setStartingCollege(o)} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
                         {startingCollege === 'Yes' && (
                           <input value={collegeStartDate} onChange={e => setCollegeStartDate(formatDob(e.target.value))}
-                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                            placeholder="MM-DD-YYYY" className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-28" />
                         )}
                       </div>
                     </div>
@@ -1541,13 +1545,13 @@ export default function ApplicationPage() {
                 {/* Employment */}
                 <div className="space-y-3">
                   <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2Employed', a2Employed)}`}>
-                    <span className="text-sm text-gray-700">Do they need child care because they are working?</span>
+                    <span className="text-sm text-[var(--paper-text)]">Do they need child care because they are working?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => (
-                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                           <input type="radio" name="a2_employed" value={o} checked={a2Employed === o}
                             onChange={() => { setA2Employed(o); if (o !== 'No') { setA2StartingNewJob(''); setA2LookingForWork('') } }}
-                            style={{ accentColor: '#0ea5e9' }} />
+                            style={{ accentColor: '#2f6d6a' }} />
                           {o}
                         </label>
                       ))}
@@ -1555,36 +1559,36 @@ export default function ApplicationPage() {
                   </div>
 
                   {a2Employed === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                    <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 space-y-3">
                       <div className="grid grid-cols-2 gap-6">
                         <input value={a2EmployerName} onChange={e => setA2EmployerName(e.target.value)} placeholder="Employer Name"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${a2EmployerName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${a2EmployerName ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                         <input value={a2HoursPerWeek} onChange={e => setA2HoursPerWeek(e.target.value)} placeholder="Total Hours Per Week"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${a2HoursPerWeek ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${a2HoursPerWeek ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                       </div>
                       {a2EmployerName && a2HoursPerWeek && (
-                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-3 space-y-3">
                         <ScheduleGrid label="" schedule={a2WorkSchedule} onChange={setA2WorkSchedule} />
-                        <hr className="border-gray-200 my-5" />
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Does their work schedule change week to week?</span>
+                        <hr className="border-[var(--paper-rule)] my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Does their work schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                                 <input type="radio" name="a2_jobScheduleChanges" value={o} checked={a2JobScheduleChanges === o}
-                                  onChange={() => setA2JobScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                  onChange={() => setA2JobScheduleChanges(o)} style={{ accentColor: '#2f6d6a' }} />
                                 {o}
                               </label>
                             ))}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Do they have more than one job?</span>
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Do they have more than one job?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                                 <input type="radio" name="a2_multipleJobs" value={o} checked={a2MultipleJobs === o}
-                                  onChange={() => setA2MultipleJobs(o)} style={{ accentColor: '#0ea5e9' }} />
+                                  onChange={() => setA2MultipleJobs(o)} style={{ accentColor: '#2f6d6a' }} />
                                 {o}
                               </label>
                             ))}
@@ -1597,18 +1601,18 @@ export default function ApplicationPage() {
 
                   {a2Employed === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2StartingNewJob', a2StartingNewJob)}`}>
-                      <span className="text-sm text-gray-700">Are they about to start a new job?</span>
+                      <span className="text-sm text-[var(--paper-text)]">Are they about to start a new job?</span>
                       <div className="flex items-center gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="a2_startingNewJob" value={o} checked={a2StartingNewJob === o}
-                              onChange={() => { setA2StartingNewJob(o); if (o !== 'No') setA2LookingForWork('') }} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => { setA2StartingNewJob(o); if (o !== 'No') setA2LookingForWork('') }} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
                         {a2StartingNewJob === 'Yes' && (
                           <input value={a2NewJobStartDate} onChange={e => setA2NewJobStartDate(formatDob(e.target.value))}
-                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                            placeholder="MM-DD-YYYY" className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-28" />
                         )}
                       </div>
                     </div>
@@ -1616,12 +1620,12 @@ export default function ApplicationPage() {
 
                   {a2Employed === 'No' && a2StartingNewJob === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2LookingForWork', a2LookingForWork)}`}>
-                      <span className="text-sm text-gray-700">Looking for work</span>
+                      <span className="text-sm text-[var(--paper-text)]">Looking for work</span>
                       <div className="flex gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="a2_lookingForWork" value={o} checked={a2LookingForWork === o}
-                              onChange={() => setA2LookingForWork(o)} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => setA2LookingForWork(o)} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
@@ -1633,13 +1637,13 @@ export default function ApplicationPage() {
                 {/* Training */}
                 <div className="space-y-3">
                   <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2InTraining', a2InTraining)}`}>
-                    <span className="text-sm text-gray-700">Do they need child care because they are in a training program?</span>
+                    <span className="text-sm text-[var(--paper-text)]">Do they need child care because they are in a training program?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => (
-                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                           <input type="radio" name="a2_inTraining" value={o} checked={a2InTraining === o}
                             onChange={() => { setA2InTraining(o); if (o !== 'No') setA2StartingTraining('') }}
-                            style={{ accentColor: '#0ea5e9' }} />
+                            style={{ accentColor: '#2f6d6a' }} />
                           {o}
                         </label>
                       ))}
@@ -1647,24 +1651,24 @@ export default function ApplicationPage() {
                   </div>
 
                   {a2InTraining === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                    <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 space-y-3">
                       <div className="grid grid-cols-2 gap-6">
                         <input value={a2TrainingName} onChange={e => setA2TrainingName(e.target.value)} placeholder="Training Program / Facility Name"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${a2TrainingName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${a2TrainingName ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                         <input value={a2TrainingHours} onChange={e => setA2TrainingHours(e.target.value)} placeholder="Total Hours Per Week"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${a2TrainingHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${a2TrainingHours ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                       </div>
                       {a2TrainingName && a2TrainingHours && (
-                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-3 space-y-3">
                         <ScheduleGrid label="" schedule={a2TrainingSchedule} onChange={setA2TrainingSchedule} />
-                        <hr className="border-gray-200 my-5" />
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Does their training schedule change week to week?</span>
+                        <hr className="border-[var(--paper-rule)] my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Does their training schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                                 <input type="radio" name="a2_trainingScheduleChanges" value={o} checked={a2TrainingScheduleChanges === o}
-                                  onChange={() => setA2TrainingScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                  onChange={() => setA2TrainingScheduleChanges(o)} style={{ accentColor: '#2f6d6a' }} />
                                 {o}
                               </label>
                             ))}
@@ -1677,18 +1681,18 @@ export default function ApplicationPage() {
 
                   {a2InTraining === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2StartingTraining', a2StartingTraining)}`}>
-                      <span className="text-sm text-gray-700">Are they about to start a training program?</span>
+                      <span className="text-sm text-[var(--paper-text)]">Are they about to start a training program?</span>
                       <div className="flex items-center gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="a2_startingTraining" value={o} checked={a2StartingTraining === o}
-                              onChange={() => setA2StartingTraining(o)} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => setA2StartingTraining(o)} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
                         {a2StartingTraining === 'Yes' && (
                           <input value={a2TrainingStartDate} onChange={e => setA2TrainingStartDate(formatDob(e.target.value))}
-                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                            placeholder="MM-DD-YYYY" className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-28" />
                         )}
                       </div>
                     </div>
@@ -1698,13 +1702,13 @@ export default function ApplicationPage() {
                 {/* College */}
                 <div className="space-y-3">
                   <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2InCollege', a2InCollege)}`}>
-                    <span className="text-sm text-gray-700">Do they need child care because they are attending college or classes?</span>
+                    <span className="text-sm text-[var(--paper-text)]">Do they need child care because they are attending college or classes?</span>
                     <div className="flex gap-4 shrink-0">
                       {['Yes', 'No'].map(o => (
-                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                        <label key={o} onClick={e => e.stopPropagation()} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                           <input type="radio" name="a2_inCollege" value={o} checked={a2InCollege === o}
                             onChange={() => { setA2InCollege(o); if (o !== 'No') setA2StartingCollege('') }}
-                            style={{ accentColor: '#0ea5e9' }} />
+                            style={{ accentColor: '#2f6d6a' }} />
                           {o}
                         </label>
                       ))}
@@ -1712,24 +1716,24 @@ export default function ApplicationPage() {
                   </div>
 
                   {a2InCollege === 'Yes' && (
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-3">
+                    <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 space-y-3">
                       <div className="grid grid-cols-2 gap-6">
                         <input value={a2SchoolName} onChange={e => setA2SchoolName(e.target.value)} placeholder="School or College Name"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-gray-400 ${a2SchoolName ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${a2SchoolName ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                         <input value={a2SchoolHours} onChange={e => setA2SchoolHours(e.target.value)} placeholder="Total Hours Per Week"
-                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-gray-400 ${a2SchoolHours ? 'border-[#0ea5e9] text-gray-800' : 'border-gray-300 text-gray-700 focus:border-[#0ea5e9]'}`} />
+                          className={`w-full border-0 border-b px-1 py-1 text-sm text-right outline-none bg-transparent placeholder:text-[var(--paper-faint)] ${a2SchoolHours ? 'border-[#2f6d6a] text-[var(--paper-text)]' : 'border-[var(--paper-rule)] text-[var(--paper-text)] focus:border-[#2f6d6a]'}`} />
                       </div>
                       {a2SchoolName && a2SchoolHours && (
-                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 space-y-3">
+                      <div className="rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-3 space-y-3">
                         <ScheduleGrid label="" schedule={a2ClassSchedule} onChange={setA2ClassSchedule} />
-                        <hr className="border-gray-200 my-5" />
-                        <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 px-4 py-2.5">
-                          <span className="text-sm text-gray-700">Does their class schedule change week to week?</span>
+                        <hr className="border-[var(--paper-rule)] my-5" />
+                        <div className="flex items-center justify-between gap-4 rounded-lg border border-[var(--paper-rule)] px-4 py-2.5">
+                          <span className="text-sm text-[var(--paper-text)]">Does their class schedule change week to week?</span>
                           <div className="flex gap-4 shrink-0">
                             {['Yes', 'No'].map(o => (
-                              <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                              <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                                 <input type="radio" name="a2_collegeScheduleChanges" value={o} checked={a2CollegeScheduleChanges === o}
-                                  onChange={() => setA2CollegeScheduleChanges(o)} style={{ accentColor: '#0ea5e9' }} />
+                                  onChange={() => setA2CollegeScheduleChanges(o)} style={{ accentColor: '#2f6d6a' }} />
                                 {o}
                               </label>
                             ))}
@@ -1742,18 +1746,18 @@ export default function ApplicationPage() {
 
                   {a2InCollege === 'No' && (
                     <div className={`flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5 cursor-pointer ${rowStyle('a2StartingCollege', a2StartingCollege)}`}>
-                      <span className="text-sm text-gray-700">Are they about to start college or classes?</span>
+                      <span className="text-sm text-[var(--paper-text)]">Are they about to start college or classes?</span>
                       <div className="flex items-center gap-4 shrink-0">
                         {['Yes', 'No'].map(o => (
-                          <label key={o} className="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer p-1.5 -m-1.5">
+                          <label key={o} className="flex items-center gap-1.5 text-sm text-[var(--paper-text)] cursor-pointer p-1.5 -m-1.5">
                             <input type="radio" name="a2_startingCollege" value={o} checked={a2StartingCollege === o}
-                              onChange={() => setA2StartingCollege(o)} style={{ accentColor: '#0ea5e9' }} />
+                              onChange={() => setA2StartingCollege(o)} style={{ accentColor: '#2f6d6a' }} />
                             {o}
                           </label>
                         ))}
                         {a2StartingCollege === 'Yes' && (
                           <input value={a2CollegeStartDate} onChange={e => setA2CollegeStartDate(formatDob(e.target.value))}
-                            placeholder="MM-DD-YYYY" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-28" />
+                            placeholder="MM-DD-YYYY" className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-28" />
                         )}
                       </div>
                     </div>
@@ -1771,26 +1775,26 @@ export default function ApplicationPage() {
                 <div className="overflow-x-auto -mx-2">
                   <table className={`w-full text-sm ${showPerson2 ? 'min-w-[900px]' : 'min-w-[560px]'}`}>
                     <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-56">
+                      <tr className="border-b border-[var(--paper-rule)]">
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] w-56">
                           <div className="flex items-center gap-2">
                             <span>Income Source</span>
                             {!showPerson2 && (
                               <div className="relative group">
-                                <button type="button" onClick={() => setShowPerson2(true)} className="text-gray-400 hover:text-[#0ea5e9] transition-colors text-base leading-none font-bold">+</button>
-                                <div className="pointer-events-none absolute left-0 top-6 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">Add a person</div>
+                                <button type="button" onClick={() => setShowPerson2(true)} className="text-[var(--paper-faint)] hover:text-[#2f6d6a] transition-colors text-base leading-none font-bold">+</button>
+                                <div className="pointer-events-none absolute left-0 top-6 hidden group-hover:block bg-[var(--paper-text)] text-[var(--paper)] text-xs rounded-lg px-2.5 py-1.5 whitespace-nowrap z-50">Add a person</div>
                               </div>
                             )}
                           </div>
                         </th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10">Yes</th>
-                        <th className="text-center px-3 py-2 font-semibold text-gray-500 w-10">No</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100 w-28">Who?</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Gross Amt</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Period</th>
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 border-l border-gray-100 w-28">Who?</th>}
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Gross Amt</th>}
-                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-gray-500 w-24">Period</th>}
+                        <th className="text-center px-3 py-2 font-semibold text-[var(--paper-muted)] w-10">Yes</th>
+                        <th className="text-center px-3 py-2 font-semibold text-[var(--paper-muted)] w-10">No</th>
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] border-l border-[var(--paper-rule)] w-28">Who?</th>
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] w-24">Gross Amt</th>
+                        <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] w-24">Period</th>
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] border-l border-[var(--paper-rule)] w-28">Who?</th>}
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] w-24">Gross Amt</th>}
+                        {showPerson2 && <th className="text-left px-3 py-2 font-semibold text-[var(--paper-muted)] w-24">Period</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -1807,14 +1811,14 @@ export default function ApplicationPage() {
                         { label: 'Pensions / Annuities', key: 'pension' },
                         { label: 'Public Assistance / Safety Net Benefits', key: 'pa' },
                       ].map(({ label, key }) => (
-                        <tr key={key} className="border-b border-gray-50 hover:bg-gray-50">
-                          <td className="px-3 py-2 text-sm text-gray-700">{label}</td>
+                        <tr key={key} className="border-b border-[var(--paper-rule)] hover:bg-[var(--paper-2)]">
+                          <td className="px-3 py-2 text-sm text-[var(--paper-text)]">{label}</td>
                           <td className="px-3 py-2 text-center select-none"
                             onMouseDown={e => { e.preventDefault(); startIncomeDrag(key, 'yes') }}
                             onMouseEnter={() => enterIncomeCell(key, 'yes')}
                           >
                             <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                              <input type="radio" name={key} value="yes" checked={incomeSelections[key] === 'yes'} onChange={() => selectIncome(key, 'yes')} style={{ accentColor: '#0ea5e9' }} />
+                              <input type="radio" name={key} value="yes" checked={incomeSelections[key] === 'yes'} onChange={() => selectIncome(key, 'yes')} style={{ accentColor: '#2f6d6a' }} />
                             </label>
                           </td>
                           <td className="px-3 py-2 text-center select-none"
@@ -1822,45 +1826,45 @@ export default function ApplicationPage() {
                             onMouseEnter={() => enterIncomeCell(key, 'no')}
                           >
                             <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                              <input type="radio" name={key} value="no" checked={incomeSelections[key] === 'no'} onChange={() => selectIncome(key, 'no')} onClick={() => selectIncome(key, 'no')} style={{ accentColor: incomeConfirmed.has(key) ? '#0ea5e9' : '#eab308' }} />
+                              <input type="radio" name={key} value="no" checked={incomeSelections[key] === 'no'} onChange={() => selectIncome(key, 'no')} onClick={() => selectIncome(key, 'no')} style={{ accentColor: incomeConfirmed.has(key) ? '#2f6d6a' : '#eab308' }} />
                             </label>
                           </td>
-                          <td className="px-2 py-1.5 border-l border-gray-100">
-                            <input value={incomeWho1[key]} onChange={e => setIncomeWho1(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          <td className="px-2 py-1.5 border-l border-[var(--paper-rule)]">
+                            <input value={incomeWho1[key]} onChange={e => setIncomeWho1(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                           </td>
                           <td className="px-2 py-1.5">
-                            <input value={incomeAmt1[key] ? `$${Number(incomeAmt1[key]).toLocaleString()}` : ''} onChange={e => setIncomeAmt1(p => ({...p, [key]: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                            <input value={incomeAmt1[key] ? `$${Number(incomeAmt1[key]).toLocaleString()}` : ''} onChange={e => setIncomeAmt1(p => ({...p, [key]: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                           </td>
                           <td className="px-2 py-1.5">
-                            <select value={incomePer1[key]} onChange={e => setIncomePer1(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                            <select value={incomePer1[key]} onChange={e => setIncomePer1(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-[var(--paper-rule)] px-1 py-1 text-xs outline-none focus:border-[#2f6d6a]">
                               <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                             </select>
                           </td>
-                          {showPerson2 && <td className="px-2 py-1.5 border-l border-gray-100">
-                            <input value={incomeWho2[key]} onChange={e => setIncomeWho2(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          {showPerson2 && <td className="px-2 py-1.5 border-l border-[var(--paper-rule)]">
+                            <input value={incomeWho2[key]} onChange={e => setIncomeWho2(p => ({...p, [key]: e.target.value}))} placeholder="Name" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                           </td>}
                           {showPerson2 && <td className="px-2 py-1.5">
-                            <input value={incomeAmt2[key] ? `$${Number(incomeAmt2[key]).toLocaleString()}` : ''} onChange={e => setIncomeAmt2(p => ({...p, [key]: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                            <input value={incomeAmt2[key] ? `$${Number(incomeAmt2[key]).toLocaleString()}` : ''} onChange={e => setIncomeAmt2(p => ({...p, [key]: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                           </td>}
                           {showPerson2 && <td className="px-2 py-1.5">
-                            <select value={incomePer2[key]} onChange={e => setIncomePer2(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                            <select value={incomePer2[key]} onChange={e => setIncomePer2(p => ({...p, [key]: e.target.value}))} className="w-full rounded border border-[var(--paper-rule)] px-1 py-1 text-xs outline-none focus:border-[#2f6d6a]">
                               <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                             </select>
                           </td>}
                         </tr>
                       ))}
                       {/* Other row */}
-                      <tr className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="px-3 py-2 text-sm text-gray-700 flex items-center gap-2">
+                      <tr className="border-b border-[var(--paper-rule)] hover:bg-[var(--paper-2)]">
+                        <td className="px-3 py-2 text-sm text-[var(--paper-text)] flex items-center gap-2">
                           <span className="shrink-0">Other</span>
-                          <input value={incomeOtherLabel} onChange={e => setIncomeOtherLabel(e.target.value)} placeholder="Please specify" className="rounded border border-gray-200 px-2 py-0.5 text-xs outline-none focus:border-[#0ea5e9] w-36" />
+                          <input value={incomeOtherLabel} onChange={e => setIncomeOtherLabel(e.target.value)} placeholder="Please specify" className="rounded border border-[var(--paper-rule)] px-2 py-0.5 text-xs outline-none focus:border-[#2f6d6a] w-36" />
                         </td>
                         <td className="px-3 py-2 text-center select-none"
                           onMouseDown={e => { e.preventDefault(); startIncomeDrag('other', 'yes') }}
                           onMouseEnter={() => enterIncomeCell('other', 'yes')}
                         >
                           <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                            <input type="radio" name="other" value="yes" checked={incomeSelections['other'] === 'yes'} onChange={() => selectIncome('other', 'yes')} style={{ accentColor: '#0ea5e9' }} />
+                            <input type="radio" name="other" value="yes" checked={incomeSelections['other'] === 'yes'} onChange={() => selectIncome('other', 'yes')} style={{ accentColor: '#2f6d6a' }} />
                           </label>
                         </td>
                         <td className="px-3 py-2 text-center select-none"
@@ -1868,28 +1872,28 @@ export default function ApplicationPage() {
                           onMouseEnter={() => enterIncomeCell('other', 'no')}
                         >
                           <label className="inline-flex items-center justify-center p-2 cursor-pointer">
-                            <input type="radio" name="other" value="no" checked={incomeSelections['other'] === 'no'} onChange={() => selectIncome('other', 'no')} onClick={() => selectIncome('other', 'no')} style={{ accentColor: incomeConfirmed.has('other') ? '#0ea5e9' : '#eab308' }} />
+                            <input type="radio" name="other" value="no" checked={incomeSelections['other'] === 'no'} onChange={() => selectIncome('other', 'no')} onClick={() => selectIncome('other', 'no')} style={{ accentColor: incomeConfirmed.has('other') ? '#2f6d6a' : '#eab308' }} />
                           </label>
                         </td>
-                        <td className="px-2 py-1.5 border-l border-gray-100">
-                          <input value={incomeWho1['other']} onChange={e => setIncomeWho1(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                        <td className="px-2 py-1.5 border-l border-[var(--paper-rule)]">
+                          <input value={incomeWho1['other']} onChange={e => setIncomeWho1(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                         </td>
                         <td className="px-2 py-1.5">
-                          <input value={incomeAmt1['other'] ? `$${Number(incomeAmt1['other']).toLocaleString()}` : ''} onChange={e => setIncomeAmt1(p => ({...p, other: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          <input value={incomeAmt1['other'] ? `$${Number(incomeAmt1['other']).toLocaleString()}` : ''} onChange={e => setIncomeAmt1(p => ({...p, other: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                         </td>
                         <td className="px-2 py-1.5">
-                          <select value={incomePer1['other']} onChange={e => setIncomePer1(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                          <select value={incomePer1['other']} onChange={e => setIncomePer1(p => ({...p, other: e.target.value}))} className="w-full rounded border border-[var(--paper-rule)] px-1 py-1 text-xs outline-none focus:border-[#2f6d6a]">
                             <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                           </select>
                         </td>
-                        {showPerson2 && <td className="px-2 py-1.5 border-l border-gray-100">
-                          <input value={incomeWho2['other']} onChange={e => setIncomeWho2(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                        {showPerson2 && <td className="px-2 py-1.5 border-l border-[var(--paper-rule)]">
+                          <input value={incomeWho2['other']} onChange={e => setIncomeWho2(p => ({...p, other: e.target.value}))} placeholder="Name" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                         </td>}
                         {showPerson2 && <td className="px-2 py-1.5">
-                          <input value={incomeAmt2['other'] ? `$${Number(incomeAmt2['other']).toLocaleString()}` : ''} onChange={e => setIncomeAmt2(p => ({...p, other: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-gray-200 px-2 py-1 text-xs outline-none focus:border-[#0ea5e9]" />
+                          <input value={incomeAmt2['other'] ? `$${Number(incomeAmt2['other']).toLocaleString()}` : ''} onChange={e => setIncomeAmt2(p => ({...p, other: e.target.value.replace(/[^0-9]/g, '')}))} placeholder="$0" className="w-full rounded border border-[var(--paper-rule)] px-2 py-1 text-xs outline-none focus:border-[#2f6d6a]" />
                         </td>}
                         {showPerson2 && <td className="px-2 py-1.5">
-                          <select value={incomePer2['other']} onChange={e => setIncomePer2(p => ({...p, other: e.target.value}))} className="w-full rounded border border-gray-200 px-1 py-1 text-xs outline-none focus:border-[#0ea5e9]">
+                          <select value={incomePer2['other']} onChange={e => setIncomePer2(p => ({...p, other: e.target.value}))} className="w-full rounded border border-[var(--paper-rule)] px-1 py-1 text-xs outline-none focus:border-[#2f6d6a]">
                             <option value="">—</option><option value="week">Weekly</option><option value="biweek">Bi-weekly</option><option value="month">Monthly</option><option value="year">Annual</option>
                           </select>
                         </td>}
@@ -1904,10 +1908,10 @@ export default function ApplicationPage() {
             {activeTab === 4 && (
               <>
                 <SectionCard title="Attestation and Signature">
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 text-xs text-gray-600 leading-relaxed space-y-2">
+                  <div className="rounded-xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-4 text-xs text-[var(--paper-muted)] leading-relaxed space-y-2">
                     <p>By submitting this application, I agree that I have read and understand the notices above, I want to apply for child care assistance, and I have been honest on this application to the best of my knowledge.</p>
                     <label className="flex items-start gap-3 cursor-pointer">
-                      <input type="checkbox" checked={attestationChecked} onChange={e => setAttestationChecked(e.target.checked)} style={{ accentColor: '#0ea5e9' }} className="mt-0.5 shrink-0" />
+                      <input type="checkbox" checked={attestationChecked} onChange={e => setAttestationChecked(e.target.checked)} style={{ accentColor: '#2f6d6a' }} className="mt-0.5 shrink-0" />
                       <span className="font-semibold">I attest that the information I provided on this application is correct and complete to the best of my knowledge.</span>
                     </label>
                   </div>
@@ -1915,21 +1919,21 @@ export default function ApplicationPage() {
                     <Field label="Print Name" value={printName} onChange={setPrintName} prefilled={prefilled(printName)} half />
                     <Field label="Date Signed" value={dateSigned} onChange={v => setDateSigned(formatDob(v))} placeholder="MM-DD-YYYY" half />
                   </Row>
-                  <div className="rounded-xl border-2 border-dashed border-gray-200 h-16 flex items-center justify-center">
-                    <span className="text-sm text-gray-400">Signature (sign when submitting in person)</span>
+                  <div className="rounded-xl border-2 border-dashed border-[var(--paper-rule)] h-16 flex items-center justify-center">
+                    <span className="text-sm text-[var(--paper-faint)]">Signature (sign when submitting in person)</span>
                   </div>
                 </SectionCard>
 
-                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-5 text-sm text-gray-600">
-                  <p className="font-semibold text-gray-800 mb-1">How to submit this application</p>
-                  <p>Print this form and bring it to your local Department of Social Services office, or mail it to the address listed on the OCFS-6025 form. You can also apply online at <span className="text-[#0ea5e9]">mybenefits.ny.gov</span>.</p>
+                <div className="rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-5 text-sm text-[var(--paper-muted)]">
+                  <p className="font-semibold text-[var(--paper-text)] mb-1">How to submit this application</p>
+                  <p>Print this form and bring it to your local Department of Social Services office, or mail it to the address listed on the OCFS-6025 form. You can also apply online at <span className="text-[#2f6d6a]">mybenefits.ny.gov</span>.</p>
                 </div>
 
                 <div className="flex justify-center pb-4">
                   <button
                     onClick={exportPDF}
                     className="flex items-center gap-2 rounded-xl px-8 py-3 text-base font-semibold text-white transition-colors hover:opacity-90"
-                    style={{ backgroundColor: '#0ea5e9' }}
+                    style={{ backgroundColor: '#2f6d6a' }}
                   >
                     <Download className="h-5 w-5" />
                     Export
