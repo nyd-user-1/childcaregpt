@@ -56,6 +56,9 @@ export function CountyShell({
   zips,
   population,
   childrenUnder6,
+  oneParentUnder6,
+  birthsPastYear,
+  under5PovertyRate,
   prevSlug,
   nextSlug,
 }: {
@@ -64,6 +67,9 @@ export function CountyShell({
   zips: ZipEntry[]
   population?: number | null
   childrenUnder6?: number | null
+  oneParentUnder6?: number | null
+  birthsPastYear?: number | null
+  under5PovertyRate?: number | null
   prevSlug: string
   nextSlug: string
 }) {
@@ -223,12 +229,14 @@ export function CountyShell({
             <div className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
               {population != null && <Stat label="Population" value={population.toLocaleString()} />}
               {childrenUnder6 != null && <Stat label="Children under 6" value={childrenUnder6.toLocaleString()} />}
+              {birthsPastYear != null && <Stat label="Babies born last year" value={birthsPastYear.toLocaleString()} />}
               <Stat label="Licensed providers" value={fmtNum(stats.provider_count)} />
               <Stat label="Total licensed seats" value={fmtNum(stats.total_capacity)} />
               {costs?.mhi != null && <Stat label="Median household income" value={`$${Math.round(costs.mhi).toLocaleString()}`} />}
               {costInfantPct != null && <Stat label="Infant care, % of income" value={`${costInfantPct}%`} />}
               {costs?.flfpr_20to64_under6 != null && <Stat label="Moms working (kids under 6)" value={`${Math.round(costs.flfpr_20to64_under6)}%`} />}
-              {costs?.pr_f != null && <Stat label="Female poverty rate" value={`${costs.pr_f.toFixed(1)}%`} />}
+              {oneParentUnder6 != null && <Stat label="Single-parent homes, under 6" value={oneParentUnder6.toLocaleString()} />}
+              {under5PovertyRate != null && <Stat label="Under-5 poverty rate" value={`${under5PovertyRate.toFixed(1)}%`} />}
             </div>
             <p className="mt-5 text-[11px] leading-relaxed text-[var(--paper-faint)]" style={SANS}>
               Sources: U.S. Census Bureau (ACS 2022) · NY OCFS licensed-provider data · U.S. Dept. of Labor.
