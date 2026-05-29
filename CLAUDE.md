@@ -138,10 +138,24 @@ The app is colored through `--paper-*` CSS variables (`globals.css`). **Dark mod
 
 **Every responsive change must be mobile-only and leave desktop byte-identical.** Put the mobile value as the base Tailwind class and re-assert desktop with `sm:`/`md:` (e.g. `pt-5 sm:pt-14`), or use `max-sm:` for mobile-only overrides. Verify desktop with a ~1180px screenshot.
 
-- **Header** (`AppLayout`): sidebar toggle sits on the right on mobile (`order-last sm:order-first`), padding tightened — frees the top-left.
-- **Panels are a drawer on mobile:** `#chat-panel-root` is `max-sm:fixed inset-0 z-50 justify-end pointer-events-none` so a panel overlays the page instead of pushing it; `AppPanel` wrapper has `max-sm:pointer-events-auto`. Desktop keeps the side-by-side push. Test a panel via `/console/[slug]?panel=providers` (opens deterministically).
-- Detail/index/hub mastheads raise on mobile and hide non-essential above-the-fold copy with `max-sm:hidden`.
-- **Still TODO (blocked by the other terminal's active map/launchpad edits):** `/console` mobile (map on top full-width, hide table, county dropdown) and `/launchpad`.
+- **Full bleed.** `html`/`body` paint `var(--paper)` on mobile (no desk color peeks through the iOS safe area); the AppLayout main panel's `border` + drop shadow are `sm:` only.
+- **No header bar on mobile.** The AppLayout header is `hidden sm:flex`. The sidebar toggle is a **draggable FAB** (bottom-right, snaps to nearest edge — ported from SportsGPT) that lives in AppLayout.
+- **Sidebar = left drawer.** On mobile the sidebar root is `max-sm:fixed inset-y-0 left-0 z-50 max-sm:w-[300px]` with a translateX slide + a tap-to-close backdrop; auto-closes on navigation (matchMedia-gated). Desktop keeps the width-push.
+- **Panels = right sheet.** `#chat-panel-root` is `max-sm:fixed inset-0 z-50 justify-end pointer-events-none` so a panel overlays the page instead of pushing it; `AppPanel` wrapper has `max-sm:pointer-events-auto`. Test deterministically via `/console/[slug]?panel=providers`.
+- **Theme toggle** sits in the header on desktop and moves into the **Sidebar footer** on mobile (consumes `dark` + `onToggleTheme` props from AppLayout — single source of truth, no desync).
+- **Table → chip rail pattern.** When a desktop page pairs a selection table with a map (`/console`, `/launchpad`), on mobile the table is `max-sm:hidden` and replaced by a horizontal-scroll **chip rail** above a full-width map hero. Each chip carries the row's key metric (FPS / seats) and a severity dot, so the ranking semantics survive in a thumb-scrollable strip.
+- **Tabs / cards in narrow widths.** Tab rows get `max-sm:overflow-x-auto max-sm:no-scrollbar` + `shrink-0 whitespace-nowrap` on each tab (e.g. console detail's program-type bar, launchpad's program-type tabs). Provider-card grids drop to `grid-cols-2` + `max-sm:aspect-square` with secondary lines/CTAs `max-sm:hidden`.
+- **Map legend (`ChildcareDotMap`)** defaults open on desktop, **closed on mobile** via a lazy `useState` initializer that checks `matchMedia('(max-width: 639px)')`.
+- Index/hub mastheads raise on mobile and hide non-essential above-the-fold copy with `max-sm:hidden`. H1 clamp floors are tuned (≤ ~1.9rem) so two-line designs don't break into three.
+
+## Command Palette (`⌘K`)
+
+`src/components/CommandPalette.tsx`, mounted in the root layout so it works on every page.
+
+- `⌘K` / `Ctrl+K` toggles; `Esc` or backdrop-click closes; arrow keys + `Enter` select.
+- Empty state: persisted **recents** (localStorage `cc-cmdk-recent`, max 5) + a **Go to** quick-nav (Counties, Cities, ZIP Codes, Providers, Console, Launchpad, Data).
+- Typing ≥ 2 chars debounced-fetches `/api/search` and groups results — Counties · Cities · ZIP Codes · Providers · Charts — plus a `Search for "…"` fallback to `/search?q=…`. Reuses the existing search infra; no new API or table.
+- Active row's icon + primary label flip to `var(--paper-accent)` — matches the project's link/hover convention.
 
 ---
 
