@@ -119,7 +119,7 @@ export function ZipMapClient() {
         </p>
 
         {/* Search */}
-        <div className="paper-rise relative mt-8" style={{ animationDelay: '180ms' }}>
+        <div className="paper-rise relative z-40 mt-8" style={{ animationDelay: '180ms' }}>
           <div className="flex items-center gap-2 rounded-2xl border bg-[var(--inp-bg)] px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.06)]" style={{ borderColor: located ? ACCENT : 'var(--border)' }}>
             <Search className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />
             <input
@@ -146,7 +146,7 @@ export function ZipMapClient() {
         </div>
 
         {/* Map */}
-        <div className="paper-rise mt-7 overflow-hidden rounded-2xl border border-[var(--paper-rule)]" style={{ animationDelay: '240ms' }}>
+        <div className="paper-rise relative z-0 mt-7 overflow-hidden rounded-2xl border border-[var(--paper-rule)]" style={{ animationDelay: '240ms' }}>
           <div className="relative aspect-[3/2] w-full">
             <APIProvider apiKey={apiKey}>
               <GMap
