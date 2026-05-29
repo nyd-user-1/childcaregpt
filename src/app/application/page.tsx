@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
-import { Download, ArrowLeft, ArrowRight, CornerDownRight, RotateCcw } from 'lucide-react'
+import { Download, ArrowLeft, ArrowRight, CornerDownRight, RotateCcw, Mail, Loader2, Check } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { PDFDocument, StandardFonts } from 'pdf-lib'
 
@@ -418,6 +418,10 @@ export default function ApplicationPage() {
   const [dateSigned,         setDateSigned]         = useState('')
   const [attestationChecked, setAttestationChecked] = useState(false)
 
+  // Email-me-my-application state
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [sendMsg,   setSendMsg]   = useState('')
+
   // Confirmation tracking
   const [touched, setTouched] = useState<Set<string>>(new Set())
   const [sectionStatus, setSectionStatus] = useState<Record<string, 'confirmed' | 'flagged'>>({})
@@ -619,8 +623,9 @@ export default function ApplicationPage() {
   }
   const unconfirmedCount = Object.entries(unconfirmedMap).filter(([k, v]) => v && !touched.has(k)).length
 
-  async function exportPDF() {
-    try {
+  // Fills the official OCFS-6025 and returns the bytes. Both Export (download)
+  // and Email (send route) use this so the form they produce is identical.
+  async function buildPdfBytes(): Promise<Uint8Array> {
     const baseBytes = await fetch('/OCFS-6025.pdf').then(r => r.arrayBuffer())
     const pdfDoc = await PDFDocument.load(baseBytes)
     const form  = pdfDoc.getForm()
@@ -767,19 +772,58 @@ export default function ApplicationPage() {
     const helv = await pdfDoc.embedFont(StandardFonts.Helvetica)
     form.updateFieldAppearances(helv)
 
-    const pdfBytes = await pdfDoc.save()
-    const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `OCFS-6025-${firstName || 'Application'}-${lastName || ''}.pdf`.replace(/\s+/g, '-')
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    setTimeout(() => URL.revokeObjectURL(url), 100)
+    return pdfDoc.save()
+  }
+
+  async function exportPDF() {
+    try {
+      const pdfBytes = await buildPdfBytes()
+      const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `OCFS-6025-${firstName || 'Application'}-${lastName || ''}.pdf`.replace(/\s+/g, '-')
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      setTimeout(() => URL.revokeObjectURL(url), 100)
     } catch (err) {
       console.error('Export failed:', err)
       alert(`Export failed: ${err instanceof Error ? err.message : String(err)}`)
+    }
+  }
+
+  async function emailPDF() {
+    const to = email.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      setSendState('error')
+      setSendMsg('Add your email in the “About” section first, then send.')
+      return
+    }
+    setSendState('sending')
+    setSendMsg('')
+    try {
+      const pdfBytes = await buildPdfBytes()
+      // Base64-encode without blowing the call stack on a large array.
+      let binary = ''
+      const bytes = new Uint8Array(pdfBytes)
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+      }
+      const pdfBase64 = btoa(binary)
+
+      const res = await fetch('/api/send-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: to, firstName, lastName, pdfBase64 }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not send the email.')
+      setSendState('sent')
+      setSendMsg(`Sent to ${to}.`)
+    } catch (err) {
+      setSendState('error')
+      setSendMsg(err instanceof Error ? err.message : 'Could not send the email.')
     }
   }
 
@@ -810,8 +854,29 @@ export default function ApplicationPage() {
                 <Download className="h-3.5 w-3.5" />
                 Export
               </button>
+              <button
+                onClick={emailPDF}
+                disabled={sendState === 'sending'}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                style={{ background: 'var(--paper-accent)' }}
+              >
+                {sendState === 'sending'
+                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Sending…</>
+                  : sendState === 'sent'
+                  ? <><Check className="h-3.5 w-3.5" />Sent</>
+                  : <><Mail className="h-3.5 w-3.5" />Email it to me</>}
+              </button>
             </div>
           </div>
+
+          {sendMsg && (
+            <p
+              className="-mt-3 mb-5 text-right text-xs"
+              style={{ ...SANS, color: sendState === 'error' ? '#b45309' : 'var(--paper-accent)' }}
+            >
+              {sendMsg}
+            </p>
+          )}
 
           {/* Tab navigation */}
           <TabBar active={activeTab} onChange={goToTab} />
@@ -854,7 +919,7 @@ export default function ApplicationPage() {
                   <div className="col-span-2"><Field label="Phone Number"  value={phone}  onChange={v => setPhone(formatPhone(v))}  prefilled={prefilled(phone)} type="tel" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  <div className="col-span-2"><Field label="Email (optional)" value={email} onChange={v => setEmail(v.toLowerCase())} prefilled={prefilled(email)} type="email" /></div>
+                  <div className="col-span-2"><Field label="Email (optional)" value={email} onChange={v => { setEmail(v.toLowerCase()); if (sendState !== 'idle') { setSendState('idle'); setSendMsg('') } }} prefilled={prefilled(email)} type="email" /></div>
                   <div className="col-span-2"><Field label="Date of Birth"    value={dateOfBirth} onChange={v => setDateOfBirth(formatDob(v))} prefilled={prefilled(dateOfBirth)} placeholder="MM-DD-YYYY" warned={w} /></div>
                 </div>
                 <div className="grid grid-cols-4 gap-3">
