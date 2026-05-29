@@ -183,8 +183,8 @@ export function ZipShell({
 
           {/* ── Snapshot ── */}
           <section className="paper-rise mt-11" style={{ animationDelay: '360ms' }}>
-            <h2 className="border-b border-[var(--paper-rule)] pb-3 text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>Snapshot</h2>
-            <dl className="mt-3 grid grid-cols-1 gap-x-12 sm:grid-cols-2">
+            <h2 className="text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>Snapshot</h2>
+            <dl className="mt-5 grid grid-cols-1 gap-x-12 sm:grid-cols-2">
               {snapshotRows.map(r => (
                 <div key={r.label} className="flex items-baseline justify-between gap-4 border-t border-[var(--paper-rule-soft)] py-3">
                   <dt className="text-[13.5px] leading-snug text-[var(--paper-muted)]" style={SANS}>{r.label}</dt>

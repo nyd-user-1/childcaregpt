@@ -227,8 +227,8 @@ export function CountyShell({
                 {zips.slice(0, 9).map(z => (
                   <Link key={z.zip_code} href={`/zip/${z.zip_code}`}
                     className="rounded-xl border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 transition-colors hover:border-[var(--paper-accent)]">
-                    <p className="tabular-nums text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.05rem', fontWeight: 500 }}>{z.zip_code}</p>
-                    <p className="truncate text-[12px] text-[var(--paper-muted)]" style={SANS}>{z.city}</p>
+                    <p className="truncate text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.05rem', fontWeight: 500 }}>{z.city}</p>
+                    <p className="text-[12px] tabular-nums text-[var(--paper-muted)]" style={SANS}>{z.zip_code}</p>
                     <p className="mt-1.5 text-[12px] font-medium tabular-nums" style={{ color: 'var(--paper-accent)' }}>{fmtNum(z.providers)} providers</p>
                   </Link>
                 ))}
@@ -238,8 +238,8 @@ export function CountyShell({
 
           {/* ── Snapshot ── */}
           <section className="paper-rise mt-11" style={{ animationDelay: '420ms' }}>
-            <h2 className="border-b border-[var(--paper-rule)] pb-3 text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>Snapshot</h2>
-            <dl className="mt-3 grid grid-cols-1 gap-x-12 sm:grid-cols-2">
+            <h2 className="text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>Snapshot</h2>
+            <dl className="mt-5 grid grid-cols-1 gap-x-12 sm:grid-cols-2">
               {snapshotRows.map(r => (
                 <div key={r.label} className="flex items-baseline justify-between gap-4 border-t border-[var(--paper-rule-soft)] py-3">
                   <dt className="text-[13.5px] leading-snug text-[var(--paper-muted)]" style={SANS}>{r.label}</dt>
