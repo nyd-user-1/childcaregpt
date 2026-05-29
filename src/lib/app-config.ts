@@ -6,7 +6,7 @@
  */
 
 import {
-  MessageCircle, LayoutDashboard, Rocket, BarChart3, Map, ClipboardList, MonitorDot,
+  MessageCircle, Search, LayoutDashboard, Rocket, BarChart3, Map, ClipboardList, MonitorDot,
 } from 'lucide-react'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
@@ -31,6 +31,7 @@ export const NAV_CYCLE = [
 // ── Sidebar active-label lookup (exact path → label) ──────────────────────
 export const PATH_NAV: Record<string, string> = {
   '/':          'Chat',
+  '/search':    'Search',
   '/charts':    'Charts',
   '/maps':      'Maps',
   '/county':    'Counties',
@@ -46,6 +47,7 @@ export const PATH_NAV: Record<string, string> = {
 
 // ── Page title shown in AppLayout header (exact path → title) ─────────────
 export const PATH_TITLE: Record<string, string> = {
+  '/search':      'Search',
   '/charts':      'Charts',
   '/maps':        'Maps',
   '/county':      'County',
@@ -65,6 +67,7 @@ export type NavItem = { label: string; icon: React.ComponentType<{ className?: s
 
 export const SIDEBAR_NAV_TOP: NavItem[] = [
   { label: 'Chat',      icon: MessageCircle,   href: '/'          },
+  { label: 'Search',    icon: Search,          href: '/search'    },
   { label: 'Charts',    icon: LayoutDashboard, href: '/charts'    },
   { label: 'Maps',      icon: Map,             href: '/maps'      },
   { label: 'Launchpad', icon: Rocket,          href: '/launchpad' },

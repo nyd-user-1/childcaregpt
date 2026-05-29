@@ -9,6 +9,8 @@ import {
   SIDEBAR_DATA_ITEMS, SIDEBAR_MAP_ITEMS, SIDEBAR_FOOTER_LABEL,
 } from '@/lib/app-config'
 
+const SANS: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+
 interface SidebarProps {
   activeLabel?: string
 }
@@ -17,14 +19,29 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
   const [dataOpen, setDataOpen] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
 
+  const navItem = (active: boolean) =>
+    cn(
+      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors',
+      active
+        ? 'bg-[var(--paper-2)] text-[var(--paper-accent)]'
+        : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)]',
+    )
+  const subItem = (active: boolean) =>
+    cn(
+      'flex items-center rounded-lg px-3 py-2 text-[14px] font-medium transition-colors',
+      active
+        ? 'bg-[var(--paper-2)] text-[var(--paper-accent)]'
+        : 'text-[var(--paper-muted)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)]',
+    )
+
   return (
-    <aside className="flex h-full flex-col bg-[var(--surface)] overflow-hidden">
+    <aside className="flex h-full flex-col overflow-hidden bg-[var(--paper)]" style={{ ...SANS, color: 'var(--paper-text)' }}>
 
       {/* Header — Log In */}
       <div className="px-3 pt-3 pb-2">
-        <div className="flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-2.5">
-          <User className="h-[18px] w-[18px] text-[var(--txt)] flex-shrink-0" />
-          <span className="text-[15px] font-medium text-[var(--txt)]">Log In</span>
+        <div className="flex items-center gap-2 rounded-lg border border-[var(--paper-rule)] px-3 py-2.5 transition-colors hover:bg-[var(--paper-2)]">
+          <User className="h-[18px] w-[18px] flex-shrink-0 text-[var(--paper-text)]" />
+          <span className="text-[15px] font-medium text-[var(--paper-text)]">Log In</span>
         </div>
       </div>
 
@@ -32,16 +49,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-0.5">
 
         {SIDEBAR_NAV_TOP.map(({ label, icon: Icon, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors',
-              activeLabel === label
-                ? 'bg-[var(--inp-bg)] text-[var(--txt)]'
-                : 'text-[var(--txt)] hover:bg-[var(--inp-bg)]'
-            )}
-          >
+          <Link key={label} href={href} className={navItem(activeLabel === label)}>
             <Icon className="h-[18px] w-[18px] flex-shrink-0" />
             {label}
           </Link>
@@ -51,22 +59,16 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
           <>
             <button
               onClick={() => setDataOpen(v => !v)}
-              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors"
+              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] transition-colors"
             >
               <BarChart3 className="h-[18px] w-[18px] flex-shrink-0" />
               <span className="flex-1 text-left">Data</span>
-              <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', dataOpen && 'rotate-180')} />
+              <ChevronDown className={cn('h-4 w-4 text-[var(--paper-faint)] transition-transform duration-200', dataOpen && 'rotate-180')} />
             </button>
             {dataOpen && (
-              <div className="ml-[30px] border-l border-[var(--border)] pl-3 space-y-0.5">
+              <div className="ml-[30px] border-l border-[var(--paper-rule)] pl-3 space-y-0.5">
                 {SIDEBAR_DATA_ITEMS.map(({ label, href }) => (
-                  <Link key={label} href={href}
-                    className={cn(
-                      'flex items-center rounded-lg px-3 py-2 text-[14px] font-medium transition-colors',
-                      activeLabel === label
-                        ? 'text-[var(--txt)] bg-[var(--inp-bg)]'
-                        : 'text-[var(--muted)] hover:bg-[var(--inp-bg)] hover:text-[var(--txt)]'
-                    )}>
+                  <Link key={label} href={href} className={subItem(activeLabel === label)}>
                     {label}
                   </Link>
                 ))}
@@ -79,17 +81,16 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
           <>
             <button
               onClick={() => setMapOpen(v => !v)}
-              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors"
+              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] transition-colors"
             >
               <Map className="h-[18px] w-[18px] flex-shrink-0" />
               <span className="flex-1 text-left">Map</span>
-              <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', mapOpen && 'rotate-180')} />
+              <ChevronDown className={cn('h-4 w-4 text-[var(--paper-faint)] transition-transform duration-200', mapOpen && 'rotate-180')} />
             </button>
             {mapOpen && (
-              <div className="ml-[30px] border-l border-[var(--border)] pl-3 space-y-0.5">
+              <div className="ml-[30px] border-l border-[var(--paper-rule)] pl-3 space-y-0.5">
                 {SIDEBAR_MAP_ITEMS.map(({ label, href }) => (
-                  <Link key={label} href={href}
-                    className="flex items-center rounded-lg px-3 py-2 text-[14px] font-medium text-[var(--muted)] hover:bg-[var(--inp-bg)] hover:text-[var(--txt)] transition-colors">
+                  <Link key={label} href={href} className={subItem(activeLabel === label)}>
                     {label}
                   </Link>
                 ))}
@@ -99,16 +100,7 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
         )}
 
         {SIDEBAR_NAV_BOTTOM.map(({ label, icon: Icon, href }) => (
-          <Link
-            key={label}
-            href={href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium transition-colors',
-              activeLabel === label
-                ? 'bg-[var(--inp-bg)] text-[var(--txt)]'
-                : 'text-[var(--txt)] hover:bg-[var(--inp-bg)]'
-            )}
-          >
+          <Link key={label} href={href} className={navItem(activeLabel === label)}>
             <Icon className="h-[18px] w-[18px] flex-shrink-0" />
             {label}
           </Link>
@@ -119,7 +111,12 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
       <div className="p-3">
         <Link
           href="/glossary"
-          className="flex items-center rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--txt)] bg-[var(--inp-bg)] hover:opacity-80"
+          className={cn(
+            'flex items-center rounded-lg border border-[var(--paper-rule)] px-3 py-2.5 text-[15px] font-medium transition-colors',
+            activeLabel === SIDEBAR_FOOTER_LABEL
+              ? 'bg-[var(--paper-2)] text-[var(--paper-accent)]'
+              : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)]',
+          )}
         >
           {SIDEBAR_FOOTER_LABEL}
         </Link>
