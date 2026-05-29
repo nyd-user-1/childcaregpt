@@ -3,8 +3,9 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, X, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
+import { Search, X, List, LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
+import { ColumnHeader } from '@/components/ColumnHeader'
 import { cn } from '@/lib/utils'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
@@ -54,16 +55,26 @@ export type CountyRow = {
   mctoddler: number | null
   mcpreschool: number | null
   mhi: number | null
+  familiesPerSeat: number | null
 }
 
-type ColKey = 'providers' | 'total' | 'infant' | 'toddler' | 'preschool'
+type ColKey = 'familiesPerSeat' | 'providers' | 'total' | 'infant' | 'toddler' | 'preschool'
             | 'schoolAge' | 'seatsPerProvider'
             | 'mcinfant' | 'mcinfantMo' | 'mcinfantYr'
             | 'mctoddler' | 'mcpreschool' | 'mhi'
 
 interface ColDef { key: ColKey; header: string; tooltip: string; cost?: boolean }
 
+// Families-per-seat severity tier — warm clay (tightest) → teal (best supplied).
+function fpsTier(fps: number): string {
+  if (fps >= 2.0) return '#b5734e'
+  if (fps >= 1.5) return '#c9a15e'
+  if (fps >= 1.2) return 'var(--paper-muted)'
+  return 'var(--paper-accent)'
+}
+
 const COLS: ColDef[] = [
+  { key: 'familiesPerSeat',  header: 'FAMILIES/SEAT',  tooltip: 'Working families with a child under 6 per licensed seat — Census ACS demand against OCFS supply. Higher means tighter; the statewide average is about 1.2.' },
   { key: 'providers',        header: 'PROVIDERS',      tooltip: 'Number of OCFS-regulated childcare facilities in the county.' },
   { key: 'total',            header: 'TOTAL SEATS',    tooltip: 'Sum of all licensed childcare capacity across facilities.' },
   { key: 'infant',           header: 'INFANT',         tooltip: 'Sum of licensed infant capacity (birth–18 months) across facilities.' },
@@ -79,43 +90,9 @@ const COLS: ColDef[] = [
   { key: 'mhi',              header: 'MED. INCOME',    tooltip: 'Median household income (DOL NDCP, 2022).' },
 ]
 
-function ColHeader({ col, active, dir, onSort }: {
-  col: ColDef; active: boolean; dir: 'asc' | 'desc'; onSort: () => void
-}) {
-  return (
-    <th className="px-3 py-3.5 bg-[var(--paper)] border-b border-[var(--paper-rule)] whitespace-nowrap text-right">
-      <div className="relative group/col inline-block">
-        <button
-          onClick={onSort}
-          className={cn(
-            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-[var(--paper-rule-soft)] hover:text-[var(--paper-text)]',
-            active ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]',
-          )}
-          style={SANS}
-        >
-          {col.header}
-          {active
-            ? dir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
-            : <ChevronUp className="h-3 w-3 opacity-0 group-hover/col:opacity-40" />}
-        </button>
-        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full right-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
-          <div className="px-3.5 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--paper-text)] mb-1.5" style={SANS}>{col.header}</p>
-            <p className="text-[12px] text-[var(--paper-muted)] leading-relaxed font-normal">{col.tooltip}</p>
-          </div>
-          <Link href="/glossary" onClick={e => e.stopPropagation()}
-            className="flex items-center justify-between gap-2 border-t border-[var(--paper-rule)] px-3.5 py-2.5 text-[11px] font-medium text-[var(--paper-accent)] hover:bg-[var(--paper-2)] transition-colors" style={SANS}>
-            <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </div>
-      </div>
-    </th>
-  )
-}
-
 function getVal(row: CountyRow, key: ColKey): number {
   switch (key) {
+    case 'familiesPerSeat':  return row.familiesPerSeat ?? 0
     case 'providers':        return row.provider_count
     case 'total':            return row.total_capacity
     case 'infant':           return row.infant_capacity
@@ -134,6 +111,7 @@ function getVal(row: CountyRow, key: ColKey): number {
 
 function cellVal(c: CountyRow, key: ColKey): string {
   switch (key) {
+    case 'familiesPerSeat':  return c.familiesPerSeat != null ? c.familiesPerSeat.toFixed(1) : '—'
     case 'providers':        return fmt(c.provider_count)
     case 'total':            return fmt(c.total_capacity)
     case 'infant':           return fmt(c.infant_capacity)
@@ -261,11 +239,8 @@ export default function CountyTable({ counties }: { counties: CountyRow[] }) {
                           : <ChevronUp className="h-3 w-3 opacity-40" />}
                       </button>
                     </th>
-                    <th className="px-3 py-3.5 bg-[var(--paper)] border-b border-[var(--paper-rule)] text-left">
-                      <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] px-1.5 py-0.5" style={SANS}>STATE</span>
-                    </th>
                     {COLS.map(col => (
-                      <ColHeader key={col.key} col={col} active={sortCol === col.key} dir={sortDir} onSort={() => handleSort(col.key)} />
+                      <ColumnHeader key={col.key} label={col.header} tooltip={col.tooltip} active={sortCol === col.key} dir={sortDir} onSort={() => handleSort(col.key)} align="right" />
                     ))}
                   </tr>
                 </thead>
@@ -274,15 +249,19 @@ export default function CountyTable({ counties }: { counties: CountyRow[] }) {
                     <tr key={c.county} onClick={() => router.push(`/county/${toSlug(c.county)}`)}
                       className="group/row cursor-pointer hover:bg-[var(--paper-2)] transition-colors">
                       <td style={{ ...SERIF, willChange: 'transform' }}
-                        className={cn('px-4 py-3 border-b border-[var(--paper-rule-soft)] sticky left-0 z-[1] bg-[var(--paper)] group-hover/row:bg-[var(--paper-2)] text-[15px] font-medium text-[var(--paper-text)] transition-colors')}>
+                        className={cn('px-4 py-3 border-b border-[var(--paper-rule-soft)] sticky left-0 z-[1] bg-[var(--paper)] group-hover/row:bg-[var(--paper-2)] group-hover/row:text-[var(--paper-accent)] text-[15px] font-medium text-[var(--paper-text)] transition-colors')}>
                         {c.county} County
                       </td>
-                      <td className={cn(td, 'text-left text-[var(--paper-faint)]')}>NY</td>
-                      {COLS.map(col => (
-                        <td key={col.key} className={cn(td, col.cost ? 'text-[var(--paper-accent)] font-medium' : 'text-[var(--paper-text)]')}>
-                          {cellVal(c, col.key)}
-                        </td>
-                      ))}
+                      {COLS.map(col => {
+                        const fpsColor = col.key === 'familiesPerSeat' && c.familiesPerSeat != null ? fpsTier(c.familiesPerSeat) : null
+                        return (
+                          <td key={col.key}
+                            className={cn(td, col.cost ? 'text-[var(--paper-accent)] font-medium' : 'text-[var(--paper-text)]')}
+                            style={fpsColor ? { color: fpsColor, fontWeight: 600 } : undefined}>
+                            {cellVal(c, col.key)}
+                          </td>
+                        )
+                      })}
                     </tr>
                   ))}
                 </tbody>

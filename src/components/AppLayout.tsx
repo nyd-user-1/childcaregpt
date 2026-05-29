@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { PanelLeftOpen, PanelLeftClose, ChevronLeft, ChevronRight } from 'lucide-react'
-import { AppLogo } from '@/components/AppLogo'
 import { Sidebar } from '@/components/Sidebar'
 import {
-  APP_NAME, ACCENT_COLOR, CHART_NAV_EVENT,
+  CHART_NAV_EVENT,
   NAV_CYCLE, PATH_NAV, PATH_TITLE,
 } from '@/lib/app-config'
 
@@ -83,12 +81,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
           </button>
 
           {title && (
-            <div className="ml-4 flex items-center gap-2 text-[var(--paper-text)]" style={{ fontFamily: 'var(--font-display), Georgia, serif' }}>
-              <Link href="/" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xl font-semibold hover:bg-[var(--paper-2)] transition-colors">
-                <AppLogo className="h-5 w-5 shrink-0" />
-                {APP_NAME}
-              </Link>
-              <span className="text-[var(--paper-faint)] text-xl select-none">|</span>
+            <div className="ml-4 flex items-center text-[var(--paper-text)]" style={{ fontFamily: 'var(--font-display), Georgia, serif' }}>
               <span className="text-xl font-medium">{title}</span>
             </div>
           )}

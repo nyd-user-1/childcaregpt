@@ -1,5 +1,6 @@
 import { sql } from '@/lib/db'
 import CountyTable from './CountyTable'
+import { getCountySupplyNeed } from '@/lib/queries/console'
 
 export const metadata = {
   title: 'Counties · ChildcareGPT',
@@ -28,6 +29,9 @@ export default async function CountyPage() {
     ORDER BY f.county
   `
 
+  const supplyNeed = await getCountySupplyNeed()
+  const fpsByCounty = new Map(supplyNeed.map(s => [s.county, s.familiesPerSeat]))
+
   return (
     <CountyTable
       counties={rows.map(r => ({
@@ -42,6 +46,7 @@ export default async function CountyPage() {
         mctoddler:   r.mctoddler   != null ? Number(r.mctoddler)   : null,
         mcpreschool: r.mcpreschool != null ? Number(r.mcpreschool) : null,
         mhi:         r.mhi         != null ? Number(r.mhi)         : null,
+        familiesPerSeat: fpsByCounty.get(r.county as string) ?? null,
       }))}
     />
   )

@@ -54,12 +54,14 @@ export function CountyShell({
   stats,
   costs,
   zips,
+  population,
   prevSlug,
   nextSlug,
 }: {
   stats: CountyStats
   costs: CountyCosts
   zips: ZipEntry[]
+  population?: number | null
   prevSlug: string
   nextSlug: string
 }) {
@@ -210,6 +212,7 @@ export function CountyShell({
 
           {/* ── Context strip (sizing the answer) ── */}
           <div className="paper-rise mt-11 flex flex-wrap gap-x-10 gap-y-4 border-t border-[var(--paper-rule)] pt-6" style={{ animationDelay: '420ms' }}>
+            {population != null && <Stat label="Population" value={population.toLocaleString()} />}
             <Stat label="Licensed providers" value={fmtNum(stats.provider_count)} />
             <Stat label="Total licensed seats" value={fmtNum(stats.total_capacity)} />
             {costs?.mhi != null && <Stat label="Median household income" value={`$${Math.round(costs.mhi).toLocaleString()}`} />}

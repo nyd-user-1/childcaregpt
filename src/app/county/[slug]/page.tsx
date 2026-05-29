@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { NY_COUNTIES } from '@/lib/ny-counties'
+import { getCountyDemographics } from '@/lib/queries/county-demographics'
 import { CountyShell } from './Shell'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -59,9 +60,11 @@ export default async function DetailPageCounty({ params }: { params: Promise<{ s
     LIMIT 1
   `
   const costs = costRows[0] ?? null
+  const demo = await getCountyDemographics(stats.county_name as string)
 
   return (
     <CountyShell
+      population={demo?.population ?? null}
       stats={{
         county_name:        stats.county_name as string,
         provider_count:     Number(stats.provider_count),

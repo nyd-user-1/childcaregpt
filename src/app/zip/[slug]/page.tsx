@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
+import { getZipDemand } from '@/lib/queries/zip-demographics'
 import { ZipShell } from './Shell'
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -59,8 +60,16 @@ export default async function DetailPageZipCode({ params }: { params: Promise<{ 
   const prevSlug = (prevRows[0]?.slug ?? lastRows[0]?.slug ?? slug) as string
   const nextSlug = (nextRows[0]?.slug ?? firstRows[0]?.slug ?? slug) as string
 
+  const seats = Number(stats.total_capacity)
+  const demand = await getZipDemand((stats.zip_code as string).slice(0, 5))
+  const familiesPerSeat = demand?.workingFamiliesUnder6 != null && seats > 0
+    ? demand.workingFamiliesUnder6 / seats
+    : null
+
   return (
     <ZipShell
+      familiesPerSeat={familiesPerSeat}
+      population={demand?.population ?? null}
       stats={{
         zip_code:           stats.zip_code as string,
         city:               stats.city as string,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, X, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
+import { ColumnHeader } from '@/components/ColumnHeader'
 import { cn } from '@/lib/utils'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
@@ -77,41 +78,6 @@ const COLS: ColDef[] = [
   { key: 'director',  header: 'DIRECTOR',    tooltip: 'Name of the approved on-site Director or Provider. Shown as "There is no approved Director/On-Site Provider" if no approved director is on file.' },
   { key: 'licExp',    header: 'LIC. EXP',    tooltip: 'License or registration expiration date. Facilities must renew before this date to maintain active status.' },
 ]
-
-function ColHeader({ col, active, dir, onSort }: {
-  col: ColDef; active: boolean; dir: 'asc' | 'desc'; onSort: () => void
-}) {
-  return (
-    <th className={cn('px-3 py-3.5 bg-[var(--paper)] border-b border-[var(--paper-rule)] whitespace-nowrap', col.num ? 'text-right' : 'text-left')}>
-      <div className="relative group/col inline-block">
-        <button
-          onClick={onSort}
-          className={cn(
-            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-[var(--paper-rule-soft)] hover:text-[var(--paper-text)]',
-            active ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]',
-          )}
-          style={SANS}
-        >
-          {col.header}
-          {active
-            ? dir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
-            : <ChevronUp className="h-3 w-3 opacity-0 group-hover/col:opacity-40" />}
-        </button>
-        <div className={cn('pointer-events-none group-hover/col:pointer-events-auto absolute top-full z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal', col.num ? 'right-0' : 'left-0')}>
-          <div className="px-3.5 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--paper-text)] mb-1.5" style={SANS}>{col.header}</p>
-            <p className="text-[12px] text-[var(--paper-muted)] leading-relaxed font-normal">{col.tooltip}</p>
-          </div>
-          <Link href="/glossary" onClick={e => e.stopPropagation()}
-            className="flex items-center justify-between gap-2 border-t border-[var(--paper-rule)] px-3.5 py-2.5 text-[11px] font-medium text-[var(--paper-accent)] hover:bg-[var(--paper-2)] transition-colors" style={SANS}>
-            <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
-            <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </div>
-      </div>
-    </th>
-  )
-}
 
 function getVal(row: FacilityRow, key: ColKey): number | string {
   switch (key) {
@@ -285,7 +251,7 @@ export default function FacilityTable({
                       </div>
                     </th>
                     {COLS.map(col => (
-                      <ColHeader key={col.key} col={col} active={sortCol === col.key} dir={sortDir} onSort={() => handleSort(col.key)} />
+                      <ColumnHeader key={col.key} label={col.header} tooltip={col.tooltip} align={col.num ? 'right' : 'left'} active={sortCol === col.key} dir={sortDir} onSort={() => handleSort(col.key)} />
                     ))}
                   </tr>
                 </thead>
