@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { ArrowRight, MapPin, Search } from 'lucide-react'
+import { ArrowRight, Info, MapPin } from 'lucide-react'
 
 // Client-only: pulls Google Maps + the dot dataset.
 const ChildcareDotMap = dynamic(() => import('@/components/ChildcareDotMap'), { ssr: false })
@@ -33,7 +33,18 @@ type GeoRow = {
   name: string; county?: string | null; chamber?: string | null
   party?: string | null; code?: string | null; num?: number
   slug: string; providers: number; capacity: number
+  dcc?: number; fdc?: number; gfdc?: number; sacc?: number; sdcc?: number
+  fps?: number | string | null
 }
+
+// Short type columns, in the canonical order, with their colors.
+const TYPE_COLS: { key: 'dcc' | 'fdc' | 'gfdc' | 'sacc' | 'sdcc'; label: string; color: string }[] = [
+  { key: 'dcc',  label: 'DCC',  color: '#3f6184' },
+  { key: 'fdc',  label: 'FDC',  color: '#b5734e' },
+  { key: 'gfdc', label: 'GFDC', color: '#2f6d6a' },
+  { key: 'sacc', label: 'SACC', color: '#c9a15e' },
+  { key: 'sdcc', label: 'SDCC', color: '#8a6d9c' },
+]
 type Card = {
   id: string; slug: string; name: string; county: string | null; city: string | null
   type: string; seats: number; infant: number; toddler: number; preschool: number; school_age: number
@@ -71,6 +82,21 @@ function licensedSince(c: Card): string | null {
   if (!c.since) return null
   const y = new Date(c.since).getFullYear()
   return Number.isFinite(y) && y > 1950 ? `Open since ${y}` : null
+}
+
+/* ── Tooltip (hover) ────────────────────────────────────────────── */
+function Tip({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <span className="group/tip relative inline-flex cursor-help items-center gap-1">
+      {label}
+      <span
+        className="pointer-events-none absolute left-0 top-full z-20 mt-2 w-60 rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] p-3 text-left text-[11.5px] font-normal normal-case tracking-normal leading-[1.5] text-[var(--paper-muted)] opacity-0 shadow-lg transition-opacity duration-150 group-hover/tip:pointer-events-auto group-hover/tip:opacity-100"
+        style={{ fontFamily: "'DM Sans', sans-serif" }}
+      >
+        {children}
+      </span>
+    </span>
+  )
 }
 
 /* ── Provider card ──────────────────────────────────────────────── */
@@ -113,7 +139,6 @@ export default function LaunchpadPage() {
   const [type, setType] = useState<(typeof TYPE_TABS)[number]>('DCC')
   const [cards, setCards] = useState<Card[]>([])
   const [cardsLoading, setCardsLoading] = useState(true)
-  const [search, setSearch] = useState('')
   const cardReq = useRef(0)
 
   // Geo table — refetch whenever the level changes; clear the current selection.
@@ -150,24 +175,18 @@ export default function LaunchpadPage() {
     return `/api/facilities-dot-map?${params.toString()}`
   }, [selected, level])
 
-  const filteredGeo = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return geoRows
-    return geoRows.filter(r =>
-      r.name.toLowerCase().includes(q) ||
-      (r.county ?? '').toLowerCase().includes(q) ||
-      (r.code ?? '').toLowerCase().includes(q),
-    )
-  }, [geoRows, search])
 
   const unit = GEO_TABS.find(g => g.key === level)!.unit
+  const hasFps = level === 'county' || level === 'zip'
+  // name + 5 type cols + capacity, plus FPS (county/zip) or chamber+district (district)
+  const colSpan = 6 + (hasFps ? 1 : 0) + (level === 'district' ? 2 : 0)
   const selectGeo = useCallback((row: GeoRow) => {
     setSelected(prev => (prev && prev.slug === row.slug ? null : row))
   }, [])
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
-      <div className="px-5 sm:px-7 pt-8 pb-16 flex flex-col gap-6">
+      <div className="px-5 sm:px-7 pt-5 sm:pt-8 pb-16 flex flex-col gap-5">
 
         {/* Masthead */}
         <div>
@@ -179,70 +198,91 @@ export default function LaunchpadPage() {
           </h1>
         </div>
 
-        {/* Geo tabs + search — capped to the table's width */}
-        <div className="flex w-full lg:w-[52%] items-end justify-between gap-x-4 border-b border-[var(--paper-rule-soft)]">
-          <div className="flex items-center gap-1">
-            {GEO_TABS.map(g => {
-              const on = level === g.key
+        {/* Geo tabs */}
+        <div className="flex items-center gap-1 border-b border-[var(--paper-rule-soft)]">
+          {GEO_TABS.map(g => {
+            const on = level === g.key
+            return (
+              <button
+                key={g.key}
+                onClick={() => setLevel(g.key)}
+                className="relative -mb-px px-4 py-2.5 text-[13.5px] transition-colors"
+                style={{
+                  ...SANS,
+                  color: on ? 'var(--paper-accent)' : 'var(--paper-muted)',
+                  fontWeight: on ? 600 : 400,
+                  borderBottom: on ? '2px solid var(--paper-accent)' : '2px solid transparent',
+                }}
+              >
+                {g.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Two-slot top row: table + dot map */}
+        <div className="h-[320px] max-sm:h-auto shrink-0 flex flex-col lg:flex-row gap-4">
+
+          {/* Mobile: scrollable geo chip rail — replaces the table; the map below is the hero */}
+          <div className="sm:hidden -mx-5 flex gap-2 overflow-x-auto no-scrollbar px-5">
+            {geoLoading ? (
+              <span className="px-1 py-2 text-[13px] text-[var(--paper-muted)]" style={SANS}>Loading…</span>
+            ) : geoRows.map(row => {
+              const on = selected?.slug === row.slug
+              const fps = row.fps != null ? Number(row.fps) : null
               return (
                 <button
-                  key={g.key}
-                  onClick={() => setLevel(g.key)}
-                  className="relative -mb-px px-4 py-2.5 text-[13.5px] transition-colors"
-                  style={{
-                    ...SANS,
-                    color: on ? 'var(--paper-accent)' : 'var(--paper-muted)',
-                    fontWeight: on ? 600 : 400,
-                    borderBottom: on ? '2px solid var(--paper-accent)' : '2px solid transparent',
-                  }}
+                  key={row.slug}
+                  onClick={() => selectGeo(row)}
+                  className={`inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors ${on ? 'border-[var(--paper-accent)] bg-[var(--paper-accent-soft)]' : 'border-[var(--paper-rule)] bg-[var(--paper-2)] active:bg-[var(--paper-rule-soft)]'}`}
                 >
-                  {g.label}
+                  <span className="text-[13.5px] font-medium" style={{ ...SERIF, color: on ? 'var(--paper-accent)' : 'var(--paper-text)' }}>{row.name}</span>
+                  <span className="text-[12px] tabular-nums text-[var(--paper-muted)]">{fps != null ? `${fps.toFixed(1)} FPS` : `${fmt(row.capacity)} seats`}</span>
                 </button>
               )
             })}
           </div>
 
-          <div className="relative mb-2 min-w-0 flex-1 max-w-[16rem]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--paper-faint)]" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={`Search ${level === 'district' ? 'reps or districts' : level === 'county' ? 'counties' : level === 'city' ? 'cities' : 'ZIP codes'}…`}
-              className="w-full rounded-full border border-[var(--paper-rule)] bg-[var(--paper-2)] pl-10 pr-4 py-2 text-[13px] text-[var(--paper-text)] outline-none transition-colors focus:border-[var(--paper-accent)]"
-              style={SANS}
-            />
-          </div>
-        </div>
-
-        {/* Two-slot top row: table + dot map */}
-        <div className="h-[420px] shrink-0 flex flex-col lg:flex-row gap-4">
-          {/* Table */}
-          <div className="w-full lg:w-[52%] min-w-0 shrink-0 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] overflow-hidden flex flex-col">
-            <div className="overflow-y-auto no-scrollbar flex-1">
-              <table className="w-full text-[13.5px]" style={SANS}>
+          {/* Table — tablet + desktop only */}
+          <div className="max-sm:hidden w-full lg:w-[52%] min-w-0 shrink-0 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] overflow-hidden flex flex-col">
+            <div className="overflow-auto no-scrollbar flex-1">
+              <table className="w-full text-[13px]" style={SANS}>
                 <thead className="sticky top-0 z-[1] bg-[var(--paper-2)]">
                   <tr className="border-b border-[var(--paper-rule)]">
-                    <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">
+                    {hasFps && (
+                      <th className="text-right text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] pl-4 pr-2 py-3.5 whitespace-nowrap">
+                        <Tip label={<>FPS <Info className="inline h-3 w-3 -mt-px" /></>}>
+                          <strong>Families Per Seat</strong> — working-parent families with a young child per licensed seat. Higher means tighter.{' '}
+                          <a href="/glossary#families-per-seat" className="underline" onClick={e => e.stopPropagation()}>Full definition →</a>
+                        </Tip>
+                      </th>
+                    )}
+                    <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] px-3 py-3.5 whitespace-nowrap">
                       {level === 'district' ? 'Representative' : unit}
                     </th>
                     {level === 'district' && (
                       <>
-                        <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">Chamber</th>
-                        <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">District</th>
+                        <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] px-3 py-3.5 whitespace-nowrap">Chamber</th>
+                        <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] px-3 py-3.5 whitespace-nowrap">District</th>
                       </>
                     )}
-                    <th className="text-right text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">Providers</th>
-                    <th className="text-right text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">Capacity</th>
+                    {TYPE_COLS.map(c => (
+                      <th key={c.key} className="text-right text-[10.5px] font-semibold uppercase tracking-[0.1em] px-2 py-3.5 whitespace-nowrap" style={{ color: c.color }}>
+                        {c.label}
+                      </th>
+                    ))}
+                    <th className="text-right text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] px-3 py-3.5 whitespace-nowrap">Capacity</th>
                   </tr>
                 </thead>
                 <tbody>
                   {geoLoading ? (
-                    <tr><td colSpan={5} className="px-4 py-10 text-center text-[var(--paper-muted)]" style={SERIF}>Loading…</td></tr>
-                  ) : filteredGeo.length === 0 ? (
-                    <tr><td colSpan={5} className="px-4 py-10 text-center text-[var(--paper-muted)]" style={SERIF}>No matches.</td></tr>
+                    <tr><td colSpan={colSpan} className="px-4 py-10 text-center text-[var(--paper-muted)]" style={SERIF}>Loading…</td></tr>
+                  ) : geoRows.length === 0 ? (
+                    <tr><td colSpan={colSpan} className="px-4 py-10 text-center text-[var(--paper-muted)]" style={SERIF}>No matches.</td></tr>
                   ) : (
-                    filteredGeo.map(row => {
+                    geoRows.map(row => {
                       const on = selected?.slug === row.slug
+                      const fps = row.fps != null ? Number(row.fps) : null
                       return (
                         <tr
                           key={row.slug}
@@ -250,30 +290,36 @@ export default function LaunchpadPage() {
                           className={`cursor-pointer border-b border-[var(--paper-rule-soft)] transition-colors ${on ? '' : 'hover:bg-[var(--paper-rule-soft)]'}`}
                           style={{ background: on ? 'var(--paper-accent-soft)' : undefined }}
                         >
-                          <td className="px-4 py-2.5">
+                          {hasFps && (
+                            <td className="pl-4 pr-2 py-2.5 text-right tabular-nums font-medium" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-text)' }}>
+                              {fps != null ? fps.toFixed(1) : '—'}
+                            </td>
+                          )}
+                          <td className="px-3 py-2.5">
                             {level === 'district' ? (
                               <Link
                                 href={`/district/${(row.chamber ?? '').toLowerCase()}/${row.num}`}
                                 onClick={e => e.stopPropagation()}
-                                className="font-medium text-[var(--paper-text)] hover:text-[var(--paper-accent)] hover:underline underline-offset-2 transition-colors"
+                                className="font-medium text-[var(--paper-text)] hover:text-[var(--paper-accent)] hover:underline underline-offset-2 transition-colors whitespace-nowrap"
                               >
                                 {row.name}
                               </Link>
                             ) : (
-                              <span className="font-medium" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-text)' }}>{row.name}</span>
-                            )}
-                            {(level === 'city' || level === 'zip') && row.county && (
-                              <span className="ml-2 text-[11.5px] text-[var(--paper-faint)]">{row.county}</span>
+                              <span className="font-medium whitespace-nowrap" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-text)' }}>{row.name}</span>
                             )}
                           </td>
                           {level === 'district' && (
                             <>
-                              <td className="px-4 py-2.5 text-[var(--paper-muted)]">{row.chamber}</td>
-                              <td className="px-4 py-2.5 tabular-nums" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-muted)' }}>{row.code}</td>
+                              <td className="px-3 py-2.5 text-[var(--paper-muted)]">{row.chamber}</td>
+                              <td className="px-3 py-2.5 tabular-nums" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-muted)' }}>{row.code}</td>
                             </>
                           )}
-                          <td className="px-4 py-2.5 text-right tabular-nums text-[var(--paper-muted)]">{row.providers.toLocaleString()}</td>
-                          <td className="px-4 py-2.5 text-right tabular-nums text-[var(--paper-muted)]">{fmt(row.capacity)}</td>
+                          {TYPE_COLS.map(c => (
+                            <td key={c.key} className="px-2 py-2.5 text-right tabular-nums text-[var(--paper-muted)]">
+                              {(row[c.key] ?? 0).toLocaleString()}
+                            </td>
+                          ))}
+                          <td className="px-3 py-2.5 text-right tabular-nums text-[var(--paper-muted)]">{fmt(row.capacity)}</td>
                         </tr>
                       )
                     })
@@ -283,8 +329,8 @@ export default function LaunchpadPage() {
             </div>
           </div>
 
-          {/* Dot map */}
-          <div className="flex-1 min-w-0 rounded-2xl border border-[var(--paper-rule)] overflow-hidden" style={{ background: 'var(--paper-2)' }}>
+          {/* Dot map — the hero on mobile */}
+          <div className="flex-1 min-w-0 rounded-2xl border border-[var(--paper-rule)] overflow-hidden max-sm:flex-none max-sm:h-[52vh]" style={{ background: 'var(--paper-2)' }}>
             <ChildcareDotMap
               key={mapUrl}
               apiUrl={mapUrl}
