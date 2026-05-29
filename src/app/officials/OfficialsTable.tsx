@@ -46,11 +46,11 @@ function partyTint(party: string | null): string {
 
 const CHAMBER_LABEL = { senate: 'Senate', assembly: 'Assembly' } as const
 
-export default function OfficialsTable({ officials }: { officials: OfficialRow[] }) {
+export default function OfficialsTable({ officials, initialChamber = 'all' }: { officials: OfficialRow[]; initialChamber?: ChamberFilter }) {
   const router = useRouter()
   const [view, setView]       = useState<'list' | 'grid'>('list')
   const [search, setSearch]   = useState('')
-  const [chamber, setChamber] = useState<ChamberFilter>('all')
+  const [chamber, setChamber] = useState<ChamberFilter>(initialChamber)
   const [sortCol, setSortCol] = useState<SortCol>('district')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
   const searchRef = useRef<HTMLInputElement>(null)

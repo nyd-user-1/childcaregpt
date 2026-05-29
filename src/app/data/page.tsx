@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { AppLayout } from '@/components/AppLayout'
-import { Building2, MapPin, Home, Hash, Landmark, ArrowRight } from 'lucide-react'
+import { Building2, MapPin, Home, Hash, Landmark, Vote, ArrowRight } from 'lucide-react'
 
 export const metadata = {
   title: 'Data · ChildcareGPT',
@@ -53,12 +53,20 @@ const CARDS: DataCard[] = [
     icon: <Hash className="h-5 w-5" />,
   },
   {
-    href: '/officials',
+    href: '/officials?chamber=senate',
     kicker: 'V',
-    title: 'Elected Officials',
-    body: 'The State Senate and Assembly member for each district, with the licensed providers they represent — and how to reach them.',
-    stat: '213 districts · 63 Senate · 150 Assembly',
+    title: 'NYS Senate',
+    body: 'The State Senator for each district, the licensed providers they represent, and how to reach them.',
+    stat: '63 districts · contact each office',
     icon: <Landmark className="h-5 w-5" />,
+  },
+  {
+    href: '/officials?chamber=assembly',
+    kicker: 'VI',
+    title: 'NYS Assembly',
+    body: 'The Assemblymember for each district, the licensed providers they represent, and how to reach them.',
+    stat: '150 districts · contact each office',
+    icon: <Vote className="h-5 w-5" />,
   },
 ]
 

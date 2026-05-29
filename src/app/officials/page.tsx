@@ -6,8 +6,9 @@ export const metadata = {
   description: 'New York State Senate and Assembly members by district, with the count of licensed child care providers each represents.',
 }
 
-export default async function OfficialsPage() {
-  const [senate, assembly] = await Promise.all([
+export default async function OfficialsPage({ searchParams }: { searchParams: Promise<{ chamber?: string }> }) {
+  const [{ chamber }, senate, assembly] = await Promise.all([
+    searchParams,
     getDistrictRows('senate'),
     getDistrictRows('assembly'),
   ])
@@ -17,5 +18,7 @@ export default async function OfficialsPage() {
     ...assembly.map(r => ({ ...r, chamber: 'assembly' as const })),
   ]
 
-  return <OfficialsTable officials={rows} />
+  const initialChamber = chamber === 'senate' || chamber === 'assembly' ? chamber : 'all'
+
+  return <OfficialsTable officials={rows} initialChamber={initialChamber} />
 }
