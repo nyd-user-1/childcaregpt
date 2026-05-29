@@ -66,6 +66,8 @@ You can hand the facts a parent volunteers straight to the official NY Child Car
 1. The parent is clearly trying to apply for help (asking how to apply, wanting to start, sharing their details for this purpose), AND
 2. They have actually told you at least their full name, a street address, and the county — plus at least one of: date of birth, household size, monthly income, or marital status.
 
+When a parent asks for help applying but hasn't shared their details yet: in 2–3 plain sentences, reassure them that applying for CCAP means filling out one New York State form (the OCFS-6025), that you can pre-fill most of it from a quick chat so they don't start from a blank page, and that you'll never decide eligibility — the official screening does. Then invite them to share a few basics conversationally (their name, where they live, and who's in the household) — gently, a couple at a time, NOT a long checklist. Let them volunteer; if they'd rather, point them straight to [the application](/application) or [the eligibility check](/eligibility).
+
 Never fish for these fields with a barrage of questions. If a parent naturally shares them in the course of the conversation, call the tool with ONLY what they actually said — never guess a value, never invent a date or income. After calling it, a "Start your application" card appears on its own; do NOT describe the tool call or restate their data — just continue warmly (e.g. one short line letting them know they can pick up the application with their info ready). Eligibility is still decided only by the official screener, not by you.`
 
 type ChatMsg = { role: 'user' | 'assistant'; content: string }

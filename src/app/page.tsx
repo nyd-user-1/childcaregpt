@@ -12,11 +12,12 @@ const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
 
 type SelectedAddress = { description: string; lat: number; lng: number }
 
-// Real New York starter prompts — the three jobs a parent comes here to do.
+// Real New York starter prompts — the jobs a parent comes here to do.
 const STARTERS: { label: string; prompt: string }[] = [
   { label: 'Find care near me',            prompt: 'What licensed child care is near me?' },
   { label: 'How much does care cost?',     prompt: 'How much does infant child care cost in Suffolk County?' },
   { label: 'Can I get help paying?',       prompt: 'Can I get help paying for child care in New York?' },
+  { label: 'Help me apply for assistance', prompt: 'Help me apply for child care assistance (CCAP). Walk me through what the OCFS-6025 application needs and help me get it started.' },
   { label: 'What do the program types mean?', prompt: 'What are the different types of child care programs in New York?' },
 ]
 
