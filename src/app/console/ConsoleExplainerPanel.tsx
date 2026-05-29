@@ -29,7 +29,7 @@ const toSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="border-t border-[var(--paper-rule)] px-5 pt-6 pb-2 first:border-t-0">
+    <div className="px-5 pt-8 pb-2.5">
       <span className="text-[10px] uppercase tracking-[0.24em] text-[var(--paper-faint)]" style={SANS}>{children}</span>
     </div>
   )
