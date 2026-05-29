@@ -147,7 +147,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--paper)] overflow-hidden shadow-[0_4px_24px_rgba(31,29,26,0.06)] border border-[var(--paper-rule)]">
+      <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--paper)] overflow-hidden sm:shadow-[0_4px_24px_rgba(31,29,26,0.06)] sm:border sm:border-[var(--paper-rule)]">
 
         <div className="hidden sm:flex items-center px-5 pt-5 pb-3">
 

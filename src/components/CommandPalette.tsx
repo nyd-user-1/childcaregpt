@@ -162,9 +162,9 @@ export function CommandPalette() {
                     onMouseMove={() => setActive(i)}
                     className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${i === active ? 'bg-[var(--paper-2)]' : ''}`}
                   >
-                    <Icon className="h-4 w-4 shrink-0 text-[var(--paper-faint)]" />
+                    <Icon className={`h-4 w-4 shrink-0 ${i === active ? 'text-[var(--paper-accent)]' : 'text-[var(--paper-faint)]'}`} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[14.5px] text-[var(--paper-text)]" style={SERIF}>{item.primary}</span>
+                      <span className={`block truncate text-[14.5px] ${i === active ? 'text-[var(--paper-accent)]' : 'text-[var(--paper-text)]'}`} style={SERIF}>{item.primary}</span>
                       <span className="block truncate text-[12px] text-[var(--paper-muted)]">{item.secondary}</span>
                     </span>
                     {i === active && <ArrowRight className="h-3.5 w-3.5 shrink-0 text-[var(--paper-accent)]" />}
