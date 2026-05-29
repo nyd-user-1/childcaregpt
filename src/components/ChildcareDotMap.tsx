@@ -194,6 +194,27 @@ function CanvasLayer({ dots, visibleTypes }: { dots: DotRow[] | null; visibleTyp
 }
 
 // ---------------------------------------------------------------------------
+// Fits the map to the current dot set. Used when the map is scoped to a county /
+// city / zip so the dots fill the frame instead of clustering in a corner at the
+// statewide default center. No-op for 0 dots; a sensible zoom for a single dot.
+// ---------------------------------------------------------------------------
+function MapFitter({ dots, enabled }: { dots: DotRow[] | null; enabled: boolean }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map || !enabled || !dots || dots.length === 0) return
+    if (dots.length === 1) {
+      map.setCenter({ lat: Number(dots[0].la), lng: Number(dots[0].lo) })
+      map.setZoom(12)
+      return
+    }
+    const bounds = new google.maps.LatLngBounds()
+    for (const d of dots) bounds.extend({ lat: Number(d.la), lng: Number(d.lo) })
+    map.fitBounds(bounds, 48)
+  }, [map, dots, enabled])
+  return null
+}
+
+// ---------------------------------------------------------------------------
 // Legend
 // ---------------------------------------------------------------------------
 function Legend({ visibleTypes, onToggle, onToggleAll }: {
@@ -240,11 +261,13 @@ export default function ChildcareDotMap({
   defaultCenter = { lat: 42.9, lng: -75.6 },
   defaultZoom = 7,
   countLabel = 'providers',
+  fitToData = false,
 }: {
   apiUrl?: string
   defaultCenter?: { lat: number; lng: number }
   defaultZoom?: number
   countLabel?: string
+  fitToData?: boolean
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const [dots, setDots] = useState<DotRow[] | null>(null)
@@ -286,6 +309,7 @@ export default function ChildcareDotMap({
           style={{ width: '100%', height: '100%' }}
         >
           <CanvasLayer dots={dots} visibleTypes={visibleTypes} />
+          <MapFitter dots={dots} enabled={fitToData} />
         </GoogleMap>
       </APIProvider>
 

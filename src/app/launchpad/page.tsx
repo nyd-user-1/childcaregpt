@@ -1,46 +1,340 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { NY_COUNTIES } from '@/lib/ny-counties'
-import { cn } from '@/lib/utils'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
+import Link from 'next/link'
+import { ArrowRight, MapPin, Search } from 'lucide-react'
+
+// Client-only: pulls Google Maps + the dot dataset.
+const ChildcareDotMap = dynamic(() => import('@/components/ChildcareDotMap'), { ssr: false })
+
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+
+// Shared program-type vocabulary with the dot map.
+const TYPE_CFG: Record<string, { color: string; label: string }> = {
+  DCC:  { color: '#3f6184', label: 'Day Care Center' },
+  FDC:  { color: '#b5734e', label: 'Family Day Care' },
+  GFDC: { color: '#2f6d6a', label: 'Group Family Day Care' },
+  SACC: { color: '#c9a15e', label: 'School-Age Child Care' },
+  SDCC: { color: '#8a6d9c', label: 'Small Day Care Center' },
+}
+const TYPE_TABS = ['DCC', 'FDC', 'GFDC', 'SACC', 'SDCC'] as const
+
+const GEO_TABS = [
+  { key: 'district', label: 'District', unit: 'District' },
+  { key: 'county',   label: 'County',   unit: 'County' },
+  { key: 'city',     label: 'City',     unit: 'City' },
+  { key: 'zip',      label: 'Zip Code', unit: 'ZIP' },
+] as const
+type GeoLevel = (typeof GEO_TABS)[number]['key']
+
+type GeoRow = {
+  name: string; county?: string | null; chamber?: string | null
+  party?: string | null; code?: string | null; num?: number
+  slug: string; providers: number; capacity: number
+}
+type Card = {
+  id: string; slug: string; name: string; county: string | null; city: string | null
+  type: string; seats: number; infant: number; toddler: number; preschool: number; school_age: number
+  since: string | null
+}
 
 function fmt(n: number) {
   return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n)
 }
 
+// Translate a selected geo row into the query params the dot-map + cards APIs
+// expect. District slugs look like "senate-32" / "assembly-86".
+function scopeParams(params: URLSearchParams, level: GeoLevel, row: GeoRow) {
+  if (level === 'county') params.set('county', row.county ?? row.name)
+  else if (level === 'city') params.set('city', row.name)
+  else if (level === 'zip') params.set('zip', row.name)
+  else if (level === 'district') {
+    const [chamber, num] = row.slug.split('-')
+    params.set(chamber === 'assembly' ? 'assembly_district' : 'senate_district', num)
+  }
+}
+
+function ageMix(c: Card): string {
+  const parts: string[] = []
+  if (c.infant > 0) parts.push('infants')
+  if (c.toddler > 0) parts.push('toddlers')
+  if (c.preschool > 0) parts.push('preschool')
+  if (c.school_age > 0) parts.push('school-age')
+  if (parts.length === 0) return 'All ages'
+  if (parts.length === 1) return `${parts[0][0].toUpperCase()}${parts[0].slice(1)}`
+  return `${parts.slice(0, -1).join(', ')} & ${parts[parts.length - 1]}`
+}
+
+function licensedSince(c: Card): string | null {
+  if (!c.since) return null
+  const y = new Date(c.since).getFullYear()
+  return Number.isFinite(y) && y > 1950 ? `Open since ${y}` : null
+}
+
+/* ── Provider card ──────────────────────────────────────────────── */
+function ProviderCard({ c }: { c: Card }) {
+  const cfg = TYPE_CFG[c.type] ?? { color: 'var(--paper-accent)', label: c.type }
+  const since = licensedSince(c)
+  return (
+    <Link
+      href={`/facility/${c.slug}`}
+      className="group/card relative flex flex-col rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-5 pl-6 transition-colors hover:border-[var(--paper-accent)]"
+    >
+      <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full" style={{ background: cfg.color }} />
+      <span className="text-[10.5px] uppercase tracking-[0.18em]" style={{ ...SANS, color: cfg.color, fontWeight: 600 }}>
+        {cfg.label}
+      </span>
+      <h3 className="mt-3 text-[17px] leading-snug" style={{ ...SERIF, fontWeight: 500 }}>{c.name}</h3>
+      <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[var(--paper-muted)]" style={SANS}>
+        <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--paper-faint)]" />
+        {[c.city, c.county && `${c.county} County`].filter(Boolean).join(' · ')}
+      </p>
+      <p className="mt-3 text-[12.5px] leading-[1.55] text-[var(--paper-muted)]" style={SANS}>
+        {ageMix(c)}
+        {since && <span className="text-[var(--paper-faint)]"> · {since}</span>}
+      </p>
+      <div className="mt-4 flex items-center gap-1 text-[12px] text-[var(--paper-accent)]" style={SANS}>
+        <span className="font-medium">View provider</span>
+        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/card:translate-x-1" />
+      </div>
+    </Link>
+  )
+}
+
+/* ── Page ───────────────────────────────────────────────────────── */
 export default function LaunchpadPage() {
-  const router = useRouter()
+  const [level, setLevel] = useState<GeoLevel>('district')
+  const [geoRows, setGeoRows] = useState<GeoRow[]>([])
+  const [geoLoading, setGeoLoading] = useState(true)
+  const [selected, setSelected] = useState<GeoRow | null>(null)
+
+  const [type, setType] = useState<(typeof TYPE_TABS)[number]>('DCC')
+  const [cards, setCards] = useState<Card[]>([])
+  const [cardsLoading, setCardsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const cardReq = useRef(0)
+
+  // Geo table — refetch whenever the level changes; clear the current selection.
+  useEffect(() => {
+    let cancelled = false
+    setGeoLoading(true)
+    setSelected(null)
+    fetch(`/api/launchpad-geo?level=${level}`)
+      .then(r => r.json())
+      .then((d: GeoRow[]) => { if (!cancelled) setGeoRows(Array.isArray(d) ? d : []) })
+      .catch(() => { if (!cancelled) setGeoRows([]) })
+      .finally(() => { if (!cancelled) setGeoLoading(false) })
+    return () => { cancelled = true }
+  }, [level])
+
+  // Provider cards — scoped to the selected geo + program type (statewide when none).
+  useEffect(() => {
+    const id = ++cardReq.current
+    setCardsLoading(true)
+    const params = new URLSearchParams({ program_type: type, limit: '60' })
+    if (selected) scopeParams(params, level, selected)
+    fetch(`/api/launchpad-cards?${params.toString()}`)
+      .then(r => r.json())
+      .then((d: Card[]) => { if (id === cardReq.current) setCards(Array.isArray(d) ? d : []) })
+      .catch(() => { if (id === cardReq.current) setCards([]) })
+      .finally(() => { if (id === cardReq.current) setCardsLoading(false) })
+  }, [selected, level, type])
+
+  // Map scope follows the selection.
+  const mapUrl = useMemo(() => {
+    if (!selected) return '/api/facilities-dot-map'
+    const params = new URLSearchParams()
+    scopeParams(params, level, selected)
+    return `/api/facilities-dot-map?${params.toString()}`
+  }, [selected, level])
+
+  const filteredGeo = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return geoRows
+    return geoRows.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      (r.county ?? '').toLowerCase().includes(q) ||
+      (r.code ?? '').toLowerCase().includes(q),
+    )
+  }, [geoRows, search])
+
+  const unit = GEO_TABS.find(g => g.key === level)!.unit
+  const selectGeo = useCallback((row: GeoRow) => {
+    setSelected(prev => (prev && prev.slug === row.slug ? null : row))
+  }, [])
 
   return (
-    <div className="w-[52%] min-w-0 shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden flex flex-col">
-      <div className="overflow-y-auto no-scrollbar flex-1">
-        <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-[var(--surface)]">
-            <tr className="border-b border-[var(--border)]">
-              {['County','Providers','Seats','Seats Filled','Seats Open','Difference (+/-)'].map(h => (
-                <th key={h} className="text-left text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] px-4 py-4 whitespace-nowrap">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {NY_COUNTIES.map((row, i) => (
-              <tr
-                key={row.county}
-                onClick={() => router.push(`/launchpad/${row.slug}`, { scroll: false })}
-                className={cn('border-b border-[var(--border)] hover:bg-[var(--row-hover)] cursor-pointer transition-colors', i % 2 !== 0 && 'bg-[var(--inp-bg)]')}
+    <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
+      <div className="px-5 sm:px-7 pt-8 pb-16 flex flex-col gap-6">
+
+        {/* Masthead */}
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={SANS}>
+            ChildcareGPT · Launchpad
+          </p>
+          <h1 className="mt-3 leading-[1.05]" style={{ ...SERIF, fontSize: 'clamp(1.9rem, 3.4vw, 2.7rem)', fontWeight: 400, letterSpacing: '-0.02em' }}>
+            Find a provider <span style={{ fontStyle: 'italic', color: 'var(--paper-accent)' }}>that fits.</span>
+          </h1>
+        </div>
+
+        {/* Geo tabs + search — capped to the table's width */}
+        <div className="flex w-full lg:w-[52%] items-end justify-between gap-x-4 border-b border-[var(--paper-rule-soft)]">
+          <div className="flex items-center gap-1">
+            {GEO_TABS.map(g => {
+              const on = level === g.key
+              return (
+                <button
+                  key={g.key}
+                  onClick={() => setLevel(g.key)}
+                  className="relative -mb-px px-4 py-2.5 text-[13.5px] transition-colors"
+                  style={{
+                    ...SANS,
+                    color: on ? 'var(--paper-accent)' : 'var(--paper-muted)',
+                    fontWeight: on ? 600 : 400,
+                    borderBottom: on ? '2px solid var(--paper-accent)' : '2px solid transparent',
+                  }}
+                >
+                  {g.label}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="relative mb-2 min-w-0 flex-1 max-w-[16rem]">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--paper-faint)]" />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={`Search ${level === 'district' ? 'reps or districts' : level === 'county' ? 'counties' : level === 'city' ? 'cities' : 'ZIP codes'}…`}
+              className="w-full rounded-full border border-[var(--paper-rule)] bg-[var(--paper-2)] pl-10 pr-4 py-2 text-[13px] text-[var(--paper-text)] outline-none transition-colors focus:border-[var(--paper-accent)]"
+              style={SANS}
+            />
+          </div>
+        </div>
+
+        {/* Two-slot top row: table + dot map */}
+        <div className="h-[420px] shrink-0 flex flex-col lg:flex-row gap-4">
+          {/* Table */}
+          <div className="w-full lg:w-[52%] min-w-0 shrink-0 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] overflow-hidden flex flex-col">
+            <div className="overflow-y-auto no-scrollbar flex-1">
+              <table className="w-full text-[13.5px]" style={SANS}>
+                <thead className="sticky top-0 z-[1] bg-[var(--paper-2)]">
+                  <tr className="border-b border-[var(--paper-rule)]">
+                    <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">
+                      {level === 'district' ? 'Representative' : unit}
+                    </th>
+                    {level === 'district' && (
+                      <>
+                        <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">Chamber</th>
+                        <th className="text-left text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">District</th>
+                      </>
+                    )}
+                    <th className="text-right text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">Providers</th>
+                    <th className="text-right text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[var(--paper-faint)] px-4 py-3.5 whitespace-nowrap">Capacity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {geoLoading ? (
+                    <tr><td colSpan={5} className="px-4 py-10 text-center text-[var(--paper-muted)]" style={SERIF}>Loading…</td></tr>
+                  ) : filteredGeo.length === 0 ? (
+                    <tr><td colSpan={5} className="px-4 py-10 text-center text-[var(--paper-muted)]" style={SERIF}>No matches.</td></tr>
+                  ) : (
+                    filteredGeo.map(row => {
+                      const on = selected?.slug === row.slug
+                      return (
+                        <tr
+                          key={row.slug}
+                          onClick={() => selectGeo(row)}
+                          className={`cursor-pointer border-b border-[var(--paper-rule-soft)] transition-colors ${on ? '' : 'hover:bg-[var(--paper-rule-soft)]'}`}
+                          style={{ background: on ? 'var(--paper-accent-soft)' : undefined }}
+                        >
+                          <td className="px-4 py-2.5">
+                            {level === 'district' ? (
+                              <Link
+                                href={`/district/${(row.chamber ?? '').toLowerCase()}/${row.num}`}
+                                onClick={e => e.stopPropagation()}
+                                className="font-medium text-[var(--paper-text)] hover:text-[var(--paper-accent)] hover:underline underline-offset-2 transition-colors"
+                              >
+                                {row.name}
+                              </Link>
+                            ) : (
+                              <span className="font-medium" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-text)' }}>{row.name}</span>
+                            )}
+                            {(level === 'city' || level === 'zip') && row.county && (
+                              <span className="ml-2 text-[11.5px] text-[var(--paper-faint)]">{row.county}</span>
+                            )}
+                          </td>
+                          {level === 'district' && (
+                            <>
+                              <td className="px-4 py-2.5 text-[var(--paper-muted)]">{row.chamber}</td>
+                              <td className="px-4 py-2.5 tabular-nums" style={{ color: on ? 'var(--paper-accent)' : 'var(--paper-muted)' }}>{row.code}</td>
+                            </>
+                          )}
+                          <td className="px-4 py-2.5 text-right tabular-nums text-[var(--paper-muted)]">{row.providers.toLocaleString()}</td>
+                          <td className="px-4 py-2.5 text-right tabular-nums text-[var(--paper-muted)]">{fmt(row.capacity)}</td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Dot map */}
+          <div className="flex-1 min-w-0 rounded-2xl border border-[var(--paper-rule)] overflow-hidden" style={{ background: 'var(--paper-2)' }}>
+            <ChildcareDotMap
+              key={mapUrl}
+              apiUrl={mapUrl}
+              fitToData={!!selected}
+              countLabel="providers"
+            />
+          </div>
+        </div>
+
+        {/* Program-type tabs */}
+        <div className="flex flex-wrap items-center gap-1 border-b border-[var(--paper-rule-soft)]">
+          {TYPE_TABS.map(t => {
+            const on = type === t
+            const cfg = TYPE_CFG[t]
+            return (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className="relative -mb-px flex items-center gap-1.5 px-3.5 py-2.5 text-[13px] transition-colors"
+                style={{
+                  ...SANS,
+                  color: on ? cfg.color : 'var(--paper-muted)',
+                  fontWeight: on ? 600 : 400,
+                  borderBottom: on ? `2px solid ${cfg.color}` : '2px solid transparent',
+                }}
               >
-                <td className="px-4 py-3 font-medium text-[var(--txt)]">{row.county}</td>
-                <td className="px-4 py-3 text-[var(--txt2)]">{row.providers}</td>
-                <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.seats)}</td>
-                <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.filled)}</td>
-                <td className="px-4 py-3 text-[var(--txt2)]">{fmt(row.open)}</td>
-                <td className={cn('px-4 py-3 font-semibold', row.diff >= 0 ? 'text-emerald-600' : 'text-red-500')}>
-                  {row.diff >= 0 ? `+${row.diff}` : row.diff}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                <span className="h-2 w-2 rounded-full" style={{ background: cfg.color }} />
+                {cfg.label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Cards */}
+        {!cardsLoading && cards.length === 0 ? (
+          <p className="py-10 text-center text-[14px] text-[var(--paper-muted)]" style={SERIF}>
+            No {TYPE_CFG[type].label} providers match{selected ? ` in ${selected.name}` : ''}.
+          </p>
+        ) : (
+          <div
+            className="grid gap-4 transition-opacity"
+            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(248px, 1fr))', opacity: cardsLoading ? 0.5 : 1 }}
+          >
+            {cards.map(c => <ProviderCard key={c.id} c={c} />)}
+          </div>
+        )}
+
+        <p className="mt-4 text-[10px] text-[var(--paper-faint)]" style={SANS}>
+          Provider data from NY OCFS · capacity and licensing dates as reported · pick a {unit.toLowerCase()} to scope the map and cards
+        </p>
       </div>
     </div>
   )
