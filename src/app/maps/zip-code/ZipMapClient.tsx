@@ -92,7 +92,11 @@ export function ZipMapClient() {
   }, [])
 
   const selectSuggestion = useCallback(async (s: Suggestion) => {
+    // Cancel any pending typeahead fetch and close the list immediately so it
+    // can't repopulate after selection.
+    if (debounceRef.current) clearTimeout(debounceRef.current)
     setInput(s.description)
+    setSuggestions([])
     try {
       const res = await fetch(`/api/places/geocode?place_id=${s.place_id}`)
       const geo = await res.json()
