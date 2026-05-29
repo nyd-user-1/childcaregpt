@@ -108,13 +108,21 @@ function NYCountyLayer({
   const layerRef   = useRef<google.maps.Data | null>(null)
   const lookupRef  = useRef<Record<string, CountyMapRow>>({})
 
+  // Keep the latest callbacks/data in refs so the GeoJSON load effect can depend
+  // only on [map]. Previously these were in the dep array — every parent re-render
+  // (e.g. on hover) created new callback identities, ran the cleanup that did
+  // layer.setMap(null), and the loadedRef guard blocked re-adding it, so the
+  // choropleth vanished after the first interaction.
+  const handlersRef = useRef({ onHover, onLeave, onClick })
+  handlersRef.current = { onHover, onLeave, onClick }
+
+  const lookup: Record<string, CountyMapRow> = {}
+  for (const r of data) lookup[r.county_fips_code] = r
+  lookupRef.current = lookup
+
   useEffect(() => {
     if (!map || loadedRef.current) return
     loadedRef.current = true
-
-    const lookup: Record<string, CountyMapRow> = {}
-    for (const r of data) lookup[r.county_fips_code] = r
-    lookupRef.current = lookup
 
     const layer = new google.maps.Data()
     layerRef.current = layer
@@ -132,20 +140,20 @@ function NYCountyLayer({
         layer.addListener('mouseover', (e: google.maps.Data.MouseEvent) => {
           const fips = (e.feature.getProperty('STATEFP') as string) + (e.feature.getProperty('COUNTYFP') as string)
           const row  = lookupRef.current[fips]
-          if (row) onHover(fips, row)
+          if (row) handlersRef.current.onHover(fips, row)
         })
-        layer.addListener('mouseout',  () => onLeave())
+        layer.addListener('mouseout',  () => handlersRef.current.onLeave())
         layer.addListener('click',     (e: google.maps.Data.MouseEvent) => {
           const fips = (e.feature.getProperty('STATEFP') as string) + (e.feature.getProperty('COUNTYFP') as string)
           const row  = lookupRef.current[fips]
-          if (row) onClick(row)
+          if (row) handlersRef.current.onClick(row)
         })
 
         setReady(true)
       })
 
-    return () => { layer.setMap(null) }
-  }, [map, data, onHover, onLeave, onClick])
+    return () => { layer.setMap(null); loadedRef.current = false }
+  }, [map])
 
   // Re-style whenever metric or hover changes — without reloading GeoJSON
   useEffect(() => {
