@@ -55,6 +55,7 @@ export function CountyShell({
   costs,
   zips,
   population,
+  childrenUnder6,
   prevSlug,
   nextSlug,
 }: {
@@ -62,6 +63,7 @@ export function CountyShell({
   costs: CountyCosts
   zips: ZipEntry[]
   population?: number | null
+  childrenUnder6?: number | null
   prevSlug: string
   nextSlug: string
 }) {
@@ -76,6 +78,11 @@ export function CountyShell({
     { label: 'Preschool', center: toMonthly(costs?.mcpreschool), family: toMonthly(costs?.mfccpreschool) },
   ]
   const hasCost = ages.some(a => a.center != null || a.family != null)
+
+  // Infant care as a share of median household income (weekly median × 52 ÷ MHI).
+  const costInfantPct = costs?.mcinfant != null && costs.mhi
+    ? Math.round((costs.mcinfant * 52 / costs.mhi) * 100)
+    : null
 
   const askHref = `/?q=${encodeURIComponent(`Find licensed child care in ${county} County`)}`
 
@@ -210,14 +217,23 @@ export function CountyShell({
             </div>
           )}
 
-          {/* ── Context strip (sizing the answer) ── */}
-          <div className="paper-rise mt-11 flex flex-wrap gap-x-10 gap-y-4 border-t border-[var(--paper-rule)] pt-6" style={{ animationDelay: '420ms' }}>
-            {population != null && <Stat label="Population" value={population.toLocaleString()} />}
-            <Stat label="Licensed providers" value={fmtNum(stats.provider_count)} />
-            <Stat label="Total licensed seats" value={fmtNum(stats.total_capacity)} />
-            {costs?.mhi != null && <Stat label="Median household income" value={`$${Math.round(costs.mhi).toLocaleString()}`} />}
-            {costs?.pr_f != null && <Stat label="Female poverty rate" value={`${costs.pr_f.toFixed(1)}%`} />}
-          </div>
+          {/* ── Snapshot ── */}
+          <section className="paper-rise mt-11" style={{ animationDelay: '420ms' }}>
+            <h2 className="border-b border-[var(--paper-rule)] pb-3 text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>Snapshot</h2>
+            <div className="mt-6 flex flex-wrap gap-x-10 gap-y-5">
+              {population != null && <Stat label="Population" value={population.toLocaleString()} />}
+              {childrenUnder6 != null && <Stat label="Children under 6" value={childrenUnder6.toLocaleString()} />}
+              <Stat label="Licensed providers" value={fmtNum(stats.provider_count)} />
+              <Stat label="Total licensed seats" value={fmtNum(stats.total_capacity)} />
+              {costs?.mhi != null && <Stat label="Median household income" value={`$${Math.round(costs.mhi).toLocaleString()}`} />}
+              {costInfantPct != null && <Stat label="Infant care, % of income" value={`${costInfantPct}%`} />}
+              {costs?.flfpr_20to64_under6 != null && <Stat label="Moms working (kids under 6)" value={`${Math.round(costs.flfpr_20to64_under6)}%`} />}
+              {costs?.pr_f != null && <Stat label="Female poverty rate" value={`${costs.pr_f.toFixed(1)}%`} />}
+            </div>
+            <p className="mt-5 text-[11px] leading-relaxed text-[var(--paper-faint)]" style={SANS}>
+              Sources: U.S. Census Bureau (ACS 2022) · NY OCFS licensed-provider data · U.S. Dept. of Labor.
+            </p>
+          </section>
 
         </div>
       </div>

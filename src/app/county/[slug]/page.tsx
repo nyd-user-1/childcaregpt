@@ -65,6 +65,7 @@ export default async function DetailPageCounty({ params }: { params: Promise<{ s
   return (
     <CountyShell
       population={demo?.population ?? null}
+      childrenUnder6={demo?.childrenUnder6 ?? null}
       stats={{
         county_name:        stats.county_name as string,
         provider_count:     Number(stats.provider_count),
