@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, ArrowRight, MapPin, CheckCircle, XCircle, ChevronDown, Check, RotateCcw } from 'lucide-react'
+import { ArrowLeft, ArrowRight, MapPin, CheckCircle, XCircle, ChevronDown, Check, RotateCcw, Phone, Mail, Loader2 } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { BottleBaby } from '@/components/BottleBaby'
 import { RevealFx } from '@/components/RevealFx'
@@ -15,6 +15,22 @@ const ACCENT_HOVER = '#255856'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
 const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+
+// Hover/focus tooltip for the icon actions on the results card.
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <span className="group/tip relative inline-flex">
+      {children}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs opacity-0 transition-opacity duration-150 group-hover/tip:opacity-100 group-focus-within/tip:opacity-100"
+        style={{ ...SANS, background: 'var(--paper-text)', color: 'var(--paper)' }}
+      >
+        {label}
+      </span>
+    </span>
+  )
+}
 
 const NY_COUNTIES = [
   'Albany','Allegany','Bronx','Broome','Cattaraugus','Cayuga','Chautauqua',
@@ -359,6 +375,12 @@ export default function EligibilityPage() {
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const incomeRef    = useRef<HTMLInputElement>(null)
 
+  // Email-me-my-results (revealed by the mail icon on the summary card)
+  const [emailOpen, setEmailOpen]   = useState(false)
+  const [resultEmail, setResultEmail] = useState('')
+  const [emailSendState, setEmailSendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [emailSendMsg, setEmailSendMsg] = useState('')
+
   function update<K extends keyof FormData>(k: K, v: FormData[K]) {
     setFormData(prev => ({ ...prev, [k]: v }))
   }
@@ -417,6 +439,44 @@ export default function EligibilityPage() {
   }, [stepIdx])
 
   const { outcome: eligibility, failReason, incomeLimit } = determineEligibility(formData)
+
+  // The summary rows — single source of truth for both the on-page card and the
+  // emailed copy, so they never drift apart.
+  const summaryRows: { label: string; value: string }[] = [
+    { label: 'Date of birth',       value: formData.dateOfBirth || '—' },
+    { label: 'Marital status',      value: formData.maritalStatus || '—' },
+    { label: 'Primary language',    value: formData.language || '—' },
+    { label: 'Household size',      value: formData.householdSize ? `${formData.householdSize} ${Number(formData.householdSize) === 1 ? 'person' : 'people'}` : '—' },
+    { label: 'Your monthly income', value: formData.monthlyIncome ? `$${Number(formData.monthlyIncome).toLocaleString()}/mo` : '—' },
+    { label: '2026 income limit',   value: incomeLimit != null ? `$${incomeLimit.toLocaleString()}/mo` : '—' },
+    { label: 'Benefits received',   value: formData.benefits.length > 0 ? formData.benefits.join(', ') : '—' },
+  ]
+
+  async function sendResultsEmail() {
+    const to = resultEmail.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
+      setEmailSendState('error'); setEmailSendMsg('Enter a valid email address.'); return
+    }
+    setEmailSendState('sending'); setEmailSendMsg('')
+    try {
+      const res = await fetch('/api/send-eligibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: to,
+          eligible: true,
+          headline: 'You may qualify.',
+          summary: 'Based on your answers, you may qualify for the Child Care Assistance Program (CCAP). Here is a copy of your results.',
+          rows: summaryRows,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not send the email.')
+      setEmailSendState('sent'); setEmailSendMsg(`Sent to ${to}.`)
+    } catch (err) {
+      setEmailSendState('error'); setEmailSendMsg(err instanceof Error ? err.message : 'Could not send the email.')
+    }
+  }
 
   const canContinue: Partial<Record<QuestionStep, boolean>> = {
     address:            !!formData.address,
@@ -500,24 +560,80 @@ export default function EligibilityPage() {
                 {/* Summary card (eligible only) */}
                 {eligibility === 'eligible' && (
                   <div className="paper-rise mt-7 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-6" style={{ animationDelay: '140ms' }}>
-                    <p className="text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.15rem', fontWeight: 500 }}>Child Care Assistance Program (CCAP)</p>
-                    <p className="mt-0.5 text-sm text-[var(--paper-muted)]" style={SANS}>NYS Office of Children &amp; Family Services · income-based, up to full coverage</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.15rem', fontWeight: 500 }}>Child Care Assistance Program (CCAP)</p>
+                        <p className="mt-0.5 text-sm text-[var(--paper-muted)]" style={SANS}>NYS Office of Children &amp; Family Services · income-based, up to full coverage</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {/* Call the NY Child Care Helpline */}
+                        <Tip label="Call the NY Child Care Helpline · (800) 345-9152">
+                          <a
+                            href="tel:18003459152"
+                            aria-label="Call the NY Child Care Helpline at (800) 345-9152"
+                            className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-muted)] transition-colors hover:border-[var(--paper-accent)] hover:text-[var(--paper-accent)]"
+                          >
+                            <Phone className="h-4 w-4" />
+                          </a>
+                        </Tip>
+                        {/* Email me my results */}
+                        <Tip label="Email me my results">
+                          <button
+                            type="button"
+                            aria-label="Email me my results"
+                            onClick={() => setEmailOpen(o => !o)}
+                            className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${emailOpen ? 'border-[var(--paper-accent)] text-[var(--paper-accent)]' : 'border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-muted)] hover:border-[var(--paper-accent)] hover:text-[var(--paper-accent)]'}`}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </button>
+                        </Tip>
+                      </div>
+                    </div>
+
                     <div className="mt-5 space-y-1.5">
-                      {[
-                        { label: 'Date of birth',       value: formData.dateOfBirth || '—' },
-                        { label: 'Marital status',      value: formData.maritalStatus || '—' },
-                        { label: 'Primary language',    value: formData.language || '—' },
-                        { label: 'Household size',      value: formData.householdSize ? `${formData.householdSize} ${Number(formData.householdSize) === 1 ? 'person' : 'people'}` : '—' },
-                        { label: 'Your monthly income', value: formData.monthlyIncome ? `$${Number(formData.monthlyIncome).toLocaleString()}/mo` : '—' },
-                        { label: '2026 income limit',   value: incomeLimit != null ? `$${incomeLimit.toLocaleString()}/mo` : '—' },
-                        { label: 'Benefits received',   value: formData.benefits.length > 0 ? formData.benefits.join(', ') : '—' },
-                      ].map(r => (
+                      {summaryRows.map(r => (
                         <div key={r.label} className="flex items-center justify-between gap-3 text-sm" style={SANS}>
                           <span className="text-[var(--paper-muted)]">{r.label}</span>
                           <span className="text-right font-medium text-[var(--paper-text)]">{r.value}</span>
                         </div>
                       ))}
                     </div>
+
+                    {/* Reveal-able email field */}
+                    {emailOpen && (
+                      <div className="mt-5 border-t border-[var(--paper-rule)] pt-4">
+                        <label className="block text-xs uppercase tracking-wide text-[var(--paper-faint)]" style={SANS}>Email me a copy of these results</label>
+                        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                          <input
+                            type="email"
+                            inputMode="email"
+                            autoFocus
+                            placeholder="you@email.com"
+                            value={resultEmail}
+                            onChange={e => { setResultEmail(e.target.value.toLowerCase()); if (emailSendState !== 'idle') { setEmailSendState('idle'); setEmailSendMsg('') } }}
+                            onKeyDown={e => { if (e.key === 'Enter') sendResultsEmail() }}
+                            className="flex-1 rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)] px-4 py-2.5 text-[15px] text-[var(--paper-text)] outline-none focus:border-[var(--paper-accent)]"
+                            style={SANS}
+                          />
+                          <button
+                            type="button"
+                            onClick={sendResultsEmail}
+                            disabled={emailSendState === 'sending'}
+                            className="flex items-center justify-center gap-1.5 rounded-xl px-5 py-2.5 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                            style={{ ...SANS, backgroundColor: ACCENT }}
+                          >
+                            {emailSendState === 'sending'
+                              ? <><Loader2 className="h-4 w-4 animate-spin" />Sending…</>
+                              : emailSendState === 'sent'
+                              ? <><Check className="h-4 w-4" />Sent</>
+                              : 'Send'}
+                          </button>
+                        </div>
+                        {emailSendMsg && (
+                          <p className="mt-2 text-xs" style={{ ...SANS, color: emailSendState === 'error' ? '#b4452f' : ACCENT }}>{emailSendMsg}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -546,20 +662,6 @@ export default function EligibilityPage() {
                   >
                     {eligibility === 'eligible' ? 'Start my application →' : 'Find local resources →'}
                   </button>
-
-                  <div className="my-5 flex items-center gap-3">
-                    <div className="flex-1 border-t border-[var(--paper-rule)]" />
-                    <span className="text-xs text-[var(--paper-faint)]" style={SANS}>or</span>
-                    <div className="flex-1 border-t border-[var(--paper-rule)]" />
-                  </div>
-
-                  <p className="text-sm text-[var(--paper-muted)] text-center" style={SANS}>Have questions? Call the NY Child Care Helpline.</p>
-                  <a href="tel:18003459152" style={SANS} className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-[var(--paper-rule)] px-6 py-3 text-base font-semibold text-[var(--paper-text)] hover:bg-[var(--paper)] transition-colors">
-                    (800) 345-9152
-                  </a>
-                  <p className="mt-3 text-center text-xs text-[var(--paper-faint)]" style={SANS}>
-                    No obligation · Free service · NYS OCFS
-                  </p>
                 </div>
 
                 <p className="mt-8 text-center text-xs text-[var(--paper-faint)]" style={SANS}>
