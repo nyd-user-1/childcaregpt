@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AppLayout } from '@/components/AppLayout'
 import { ChatInput } from '@/components/ChatInput'
 import { ChatMessage } from '@/components/ChatMessage'
@@ -22,6 +22,7 @@ const STARTERS: { label: string; prompt: string }[] = [
 export default function HomePage() {
   const { messages, isStreaming, sendMessage } = useChat()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [address, setAddress] = useState<SelectedAddress | null>(null)
   const hasMessages = messages.length > 0
 
   useEffect(() => {
@@ -29,9 +30,14 @@ export default function HomePage() {
     if (el) el.scrollTop = el.scrollHeight
   }, [messages])
 
-  function handleSend(message: string, address?: SelectedAddress | null) {
-    const full = address ? `${message}\n\n[My address: ${address.description}]` : message
-    sendMessage(full)
+  const [prefill, setPrefill] = useState('')
+
+  // Single send path. The visible bubble shows the clean message; the address
+  // rides along as hidden apiContent so geo context is never dropped from the
+  // model's view but never clutters the chat.
+  function handleSend(message: string, addr: SelectedAddress | null = address) {
+    const api = addr ? `${message}\n\n[My address: ${addr.description}]` : undefined
+    sendMessage(message, api)
   }
 
   // ── Conversation phase ─────────────────────────────────────────────
@@ -42,13 +48,18 @@ export default function HomePage() {
           <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar">
             <div className="mx-auto max-w-3xl px-5 sm:px-8 py-8 flex flex-col gap-7">
               {messages.map((m, i) => (
-                <ChatMessage key={m.id} message={m} isStreaming={isStreaming && i === messages.length - 1} />
+                <ChatMessage
+                  key={m.id}
+                  message={m}
+                  isStreaming={isStreaming && i === messages.length - 1}
+                  onFollowUp={q => handleSend(q)}
+                />
               ))}
             </div>
           </div>
           <div className="shrink-0 border-t border-[var(--paper-rule)] px-5 sm:px-8 py-4" style={{ background: 'var(--paper)' }}>
             <div className="mx-auto max-w-3xl">
-              <ChatInput onSend={handleSend} />
+              <ChatInput onSend={handleSend} address={address} onAddressChange={setAddress} value={prefill} onValueChange={setPrefill} />
             </div>
           </div>
         </div>
@@ -79,7 +90,7 @@ export default function HomePage() {
           </p>
 
           <div className="paper-rise mt-8" style={{ animationDelay: '180ms' }}>
-            <ChatInput onSend={handleSend} />
+            <ChatInput onSend={handleSend} address={address} onAddressChange={setAddress} />
           </div>
 
           {/* Real starter prompts */}
@@ -87,7 +98,7 @@ export default function HomePage() {
             {STARTERS.map(s => (
               <button
                 key={s.label}
-                onClick={() => sendMessage(s.prompt)}
+                onClick={() => handleSend(s.prompt)}
                 className="rounded-full border border-[var(--paper-rule)] bg-[var(--paper-2)] px-3.5 py-1.5 text-[13px] text-[var(--paper-muted)] hover:border-[var(--paper-accent)] hover:text-[var(--paper-text)] transition-colors"
                 style={SANS}
               >

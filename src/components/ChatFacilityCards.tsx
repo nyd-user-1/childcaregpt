@@ -1,41 +1,51 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { APIProvider, Map as GMap, AdvancedMarker } from '@vis.gl/react-google-maps'
+import { APIProvider, Map as GMap, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
 import { MapPin, Phone, Users } from 'lucide-react'
 import type { ChatFacility } from '@/hooks/useChat'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
 const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
 
-function center(facilities: ChatFacility[]): { lat: number; lng: number } | null {
-  const pts = facilities.filter(f => f.latitude != null && f.longitude != null)
-  if (!pts.length) return null
-  const lat = pts.reduce((s, f) => s + Number(f.latitude), 0) / pts.length
-  const lng = pts.reduce((s, f) => s + Number(f.longitude), 0) / pts.length
-  return { lat, lng }
+// Fit the map to all markers so the providers shown are actually in view
+// (a plain average center + fixed zoom drifts off when results are spread out).
+function FitBounds({ points }: { points: { lat: number; lng: number }[] }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!map || !points.length) return
+    if (points.length === 1) {
+      map.setCenter(points[0]); map.setZoom(13); return
+    }
+    const bounds = new google.maps.LatLngBounds()
+    points.forEach(p => bounds.extend(p))
+    map.fitBounds(bounds, 32)
+  }, [map, points])
+  return null
 }
 
 export function ChatFacilityCards({ facilities }: { facilities: ChatFacility[] }) {
   if (!facilities?.length) return null
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-  const c = center(facilities)
   const mappable = facilities.filter(f => f.latitude != null && f.longitude != null)
+  const points = mappable.map(f => ({ lat: Number(f.latitude), lng: Number(f.longitude) }))
 
   return (
-    <div className="mt-5 grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-4">
-      {/* Mini-map */}
-      {apiKey && c && mappable.length > 0 && (
-        <div className="h-[200px] sm:h-auto sm:min-h-[200px] rounded-xl overflow-hidden border border-[var(--paper-rule)]">
+    <div className="mt-5 flex flex-col gap-4">
+      {/* Mini-map — full chat width, above the cards */}
+      {apiKey && points.length > 0 && (
+        <div className="aspect-[2/1] w-full rounded-xl overflow-hidden border border-[var(--paper-rule)]">
           <APIProvider apiKey={apiKey}>
             <GMap
-              defaultCenter={c}
+              defaultCenter={points[0]}
               defaultZoom={11}
               gestureHandling="cooperative"
               disableDefaultUI
               mapId="childcare-chat-mini"
               style={{ width: '100%', height: '100%' }}
             >
+              <FitBounds points={points} />
               {mappable.map(f => (
                 <AdvancedMarker key={f.facility_id} position={{ lat: Number(f.latitude), lng: Number(f.longitude) }}>
                   <span className="block h-3 w-3 rounded-full border-2 border-white shadow" style={{ background: 'var(--paper-accent)' }} />

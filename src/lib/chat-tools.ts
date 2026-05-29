@@ -83,7 +83,7 @@ export async function executeToolCall(name: string, input: Record<string, unknow
                  infant_capacity, toddler_capacity, preschool_capacity, school_age_capacity,
                  phone_number, latitude, longitude
           FROM facilities
-          WHERE facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%' OR TRUE
+          WHERE (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
             AND (${county}::text IS NULL OR county ILIKE ${county})
             AND (${programType}::text IS NULL OR program_type = ${programType})
             AND (${search}::text IS NULL OR facility_name ILIKE ${'%' + (search ?? '') + '%'} OR provider_name ILIKE ${'%' + (search ?? '') + '%'})

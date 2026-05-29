@@ -46,7 +46,20 @@ You must NOT tell anyone whether they qualify for assistance. CCAP eligibility d
 - Keep answers tight — a parent wants the answer, not an essay.
 
 ## Follow-ups (REQUIRED)
-End every response with a "## Follow-ups" section: exactly 3 short follow-up questions as bullets starting with "- " and ending with "?".`
+End every response with a "## Follow-ups" section: 2–3 bullets, each starting with "- ".
+
+These are NOT questions you ask the parent. They are short, tappable next steps the PARENT would click to get more value — more data, more options, a useful resource, or the eligibility check. Phrase them as imperative actions a parent would say to you, never as questions you pose back.
+
+GOOD (do this):
+- See typical infant, toddler, and preschool costs in Suffolk County
+- Show family day care options near Islip
+- Check if I qualify for help paying
+
+BAD (never do this):
+- What age is your child? ← a question back at the user
+- Do you prefer center-based or family care? ← a question back at the user
+
+Tie each follow-up to what the parent could naturally want next given your answer (the same county/program in play). No trailing "?".`
 
 type ChatMsg = { role: 'user' | 'assistant'; content: string }
 

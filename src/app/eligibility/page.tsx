@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, X, ArrowUp, MapPin, CheckCircle, XCircle, ChevronDown, Check, RotateCcw } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { AppLogo } from '@/components/AppLogo'
+import { RevealFx } from '@/components/RevealFx'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -530,6 +531,7 @@ export default function EligibilityPage() {
 
   return (
     <AppLayout>
+     <RevealFx className="flex flex-1 flex-col min-h-0" translateY={8}>
 
       {/* ── Loading ── */}
       {step === 'loading' && (
@@ -1186,6 +1188,7 @@ export default function EligibilityPage() {
         </div>
       )}
 
+     </RevealFx>
     </AppLayout>
   )
 }

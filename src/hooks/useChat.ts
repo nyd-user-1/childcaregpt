@@ -37,14 +37,17 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  const sendMessage = useCallback(async (content: string) => {
+  // `content` is what the user sees in their bubble. `apiContent` (optional) is
+  // what's actually sent to the model — used to attach hidden context like a
+  // selected address without cluttering the visible message.
+  const sendMessage = useCallback(async (content: string, apiContent?: string) => {
     const userMsg: Message = { id: generateId(), role: 'user', content }
     setMessages(prev => [...prev, userMsg])
     setIsStreaming(true)
 
     const prevMessages = [
       ...messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
-      { role: 'user' as const, content },
+      { role: 'user' as const, content: apiContent ?? content },
     ]
 
     const assistantId = generateId()

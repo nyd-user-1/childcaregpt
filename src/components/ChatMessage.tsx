@@ -1,13 +1,14 @@
 'use client'
 
 import { ChatMarkdown } from '@/components/ChatMarkdown'
+import { ChatResponseFooter } from '@/components/ChatResponseFooter'
 import { ChatFacilityCards } from '@/components/ChatFacilityCards'
 import { AppLogo } from '@/components/AppLogo'
 import type { Message } from '@/hooks/useChat'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
 
-export function ChatMessage({ message, isStreaming }: { message: Message; isStreaming?: boolean }) {
+export function ChatMessage({ message, isStreaming, onFollowUp }: { message: Message; isStreaming?: boolean; onFollowUp?: (q: string) => void }) {
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -33,6 +34,9 @@ export function ChatMessage({ message, isStreaming }: { message: Message; isStre
         ) : null}
         {isStreaming && message.content && (
           <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse" style={{ background: 'var(--paper-accent)' }} />
+        )}
+        {!isStreaming && message.content && (
+          <ChatResponseFooter content={message.content} onFollowUp={onFollowUp} />
         )}
       </div>
     </div>

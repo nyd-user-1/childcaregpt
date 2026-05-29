@@ -8,15 +8,34 @@ import { ACCENT_COLOR } from '@/lib/app-config'
 type PlaceSuggestion = { place_id: string; description: string }
 type SelectedAddress = { description: string; lat: number; lng: number }
 
-export function ChatInput({ onSend }: { onSend?: (message: string, address?: SelectedAddress | null) => void } = {}) {
-  const [input, setInput] = useState('')
+export function ChatInput({
+  onSend,
+  address,
+  onAddressChange,
+  value,
+  onValueChange,
+}: {
+  onSend?: (message: string, address?: SelectedAddress | null) => void
+  address?: SelectedAddress | null            // optional controlled selected-address
+  onAddressChange?: (a: SelectedAddress | null) => void
+  value?: string                              // optional controlled input text (for follow-up prefill)
+  onValueChange?: (v: string) => void
+} = {}) {
+  const [internalInput, setInternalInput] = useState('')
+  const inputControlled = onValueChange !== undefined
+  const input = inputControlled ? (value ?? '') : internalInput
+  const setInput = (v: string) => inputControlled ? onValueChange!(v) : setInternalInput(v)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Geo-mode (address lookup) — ported from SolarGPT NewChatClient
   const [addressMode, setAddressMode] = useState(false)
   const [addressInput, setAddressInput] = useState('')
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([])
-  const [selectedAddress, setSelectedAddress] = useState<SelectedAddress | null>(null)
+  // Controlled when the page passes address/onAddressChange; internal otherwise.
+  const [internalAddress, setInternalAddress] = useState<SelectedAddress | null>(null)
+  const controlled = onAddressChange !== undefined
+  const selectedAddress = controlled ? (address ?? null) : internalAddress
+  const setSelectedAddress = (a: SelectedAddress | null) => controlled ? onAddressChange!(a) : setInternalAddress(a)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -37,6 +56,16 @@ export function ChatInput({ onSend }: { onSend?: (message: string, address?: Sel
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 144)}px`
   }
+
+  // When a follow-up link prefills the input, resize + focus so the parent's
+  // cursor lands ready to edit/send.
+  useEffect(() => {
+    if (inputControlled && value && !addressMode) {
+      autoResize()
+      textareaRef.current?.focus()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
 
   const handleInputChange = (value: string) => {
     setInput(value)
