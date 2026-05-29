@@ -68,7 +68,23 @@ export const TOOLS = [
   },
 ] as const
 
-export async function executeToolCall(name: string, input: Record<string, unknown>): Promise<unknown> {
+// Optional context passed by the API route — NOT model input. The user's
+// geocoded location (when they entered an address) lets find_facilities rank by
+// real distance instead of a coarse county match.
+export interface ToolContext {
+  location?: { lat: number; lng: number; description?: string } | null
+}
+
+// A geocode failure falls back to {0,0}; treat that as "no usable location"
+// so we never rank against the middle of the ocean.
+function usableLocation(ctx?: ToolContext) {
+  const loc = ctx?.location
+  if (!loc || (loc.lat === 0 && loc.lng === 0)) return null
+  if (!Number.isFinite(loc.lat) || !Number.isFinite(loc.lng)) return null
+  return loc
+}
+
+export async function executeToolCall(name: string, input: Record<string, unknown>, ctx?: ToolContext): Promise<unknown> {
   try {
     switch (name) {
       case 'find_facilities': {
@@ -76,7 +92,43 @@ export async function executeToolCall(name: string, input: Record<string, unknow
         const programType = typeof input.program_type === 'string' ? input.program_type : null
         const search = typeof input.search === 'string' ? input.search.trim() : null
         const limit = Math.min(Number(input.limit) || 8, 20)
+        const loc = usableLocation(ctx)
 
+        const decorate = (rows: Record<string, unknown>[]) =>
+          rows.map(r => ({ ...r, program_type_label: PROGRAM_TYPE_LABEL[r.program_type as string] ?? r.program_type }))
+
+        // ── Distance mode: the user gave an address. Rank by real proximity
+        // and cap to a radius so a Brentwood parent isn't sent to West Islip.
+        // Coords win over an explicit county here (county becomes a no-op).
+        if (loc) {
+          const distExpr = (lat: number, lng: number) => sql`
+            3958.8 * acos(LEAST(1, GREATEST(-1,
+              sin(radians(${lat})) * sin(radians(latitude)) +
+              cos(radians(${lat})) * cos(radians(latitude)) * cos(radians(longitude) - radians(${lng}))
+            )))`
+          const queryWithin = (radius: number) => sql`
+            SELECT * FROM (
+              SELECT facility_id, facility_name, provider_name, county, city, zip_code,
+                     program_type, facility_status, total_capacity,
+                     infant_capacity, toddler_capacity, preschool_capacity, school_age_capacity,
+                     phone_number, latitude, longitude,
+                     ROUND((${distExpr(loc.lat, loc.lng)})::numeric, 1) AS distance_miles
+              FROM facilities
+              WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+                AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+                AND (${programType}::text IS NULL OR program_type = ${programType})
+                AND (${search}::text IS NULL OR facility_name ILIKE ${'%' + (search ?? '') + '%'} OR provider_name ILIKE ${'%' + (search ?? '') + '%'})
+            ) q
+            WHERE distance_miles <= ${radius}
+            ORDER BY distance_miles ASC
+            LIMIT ${limit}
+          `
+          let rows = await queryWithin(10)
+          if (rows.length < 4) rows = await queryWithin(25)
+          return decorate(rows)
+        }
+
+        // ── County mode: no address — fall back to county/name filter, biggest first.
         const rows = await sql`
           SELECT facility_id, facility_name, provider_name, county, city, zip_code,
                  program_type, facility_status, total_capacity,
@@ -90,7 +142,7 @@ export async function executeToolCall(name: string, input: Record<string, unknow
           ORDER BY total_capacity DESC NULLS LAST
           LIMIT ${limit}
         `
-        return rows.map(r => ({ ...r, program_type_label: PROGRAM_TYPE_LABEL[r.program_type as string] ?? r.program_type }))
+        return decorate(rows)
       }
 
       case 'get_county_costs': {

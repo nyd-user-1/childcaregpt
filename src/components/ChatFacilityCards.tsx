@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { APIProvider, Map as GMap, AdvancedMarker, useMap } from '@vis.gl/react-google-maps'
-import { MapPin, Phone, Users } from 'lucide-react'
+import { MapPin, Phone, Users, Navigation } from 'lucide-react'
 import type { ChatFacility } from '@/hooks/useChat'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
@@ -75,6 +75,11 @@ export function ChatFacilityCards({ facilities }: { facilities: ChatFacility[] }
               )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-[var(--paper-muted)]" style={SANS}>
+              {f.distance_miles != null && (
+                <span className="inline-flex items-center gap-1 font-medium" style={{ color: 'var(--paper-accent)' }}>
+                  <Navigation className="h-3 w-3" />{f.distance_miles} mi away
+                </span>
+              )}
               {(f.city || f.county) && (
                 <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{[f.city, f.county].filter(Boolean).join(', ')}</span>
               )}

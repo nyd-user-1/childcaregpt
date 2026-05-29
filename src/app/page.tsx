@@ -32,12 +32,11 @@ export default function HomePage() {
 
   const [prefill, setPrefill] = useState('')
 
-  // Single send path. The visible bubble shows the clean message; the address
-  // rides along as hidden apiContent so geo context is never dropped from the
-  // model's view but never clutters the chat.
+  // Single send path. The selected address rides along as structured location
+  // (lat/lng) so the server ranks providers by real distance — never stuffed
+  // into the visible message.
   function handleSend(message: string, addr: SelectedAddress | null = address) {
-    const api = addr ? `${message}\n\n[My address: ${addr.description}]` : undefined
-    sendMessage(message, api)
+    sendMessage(message, addr ?? null)
   }
 
   // ── Conversation phase ─────────────────────────────────────────────

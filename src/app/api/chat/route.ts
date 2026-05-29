@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { TOOLS, executeToolCall } from '@/lib/chat-tools'
+import { TOOLS, executeToolCall, type ToolContext } from '@/lib/chat-tools'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -62,12 +62,16 @@ BAD (never do this):
 Tie each follow-up to what the parent could naturally want next given your answer (the same county/program in play). No trailing "?".`
 
 type ChatMsg = { role: 'user' | 'assistant'; content: string }
+type ReqLocation = { lat: number; lng: number; description?: string }
 
 export async function POST(req: NextRequest) {
-  const { messages } = await req.json() as { messages: ChatMsg[] }
+  const { messages, location } = await req.json() as { messages: ChatMsg[]; location?: ReqLocation | null }
   if (!messages?.length) {
     return new Response(JSON.stringify({ error: 'messages required' }), { status: 400 })
   }
+
+  const ctx: ToolContext = { location: location ?? null }
+  const hasLocation = !!location && !(location.lat === 0 && location.lng === 0)
 
   const apiKey = process.env.CLAUDE_CHILDCARE_API_KEY
   const encoder = new TextEncoder()
@@ -124,13 +128,18 @@ export async function POST(req: NextRequest) {
       try {
         const client = new Anthropic({ apiKey })
         type AnthMsg = Anthropic.Messages.MessageParam
+        // Coords flow to find_facilities through ctx, not the prompt. The model
+        // only needs to know proximity ranking is on so it frames the answer.
+        const system = hasLocation
+          ? `${SYSTEM_PROMPT}\n\n## This parent's location\nThe parent is at "${location!.description ?? 'their saved address'}". When you call find_facilities, results are already sorted by real distance from them and capped to a tight radius — present them as "near you", lead with the closest, and mention each provider's distance (the distance_miles field, e.g. "0.8 mi away"). Do not re-sort by capacity.`
+          : SYSTEM_PROMPT
         const history: AnthMsg[] = messages.map(m => ({ role: m.role, content: m.content }))
 
         for (let i = 0; i < 6; i++) {
           const response = await client.messages.create({
             model: 'claude-haiku-4-5-20251001',
             max_tokens: 2048,
-            system: SYSTEM_PROMPT,
+            system,
             tools: TOOLS as unknown as Anthropic.Messages.Tool[],
             messages: history,
           })
@@ -143,7 +152,7 @@ export async function POST(req: NextRequest) {
             (b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use'
           )
           const toolResults = await Promise.all(toolBlocks.map(async b => {
-            const result = await executeToolCall(b.name, b.input as Record<string, unknown>)
+            const result = await executeToolCall(b.name, b.input as Record<string, unknown>, ctx)
             trackTools(b.name, result)
             return { type: 'tool_result' as const, tool_use_id: b.id, content: JSON.stringify(result) }
           }))

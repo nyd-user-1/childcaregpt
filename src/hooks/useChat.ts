@@ -2,6 +2,12 @@
 
 import { useState, useCallback, useRef } from 'react'
 
+export interface ChatLocation {
+  lat: number
+  lng: number
+  description?: string
+}
+
 export interface ChatFacility {
   facility_id: string
   facility_name: string
@@ -15,6 +21,7 @@ export interface ChatFacility {
   phone_number?: string | null
   latitude?: number | null
   longitude?: number | null
+  distance_miles?: number | null
 }
 
 export interface ChatMeta {
@@ -37,17 +44,17 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  // `content` is what the user sees in their bubble. `apiContent` (optional) is
-  // what's actually sent to the model — used to attach hidden context like a
-  // selected address without cluttering the visible message.
-  const sendMessage = useCallback(async (content: string, apiContent?: string) => {
+  // `content` is shown in the user's bubble and sent to the model. `location`
+  // (optional) is the parent's geocoded address — sent as structured data so the
+  // server can rank providers by real distance, never stuffed into the message.
+  const sendMessage = useCallback(async (content: string, location?: ChatLocation | null) => {
     const userMsg: Message = { id: generateId(), role: 'user', content }
     setMessages(prev => [...prev, userMsg])
     setIsStreaming(true)
 
     const prevMessages = [
       ...messages.slice(-6).map(m => ({ role: m.role, content: m.content })),
-      { role: 'user' as const, content: apiContent ?? content },
+      { role: 'user' as const, content },
     ]
 
     const assistantId = generateId()
@@ -60,7 +67,7 @@ export function useChat() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: prevMessages }),
+        body: JSON.stringify({ messages: prevMessages, location: location ?? null }),
         signal: controller.signal,
       })
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
