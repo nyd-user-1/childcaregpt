@@ -50,6 +50,7 @@ const NY_COUNTIES = [
 interface FormData {
   address:            string
   placeId:            string
+  county:             string
   dateOfBirth:        string
   maritalStatus:      string
   language:           string
@@ -103,7 +104,7 @@ type Step = QuestionStep | 'loading' | 'result'
 
 function defaultFormData(): FormData {
   return {
-    address: '', placeId: '',
+    address: '', placeId: '', county: '',
     dateOfBirth: '', maritalStatus: '', language: '',
     childSpecialNeeds: '', childAged18: '', fosterParent: '',
     employed: '', employerName: '', jobSearchOrTraining: '', dssActivities: '',
@@ -432,13 +433,24 @@ export default function EligibilityPage() {
   }, [])
 
   const selectAddress = useCallback((s: PlaceSuggestion) => {
-    setFormData(prev => ({ ...prev, address: s.description, placeId: s.place_id }))
+    setFormData(prev => ({ ...prev, address: s.description, placeId: s.place_id, county: '' }))
     setSuggestions([])
     goNext()
+    // Resolve the county in the background — the parent has 20+ questions to
+    // answer before the result screen needs it, so don't block the click.
+    fetch(`/api/places/geocode?place_id=${encodeURIComponent(s.place_id)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.county) setFormData(prev => ({ ...prev, county: data.county })) })
+      .catch(() => { /* fallback county select stays available on the result screen */ })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepIdx])
 
   const { outcome: eligibility, failReason, incomeLimit } = determineEligibility(formData)
+
+  // County resolved from the address step (via geocode). Only treat it as usable
+  // when it's a real NY county — otherwise the result screen falls back to the
+  // manual select so an out-of-state or unresolved address never dead-ends.
+  const autoCounty = formData.county && NY_COUNTIES.includes(formData.county) ? formData.county : ''
 
   // The summary rows — single source of truth for both the on-page card and the
   // emailed copy, so they never drift apart.
@@ -639,29 +651,53 @@ export default function EligibilityPage() {
 
                 {/* CTA card */}
                 <div className="paper-rise mt-5 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-6" style={{ animationDelay: '200ms' }}>
-                  <p className="text-sm text-[var(--paper-muted)] text-center" style={SANS}>
-                    {eligibility === 'eligible'
-                      ? 'Select your county and we’ll start your pre-filled application.'
-                      : 'Select your county for other childcare resources near you.'}
-                  </p>
+                  {eligibility === 'eligible' && autoCounty ? (
+                    // County came from the address — skip the manual select.
+                    <>
+                      <p className="text-sm text-[var(--paper-muted)] text-center" style={SANS}>
+                        We’ve pre-filled your application for <span className="font-medium text-[var(--paper-text)]">{autoCounty} County</span>.
+                      </p>
+                      <button
+                        className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white transition-colors"
+                        style={{ ...SANS, backgroundColor: ACCENT }}
+                        onMouseEnter={e => { e.currentTarget.style.backgroundColor = ACCENT_HOVER }}
+                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = ACCENT }}
+                        onClick={() => {
+                          localStorage.setItem('ccap-eligibility-data', JSON.stringify({ ...formData, county: autoCounty }))
+                          router.push('/application')
+                        }}
+                      >
+                        View my pre-filled application →
+                      </button>
+                    </>
+                  ) : (
+                    // No usable county from the address — fall back to the select.
+                    <>
+                      <p className="text-sm text-[var(--paper-muted)] text-center" style={SANS}>
+                        {eligibility === 'eligible'
+                          ? 'Select your county and we’ll start your pre-filled application.'
+                          : 'Select your county for other childcare resources near you.'}
+                      </p>
 
-                  <CountySelect value={selectedCounty} onChange={setSelectedCounty} />
+                      <CountySelect value={selectedCounty} onChange={setSelectedCounty} />
 
-                  <button
-                    className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50"
-                    style={{ ...SANS, backgroundColor: ACCENT }}
-                    disabled={!selectedCounty}
-                    onMouseEnter={e => { if (selectedCounty) e.currentTarget.style.backgroundColor = ACCENT_HOVER }}
-                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = ACCENT }}
-                    onClick={() => {
-                      if (eligibility === 'eligible') {
-                        localStorage.setItem('ccap-eligibility-data', JSON.stringify({ ...formData, county: selectedCounty }))
-                        router.push('/application')
-                      }
-                    }}
-                  >
-                    {eligibility === 'eligible' ? 'Start my application →' : 'Find local resources →'}
-                  </button>
+                      <button
+                        className="mt-3 w-full rounded-xl py-3 text-base font-semibold text-white transition-colors disabled:opacity-50"
+                        style={{ ...SANS, backgroundColor: ACCENT }}
+                        disabled={!selectedCounty}
+                        onMouseEnter={e => { if (selectedCounty) e.currentTarget.style.backgroundColor = ACCENT_HOVER }}
+                        onMouseLeave={e => { e.currentTarget.style.backgroundColor = ACCENT }}
+                        onClick={() => {
+                          if (eligibility === 'eligible') {
+                            localStorage.setItem('ccap-eligibility-data', JSON.stringify({ ...formData, county: selectedCounty }))
+                            router.push('/application')
+                          }
+                        }}
+                      >
+                        {eligibility === 'eligible' ? 'Start my application →' : 'Find local resources →'}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 <p className="mt-8 text-center text-xs text-[var(--paper-faint)]" style={SANS}>
