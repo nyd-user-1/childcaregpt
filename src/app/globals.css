@@ -100,3 +100,19 @@ html.dark {
   opacity: 0;
   animation: paper-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Chat assistant reply — sweeps in left-to-right with a soft leading edge so a
+   reply that arrives in one chunk still reads as "streaming in". */
+@keyframes chat-stream {
+  from { -webkit-mask-position: 100% 0; mask-position: 100% 0; }
+  to   { -webkit-mask-position: 0 0;   mask-position: 0 0; }
+}
+.chat-stream {
+  -webkit-mask-image: linear-gradient(to right, #000 35%, transparent 72%);
+  mask-image: linear-gradient(to right, #000 35%, transparent 72%);
+  -webkit-mask-size: 300% 100%;
+  mask-size: 300% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: chat-stream 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}

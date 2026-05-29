@@ -4,7 +4,6 @@ import { ChatMarkdown } from '@/components/ChatMarkdown'
 import { ChatResponseFooter } from '@/components/ChatResponseFooter'
 import { ChatFacilityCards } from '@/components/ChatFacilityCards'
 import { ChatStartApplicationCard } from '@/components/ChatStartApplicationCard'
-import { AppLogo } from '@/components/AppLogo'
 import type { Message } from '@/hooks/useChat'
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
@@ -22,13 +21,9 @@ export function ChatMessage({ message, isStreaming, onFollowUp }: { message: Mes
   }
 
   return (
-    <div className="flex gap-3">
-      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--paper-accent-soft)' }}>
-        <AppLogo className="h-4 w-4" />
-      </div>
-      <div className="min-w-0 flex-1">
+    <div className="min-w-0">
         {message.content
-          ? <ChatMarkdown text={message.content} />
+          ? <div className="chat-stream"><ChatMarkdown text={message.content} /></div>
           : <p className="text-[15px] italic text-[var(--paper-faint)]" style={SERIF}>Thinking…</p>}
         {message.meta?.facilities?.length ? (
           <ChatFacilityCards facilities={message.meta.facilities} />
@@ -42,7 +37,6 @@ export function ChatMessage({ message, isStreaming, onFollowUp }: { message: Mes
         {!isStreaming && message.content && (
           <ChatResponseFooter content={message.content} onFollowUp={onFollowUp} />
         )}
-      </div>
     </div>
   )
 }
