@@ -6,7 +6,7 @@ import { PanelLeftOpen, PanelLeftClose, ChevronLeft, ChevronRight } from 'lucide
 import { Sidebar } from '@/components/Sidebar'
 import {
   CHART_NAV_EVENT,
-  NAV_CYCLE, PATH_NAV, PATH_TITLE,
+  NAV_CYCLE, PATH_NAV,
 } from '@/lib/app-config'
 
 type ChartNavDetail = {
@@ -43,12 +43,6 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
     pathname.startsWith('/console')   ? 'Console'   :
     pathname.startsWith('/chart/')    ? 'Charts'    : undefined
   )
-  const title = PATH_TITLE[pathname] ?? (
-    pathname.startsWith('/launchpad') ? 'Launchpad' :
-    pathname.startsWith('/console')   ? 'Console'   :
-    pathname.startsWith('/chart/')    ? 'Charts'    : undefined
-  )
-
   // For sub-routes (e.g. /console/suffolk, /launchpad/albany), find the parent NAV_CYCLE entry
   const navIdx = NAV_CYCLE.indexOf(pathname) !== -1
     ? NAV_CYCLE.indexOf(pathname)
@@ -79,12 +73,6 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
               : <PanelLeftOpen  className="h-5 w-5 text-[var(--paper-text)]" />
             }
           </button>
-
-          {title && (
-            <div className="ml-4 flex items-center text-[var(--paper-text)]" style={{ fontFamily: 'var(--font-display), Georgia, serif' }}>
-              <span className="text-xl font-medium">{title}</span>
-            </div>
-          )}
 
           <div className="flex-1" />
 
