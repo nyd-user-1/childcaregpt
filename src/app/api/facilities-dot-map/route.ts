@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
        program_type                        AS t
      FROM facilities
      WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-       AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+       AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%regist%' OR facility_status ILIKE '%active%')
        AND ($1::text IS NULL OR county ILIKE $1)
        AND ($2::text IS NULL OR program_type = $2)`,
     [county, programType],

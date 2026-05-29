@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
              ))))::numeric, 1) AS distance_miles
       FROM facilities
       WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-        AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+        AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%regist%' OR facility_status ILIKE '%active%')
         AND (${programType}::text IS NULL OR program_type = ${programType})
     ) q
     WHERE distance_miles <= ${r}

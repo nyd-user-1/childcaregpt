@@ -153,7 +153,7 @@ export async function executeToolCall(name: string, input: Record<string, unknow
                      ROUND((${distExpr(loc.lat, loc.lng)})::numeric, 1) AS distance_miles
               FROM facilities
               WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-                AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+                AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%regist%' OR facility_status ILIKE '%active%')
                 AND (${programType}::text IS NULL OR program_type = ${programType})
                 AND (${search}::text IS NULL OR facility_name ILIKE ${'%' + (search ?? '') + '%'} OR provider_name ILIKE ${'%' + (search ?? '') + '%'})
             ) q
@@ -173,7 +173,7 @@ export async function executeToolCall(name: string, input: Record<string, unknow
                  infant_capacity, toddler_capacity, preschool_capacity, school_age_capacity,
                  phone_number, latitude, longitude
           FROM facilities
-          WHERE (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+          WHERE (facility_status ILIKE '%license%' OR facility_status ILIKE '%regist%' OR facility_status ILIKE '%active%')
             AND (${county}::text IS NULL OR county ILIKE ${county})
             AND (${programType}::text IS NULL OR program_type = ${programType})
             AND (${search}::text IS NULL OR facility_name ILIKE ${'%' + (search ?? '') + '%'} OR provider_name ILIKE ${'%' + (search ?? '') + '%'})
@@ -249,7 +249,7 @@ export async function executeToolCall(name: string, input: Record<string, unknow
                   phone_number, latitude, longitude
            FROM facilities
            WHERE ${col} = $1
-             AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+             AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%regist%' OR facility_status ILIKE '%active%')
              AND ($2::text IS NULL OR program_type = $2)
            ORDER BY total_capacity DESC NULLS LAST
            LIMIT $3`,
