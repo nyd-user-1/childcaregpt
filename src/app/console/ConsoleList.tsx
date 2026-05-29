@@ -33,7 +33,31 @@ export function ConsoleList({ rows }: { rows: CountySupplyNeed[] }) {
   }, [rows])
 
   return (
-    <div className="w-[44%] min-w-0 shrink-0 flex flex-col overflow-hidden rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)]" style={{ color: 'var(--paper-text)' }}>
+    <>
+    {/* ── Mobile: ranked county rail (the map below is the hero) ── */}
+    <div className="sm:hidden shrink-0 flex gap-2 overflow-x-auto no-scrollbar border-b border-[var(--paper-rule)] bg-[var(--paper)] px-3 py-2.5">
+      {rows.map((r) => {
+        const t = tier(r.familiesPerSeat)
+        const isActive = r.slug === activeSlug
+        return (
+          <button
+            key={r.slug}
+            onClick={() => router.push(`/console/${r.slug}`, { scroll: false })}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 transition-colors',
+              isActive ? 'border-[var(--paper-accent)] bg-[var(--paper-2)]' : 'border-[var(--paper-rule)] bg-[var(--paper)] active:bg-[var(--paper-2)]',
+            )}
+          >
+            <span className="h-2 w-2 rounded-full" style={{ background: t.color }} />
+            <span className="text-[13.5px] font-medium text-[var(--paper-text)]" style={SERIF}>{r.county}</span>
+            <span className="text-[13px] tabular-nums" style={{ color: t.color, fontWeight: 600 }}>{r.familiesPerSeat.toFixed(1)}</span>
+          </button>
+        )
+      })}
+    </div>
+
+    {/* ── Desktop: full ranking panel ── */}
+    <div className="hidden sm:flex w-[44%] min-w-0 shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)]" style={{ color: 'var(--paper-text)' }}>
 
       {/* ── Panel header ── */}
       <div className="shrink-0 border-b border-[var(--paper-rule)] px-6 pt-8 pb-7">
@@ -95,5 +119,6 @@ export function ConsoleList({ rows }: { rows: CountySupplyNeed[] }) {
         })}
       </div>
     </div>
+    </>
   )
 }
