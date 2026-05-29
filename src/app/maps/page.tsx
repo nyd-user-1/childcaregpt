@@ -67,7 +67,7 @@ export default function MapsPage() {
 
           {/* Masthead */}
           <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
-            ChildcareGPT · New York State
+            ChildcareGPT · Maps
           </p>
           <h1
             className="paper-rise mt-4 leading-[1.04]"

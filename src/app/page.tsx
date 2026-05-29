@@ -83,7 +83,7 @@ export default function HomePage() {
         <div className="mx-auto flex min-h-full max-w-3xl flex-col justify-center px-6 sm:px-10 py-12">
 
           <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
-            ChildcareGPT · New York State
+            ChildcareGPT · Chat
           </p>
           <h1
             className="paper-rise mt-4 leading-[1.05]"
