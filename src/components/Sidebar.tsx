@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, User, BarChart3, Map } from 'lucide-react'
+import { ChevronDown, User, BarChart3, Map, Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   SIDEBAR_NAV_TOP, SIDEBAR_NAV_BOTTOM,
@@ -13,9 +13,11 @@ const SANS: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
 
 interface SidebarProps {
   activeLabel?: string
+  dark?: boolean
+  onToggleTheme?: (e: React.MouseEvent) => void
 }
 
-export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
+export function Sidebar({ activeLabel = 'Chat', dark, onToggleTheme }: SidebarProps) {
   const [mapOpen, setMapOpen] = useState(false)
 
   const navItem = (active: boolean) =>
@@ -91,6 +93,18 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
 
       {/* Footer */}
       <div className="p-3">
+        {/* Theme toggle — mobile only; desktop toggles from the header */}
+        {onToggleTheme && (
+          <button
+            onClick={onToggleTheme}
+            className="sm:hidden mb-1.5 w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)] transition-colors"
+          >
+            {dark
+              ? <Sun className="h-[18px] w-[18px] flex-shrink-0 fill-amber-400 text-amber-400" />
+              : <Moon className="h-[18px] w-[18px] flex-shrink-0" />}
+            {dark ? 'Light mode' : 'Dark mode'}
+          </button>
+        )}
         <Link
           href="/glossary"
           className={cn(

@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { PanelLeftOpen, PanelLeftClose, Sun, Moon } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
+import { cn } from '@/lib/utils'
 import {
   CHART_NAV_EVENT,
   PATH_NAV,
@@ -61,6 +62,13 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
     if (!pathname.startsWith('/chart/')) setChartNav(null)
   }, [pathname])
 
+  // On mobile the sidebar is an overlay drawer — close it after navigating.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches) {
+      setSidebarOpen(false)
+    }
+  }, [pathname])
+
   const activeNav = PATH_NAV[pathname] ?? (
     pathname.startsWith('/county')    ? 'Counties'  :
     pathname.startsWith('/facility')  ? 'Facilities':
@@ -74,11 +82,22 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
   const themeBtnCls = 'flex h-9 w-9 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
 
   return (
-    <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px]" style={{ background: 'var(--paper-ground)' }}>
+    <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px] bg-[var(--paper-ground)] max-sm:bg-[var(--paper)]">
 
-      <div className={`shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-full sm:w-[240px] sm:mr-[18px]' : 'w-0'}`}>
-        <div className="w-[240px] h-full rounded-none sm:rounded-2xl overflow-hidden">
-          <Sidebar activeLabel={activeNav} />
+      {/* Mobile: dim + close the drawer by tapping outside it */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 sm:hidden" aria-hidden onClick={() => setSidebarOpen(false)} />
+      )}
+
+      <div className={cn(
+        'shrink-0 overflow-hidden transition-all duration-300 ease-in-out',
+        'max-sm:fixed max-sm:inset-y-0 max-sm:left-0 max-sm:z-50 max-sm:w-[300px] max-sm:max-w-[85vw]',
+        sidebarOpen
+          ? 'w-[240px] sm:mr-[18px] max-sm:translate-x-0 max-sm:shadow-2xl'
+          : 'w-0 max-sm:-translate-x-full',
+      )}>
+        <div className="h-full w-full sm:w-[240px] rounded-none sm:rounded-2xl overflow-hidden">
+          <Sidebar activeLabel={activeNav} dark={dark} onToggleTheme={toggleTheme} />
         </div>
       </div>
 
@@ -105,7 +124,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
                 <div className="text-xs text-[var(--paper-muted)] mt-0.5">{chartNav.kpiLabel}</div>
               </div>
             )}
-            <button onClick={toggleTheme} aria-label="Toggle dark mode" className={themeBtnCls}>
+            <button onClick={toggleTheme} aria-label="Toggle dark mode" className={`${themeBtnCls} max-sm:hidden`}>
               {dark
                 ? <Sun  className="h-[18px] w-[18px] fill-amber-400 text-amber-400" />
                 : <Moon className="h-[18px] w-[18px]" />}

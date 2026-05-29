@@ -18,6 +18,14 @@
   display: none;
 }
 
+/* Desktop shows the warm "desk" behind the floating panel. On mobile the panel
+   runs full-bleed, so paint html/body the panel color — no desk peeking through
+   the iOS status bar / safe area / overscroll. */
+body { background: var(--paper-ground); }
+@media (max-width: 639px) {
+  html, body { background: var(--paper); }
+}
+
 :root {
   --bg: #e4f6fe;
   --bg2: #d0eefb;
