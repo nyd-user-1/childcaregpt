@@ -23,7 +23,7 @@ const CARDS: DataCard[] = [
   {
     href: '/county',
     kicker: 'I',
-    title: 'Counties',
+    title: 'County',
     body: 'Providers, capacity, and typical infant-to-school-age costs across all 62 New York counties.',
     stat: '62 counties · cost + coverage',
     icon: <Building2 className="h-5 w-5" />,
@@ -31,7 +31,7 @@ const CARDS: DataCard[] = [
   {
     href: '/city',
     kicker: 'II',
-    title: 'Cities',
+    title: 'City',
     body: 'Licensed providers and seats in every city and town with regulated child care.',
     stat: '1,100+ cities',
     icon: <Home className="h-5 w-5" />,
@@ -39,7 +39,7 @@ const CARDS: DataCard[] = [
   {
     href: '/facility',
     kicker: 'III',
-    title: 'Facilities',
+    title: 'Provider',
     body: 'Every OCFS-regulated provider in the state — capacity by age group, status, and contact.',
     stat: '16,800 providers',
     icon: <MapPin className="h-5 w-5" />,
@@ -47,7 +47,7 @@ const CARDS: DataCard[] = [
   {
     href: '/zip-code',
     kicker: 'IV',
-    title: 'ZIP Codes',
+    title: 'Zip Code',
     body: 'Child care rolled up by ZIP — the tightest geography for finding care near home.',
     stat: 'Statewide by ZIP',
     icon: <Hash className="h-5 w-5" />,
