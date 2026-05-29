@@ -28,7 +28,7 @@ export function AppPanel({
   const w = expanded ? 'sm:w-[50vw]' : 'sm:w-[423px]'
 
   return createPortal(
-    <div className={`shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${open ? `w-full ${w} sm:ml-[18px]` : 'w-0'}`}>
+    <div className={`shrink-0 transition-all duration-300 ease-in-out overflow-hidden max-sm:pointer-events-auto ${open ? `w-full ${w} sm:ml-[18px]` : 'w-0'}`}>
       {open && (
         <div className={`relative h-full w-full ${w} rounded-none sm:rounded-2xl bg-[var(--paper)] flex flex-col overflow-hidden shadow-[0_4px_24px_rgba(31,29,26,0.07)]`}>
 

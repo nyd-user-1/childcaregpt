@@ -118,7 +118,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
 
       </div>
 
-      <div id="chat-panel-root" className="flex shrink-0 h-full" />
+      <div id="chat-panel-root" className="flex shrink-0 h-full max-sm:fixed max-sm:inset-0 max-sm:z-50 max-sm:justify-end max-sm:pointer-events-none" />
     </div>
   )
 }
