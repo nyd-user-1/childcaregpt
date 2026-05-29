@@ -74,7 +74,7 @@ export default function DataPage() {
   return (
     <AppLayout>
       <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
-        <div className="mx-auto max-w-5xl px-6 sm:px-10 md:px-14 pt-12 sm:pt-16 pb-16">
+        <div className="mx-auto max-w-5xl px-6 sm:px-10 md:px-14 pt-6 sm:pt-16 pb-16">
 
           {/* Masthead */}
           <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>

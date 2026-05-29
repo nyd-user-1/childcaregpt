@@ -96,7 +96,7 @@ export function SearchShell() {
       <div className="mx-auto max-w-3xl px-6 sm:px-10 pb-24">
 
         {/* ── Masthead ── */}
-        <div className="pt-10 pb-6">
+        <div className="pt-5 sm:pt-10 pb-6">
           <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
             ChildcareGPT · Search
           </p>

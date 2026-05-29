@@ -121,7 +121,7 @@ export default function CityTable({ cities: initial, total: initialTotal }: { ci
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
 
         {/* ── Masthead ───────────────────────────────────────────── */}
-        <div className="shrink-0 px-6 sm:px-10 pt-9 pb-5">
+        <div className="shrink-0 px-6 sm:px-10 pt-4 sm:pt-9 pb-5">
           <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
             ChildcareGPT · <span className="tabular-nums">{fullTotal.toLocaleString()}</span> cities
           </p>
