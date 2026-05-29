@@ -45,7 +45,7 @@ export default function HomePage() {
       <AppLayout>
         <div className="flex flex-1 flex-col overflow-hidden" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
           <div ref={scrollRef} className="flex-1 overflow-y-auto no-scrollbar">
-            <div className="mx-auto max-w-3xl px-5 sm:px-8 py-8 flex flex-col gap-7">
+            <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-8 pb-4 flex flex-col gap-7">
               {messages.map((m, i) => (
                 <ChatMessage
                   key={m.id}
@@ -56,8 +56,18 @@ export default function HomePage() {
               ))}
             </div>
           </div>
-          <div className="shrink-0 border-t border-[var(--paper-rule)] px-5 sm:px-8 py-4" style={{ background: 'var(--paper)' }}>
-            <div className="mx-auto max-w-3xl">
+          <div className="relative shrink-0 px-5 sm:px-8 py-4" style={{ background: 'var(--paper)' }}>
+            {/* Blur-fade mask: softens text scrolling up behind the input,
+                replacing the old 1px rule. */}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-full h-10 backdrop-blur-[2px]"
+              style={{ WebkitMaskImage: 'linear-gradient(to top, black, transparent)', maskImage: 'linear-gradient(to top, black, transparent)' }}
+            />
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 -translate-y-full h-8"
+              style={{ background: 'linear-gradient(to top, var(--paper), transparent)' }}
+            />
+            <div className="mx-auto max-w-3xl" style={{ background: 'var(--paper)' }}>
               <ChatInput onSend={handleSend} address={address} onAddressChange={setAddress} value={prefill} onValueChange={setPrefill} />
             </div>
           </div>
