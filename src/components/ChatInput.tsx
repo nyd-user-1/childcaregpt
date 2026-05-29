@@ -8,7 +8,7 @@ import { ACCENT_COLOR } from '@/lib/app-config'
 type PlaceSuggestion = { place_id: string; description: string }
 type SelectedAddress = { description: string; lat: number; lng: number }
 
-export function ChatInput() {
+export function ChatInput({ onSend }: { onSend?: (message: string, address?: SelectedAddress | null) => void } = {}) {
   const [input, setInput] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -83,6 +83,14 @@ export function ChatInput() {
 
   const clearAddress = () => setSelectedAddress(null)
 
+  const submit = () => {
+    const msg = input.trim()
+    if (!msg || !onSend) return
+    onSend(msg, selectedAddress)
+    setInput('')
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'
+  }
+
   const accentActive = addressMode || !!selectedAddress
 
   return (
@@ -136,7 +144,7 @@ export function ChatInput() {
                 if (e.key === 'Escape') { e.preventDefault(); exitAddressMode() }
                 if (e.key === 'Enter' && suggestions.length > 0) { e.preventDefault(); selectAddress(suggestions[0]) }
               } else {
-                if (e.key === 'Enter' && !e.shiftKey) e.preventDefault()
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit() }
               }
             }}
             placeholder={addressMode ? 'Enter an address…' : selectedAddress ? 'Ask about this area…' : 'Ask about childcare...'}
@@ -169,6 +177,7 @@ export function ChatInput() {
           {/* ButtonSendChat */}
           <button
             type="button"
+            onClick={submit}
             disabled={!input.trim()}
             className="ml-1 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1a1a1a] text-white disabled:opacity-25 hover:opacity-80 transition-opacity"
           >
