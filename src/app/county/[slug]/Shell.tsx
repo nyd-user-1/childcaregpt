@@ -1,21 +1,24 @@
 'use client'
 
-import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { ChevronLeft, ChevronRight, ChevronDown, ChartSpline, MapPlus, MessageCircle, Map } from 'lucide-react'
+import { ChevronLeft, ChevronRight, MessageCircle, MapPin, ArrowRight, Sparkles } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
-import { PanelChart } from '@/components/PanelChart'
-import { PanelMap } from '@/components/PanelMap'
-import { PanelChat } from '@/components/PanelChat'
-import { cn } from '@/lib/utils'
 
-function fmtNum(n: number) {
-  return n >= 1000 ? `${(n / 1000).toFixed(1)}K` : String(n)
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+
+// DOL National Database of Childcare Prices stores WEEKLY medians. Convert to a
+// monthly figure parents can budget against — the same math the chat uses, so
+// both surfaces give one answer.
+function toMonthly(weekly: number | null | undefined): number | null {
+  const w = Number(weekly)
+  return Number.isFinite(w) && w > 0 ? Math.round((w * 52) / 12) : null
 }
-
-function fmtCurrency(n: number | null) {
-  if (n == null) return '—'
-  return `$${Math.round(n).toLocaleString()}/wk`
+function money(n: number | null): string {
+  return n == null ? '—' : `$${n.toLocaleString()}`
+}
+function fmtNum(n: number) {
+  return n.toLocaleString()
 }
 
 export type CountyStats = {
@@ -47,8 +50,6 @@ export type ZipEntry = {
   seats: number
 }
 
-const DEFAULT_ROWS = 2
-
 export function CountyShell({
   stats,
   costs,
@@ -62,166 +63,170 @@ export function CountyShell({
   prevSlug: string
   nextSlug: string
 }) {
-  const [infoExpanded, setInfoExpanded] = useState(false)
-  const [profileIdx, setProfileIdx]     = useState(0)
-  const [chartsOpen, setChartsOpen]     = useState(false)
-  const [mapsOpen, setMapsOpen]         = useState(false)
-  const [chatOpen, setChatOpen]         = useState(false)
-  const zipScrollRef = useRef<HTMLDivElement>(null)
+  const county = stats.county_name
 
-  const btn    = 'inline-flex items-center justify-center h-8 w-8 border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:text-sky-500 hover:bg-[var(--inp-bg)] transition-colors'
-  const active = 'text-sky-500 bg-[var(--inp-bg)]'
-  const tip    = 'absolute left-1/2 -translate-x-1/2 -top-8 px-2 py-1 rounded bg-[var(--txt)] text-[var(--bg)] text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50'
-
-  const PROFILES = [
-    {
-      title: 'Inventory',
-      rows: [
-        { label: 'Licensed Providers',     value: String(stats.provider_count),   highlight: false },
-        { label: 'Total Licensed Capacity',value: fmtNum(stats.total_capacity),   highlight: true  },
-        { label: 'Infant Capacity',        value: String(stats.infant_capacity),   highlight: false },
-        { label: 'Toddler Capacity',       value: String(stats.toddler_capacity),  highlight: false },
-        { label: 'Preschool Capacity',     value: String(stats.preschool_capacity),highlight: false },
-        { label: 'School-Age Capacity',    value: String(stats.school_age_capacity),highlight: false },
-      ],
-    },
-    {
-      title: 'Cost',
-      rows: [
-        { label: 'Median Infant Cost (Center)',    value: fmtCurrency(costs?.mcinfant ?? null),    highlight: false },
-        { label: 'Median Toddler Cost (Center)',   value: fmtCurrency(costs?.mctoddler ?? null),   highlight: false },
-        { label: 'Median Preschool Cost (Center)', value: fmtCurrency(costs?.mcpreschool ?? null), highlight: false },
-        { label: 'Median Infant Cost (Family CC)', value: fmtCurrency(costs?.mfccinfant ?? null),  highlight: false },
-        { label: 'Median Toddler Cost (Family CC)',value: fmtCurrency(costs?.mfcctoddler ?? null), highlight: false },
-        { label: 'Median Preschool (Family CC)',   value: fmtCurrency(costs?.mfccpreschool ?? null),highlight: false },
-        { label: 'Median Household Income',        value: costs?.mhi != null ? `$${Math.round(costs.mhi).toLocaleString()}` : '—', highlight: false },
-        { label: "Women's LFPR (children under 6)", value: costs?.flfpr_20to64_under6 != null ? `${costs.flfpr_20to64_under6.toFixed(1)}%` : '—', highlight: false },
-        { label: 'Female Poverty Rate',            value: costs?.pr_f != null ? `${costs.pr_f.toFixed(1)}%` : '—', highlight: false },
-      ],
-    },
+  // Monthly costs (center = day care center, family = family child care).
+  const centerInfant = toMonthly(costs?.mcinfant)
+  const familyInfant = toMonthly(costs?.mfccinfant)
+  const ages = [
+    { label: 'Infant',    center: toMonthly(costs?.mcinfant),    family: toMonthly(costs?.mfccinfant) },
+    { label: 'Toddler',   center: toMonthly(costs?.mctoddler),   family: toMonthly(costs?.mfcctoddler) },
+    { label: 'Preschool', center: toMonthly(costs?.mcpreschool), family: toMonthly(costs?.mfccpreschool) },
   ]
+  const hasCost = ages.some(a => a.center != null || a.family != null)
 
-  const cycleProfile = (dir: 1 | -1) => {
-    setProfileIdx(i => (i + dir + PROFILES.length) % PROFILES.length)
-    setInfoExpanded(false)
-  }
+  const askHref = `/?q=${encodeURIComponent(`Find licensed child care in ${county} County`)}`
 
-  const activeProfile = PROFILES[profileIdx]
-  const visibleRows = infoExpanded ? activeProfile.rows : activeProfile.rows.slice(0, DEFAULT_ROWS)
+  const roundBtn = 'inline-flex items-center justify-center h-9 w-9 rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
 
   return (
-    <>
-      <AppLayout>
-        <div className="flex-1 overflow-y-auto no-scrollbar">
-          <div className="mx-auto max-w-4xl px-5 py-8">
+    <AppLayout>
+      <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
+        <div className="mx-auto max-w-3xl px-6 sm:px-10 pt-10 sm:pt-14 pb-16">
 
-            {/* ── Header ── */}
-            <div className="mb-8 flex items-center justify-between gap-2">
-              <h1 className="text-2xl font-bold text-[var(--txt)]">{stats.county_name} County</h1>
-              <div className="hidden sm:flex items-center shrink-0">
-                <div className="inline-flex -space-x-px">
-                  <div className="relative group">
-                    <Link href={`/county/${prevSlug}`} className={`${btn} rounded-l-full`}><ChevronLeft className="h-4 w-4" /></Link>
-                    <span className={tip}>Prev</span>
-                  </div>
-                  <div className="relative group">
-                    <button onClick={() => setChartsOpen(v => !v)} className={`${btn} ${chartsOpen ? active : ''}`}><ChartSpline className="h-4 w-4" /></button>
-                    <span className={tip}>Charts</span>
-                  </div>
-                  <div className="relative group">
-                    <button onClick={() => setMapsOpen(v => !v)} className={`${btn} ${mapsOpen ? active : ''}`}><MapPlus className="h-4 w-4" /></button>
-                    <span className={tip}>Maps</span>
-                  </div>
-                  <div className="relative group">
-                    <button onClick={() => setChatOpen(v => !v)} className={`${btn} ${chatOpen ? active : ''}`}><MessageCircle className="h-4 w-4" /></button>
-                    <span className={tip}>Ask ChildcareGPT</span>
-                  </div>
-                  <div className="relative group">
-                    <Link href={`/county/${nextSlug}`} className={`${btn} rounded-r-full`}><ChevronRight className="h-4 w-4" /></Link>
-                    <span className={tip}>Next</span>
-                  </div>
-                </div>
-              </div>
+          {/* ── Masthead ── */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
+                ChildcareGPT · County
+              </p>
+              <h1 className="paper-rise mt-3 leading-[1.04]" style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(2.1rem, 5vw, 3.25rem)', fontWeight: 400, letterSpacing: '-0.02em' }}>
+                {county} <span style={{ fontStyle: 'italic', color: 'var(--paper-accent)' }}>County.</span>
+              </h1>
             </div>
-
-            {/* ── Map placeholder ── */}
-            <div className="mb-8 h-64 sm:h-96 w-full rounded-2xl border border-[var(--border)] overflow-hidden flex flex-col items-center justify-center gap-3"
-              style={{ background: 'linear-gradient(135deg,#e8f4fb 0%,#d0eaf7 100%)' }}>
-              <Map className="h-14 w-14 text-[var(--muted)]" />
-              <div className="text-center">
-                <p className="text-sm font-semibold text-[var(--txt2)]">{stats.county_name} County, NY</p>
-                <p className="text-xs text-[var(--muted)] mt-0.5">County Map · Coming Soon</p>
-              </div>
+            <div className="flex shrink-0 items-center gap-2 pt-1">
+              <Link href={`/county/${prevSlug}`} aria-label="Previous county" className={roundBtn}><ChevronLeft className="h-4 w-4" /></Link>
+              <Link href={`/county/${nextSlug}`} aria-label="Next county" className={roundBtn}><ChevronRight className="h-4 w-4" /></Link>
             </div>
+          </div>
 
-            {/* ── Profiles ── */}
-            <div className="mb-8">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--txt)]">Profiles</h2>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => cycleProfile(-1)} className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => cycleProfile(1)} className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="rounded-xl border border-[var(--border)] overflow-hidden shadow-sm">
-                <button onClick={() => setInfoExpanded(v => !v)}
-                  className="flex items-center justify-between w-full px-4 py-3 bg-[var(--surface)] hover:bg-[var(--inp-bg)] transition-colors">
-                  <span className="text-sm font-semibold text-[var(--txt)]">{activeProfile.title}</span>
-                  <ChevronDown className={cn('h-4 w-4 text-[var(--muted)] transition-transform duration-200', infoExpanded && 'rotate-180')} />
-                </button>
-                {visibleRows.map((row, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_auto] gap-x-3 px-4 py-2.5 border-t border-[var(--border)]">
-                    <span className="text-sm text-[var(--muted)]">{row.label}</span>
-                    <span className={cn('text-sm text-right', row.highlight ? 'font-bold text-sky-500' : 'text-[var(--txt)]')}>
-                      {row.value}
-                    </span>
+          {/* ── The answer: cost ── */}
+          {hasCost ? (
+            <p className="paper-rise mt-7 max-w-[54ch] text-[var(--paper-text)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: 'clamp(1.25rem, 2.4vw, 1.6rem)', lineHeight: 1.5 }}>
+              In {county} County, infant care typically runs{' '}
+              <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{money(centerInfant)}/month</strong>{' '}
+              at a day care center{familyInfant != null && <> — or <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{money(familyInfant)}/month</strong> in family child care</>}.
+              Care costs less as children get older.
+            </p>
+          ) : (
+            <p className="paper-rise mt-7 max-w-[54ch] text-[var(--paper-muted)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: '1.2rem', lineHeight: 1.6 }}>
+              We don’t have published cost figures for {county} County yet — but you
+              can still find licensed providers below.
+            </p>
+          )}
+
+          {/* ── Cost by age ── */}
+          {hasCost && (
+            <div className="paper-rise mt-9" style={{ animationDelay: '180ms' }}>
+              <p className="mb-3 text-[11px] uppercase tracking-[0.2em] text-[var(--paper-faint)]" style={SANS}>
+                Typical cost per month
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                {ages.map(a => (
+                  <div key={a.label} className="rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] px-5 py-4">
+                    <p className="text-[12px] uppercase tracking-[0.12em] text-[var(--paper-faint)]" style={SANS}>{a.label}</p>
+                    <p className="mt-2 leading-none text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.75rem', fontWeight: 500 }}>
+                      {a.center != null ? `${money(a.center)}` : '—'}
+                    </p>
+                    <p className="mt-1.5 text-[12px] text-[var(--paper-muted)]" style={SANS}>
+                      center{a.family != null && <> · {money(a.family)} family care</>}
+                    </p>
                   </div>
                 ))}
               </div>
+              <p className="mt-3 text-[11px] text-[var(--paper-faint)]" style={SANS}>
+                Median prices, U.S. Dept. of Labor (2022), converted to monthly. Costs are an estimate, not a quote — always call to confirm.
+              </p>
             </div>
+          )}
 
-            {/* ── Zip Codes carousel ── */}
-            <div className="mb-8">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-[var(--txt)]">Zip Codes</h2>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => zipScrollRef.current?.scrollBy({ left: -240, behavior: 'smooth' })}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => zipScrollRef.current?.scrollBy({ left: 240, behavior: 'smooth' })}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors">
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-              <div ref={zipScrollRef} className="overflow-x-auto no-scrollbar">
-                <div className="flex gap-3 pb-1">
-                  {zips.map(z => (
-                    <Link key={z.zip_code} href={`/zip/${z.zip_code}`}
-                      className="shrink-0 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 hover:bg-[var(--inp-bg)] hover:border-transparent transition-all">
-                      <p className="text-base font-bold text-[var(--txt)]">{z.zip_code}</p>
-                      <p className="text-xs font-medium text-[var(--txt2)] mt-0.5">{z.city}</p>
-                      <div className="mt-2">
-                        <span className="text-xs font-bold text-sky-500">{fmtNum(z.seats)} seats</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+          {/* ── Help paying (eligibility route) ── */}
+          <div className="paper-rise mt-9 rounded-2xl border border-[var(--paper-accent)] p-6" style={{ background: 'var(--paper-accent-soft)', animationDelay: '240ms' }}>
+            <div className="flex items-start gap-3">
+              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--paper-accent)', color: '#fff' }}>
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-[19px] leading-snug text-[var(--paper-text)]" style={{ ...SERIF, fontWeight: 500 }}>
+                  Worried about the cost?
+                </h2>
+                <p className="mt-1.5 text-[14.5px] leading-[1.6] text-[var(--paper-muted)]" style={SANS}>
+                  New York’s Child Care Assistance Program (CCAP) can cover most or all
+                  of it for families who qualify. A few quick questions will tell you for sure.
+                </p>
+                <Link
+                  href="/eligibility"
+                  className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-medium text-white transition-opacity hover:opacity-90"
+                  style={{ ...SANS, background: 'var(--paper-accent)' }}
+                >
+                  Check if you qualify <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
-
           </div>
-        </div>
-      </AppLayout>
 
-      <PanelChart open={chartsOpen} onClose={() => setChartsOpen(false)} />
-      <PanelMap   open={mapsOpen}   onClose={() => setMapsOpen(false)}   />
-      <PanelChat  open={chatOpen}   onClose={() => setChatOpen(false)}   countyName={stats.county_name} />
-    </>
+          {/* ── Find care (chat + zip map routes) ── */}
+          <div className="paper-rise mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2" style={{ animationDelay: '300ms' }}>
+            <Link href={askHref} className="group/c rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-5 transition-colors hover:border-[var(--paper-accent)]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: 'var(--paper-accent-soft)', color: 'var(--paper-accent)' }}>
+                <MessageCircle className="h-4.5 w-4.5" />
+              </span>
+              <h3 className="mt-4 text-[17px] text-[var(--paper-text)]" style={{ ...SERIF, fontWeight: 500 }}>Ask about {county} County</h3>
+              <p className="mt-1 text-[13.5px] leading-[1.55] text-[var(--paper-muted)]" style={SANS}>Get providers, costs, and answers in plain language.</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium" style={{ color: 'var(--paper-accent)' }}>
+                Start a chat <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/c:translate-x-0.5" />
+              </span>
+            </Link>
+            <Link href="/maps/zip-code" className="group/c rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-5 transition-colors hover:border-[var(--paper-accent)]">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: 'var(--paper-accent-soft)', color: 'var(--paper-accent)' }}>
+                <MapPin className="h-4.5 w-4.5" />
+              </span>
+              <h3 className="mt-4 text-[17px] text-[var(--paper-text)]" style={{ ...SERIF, fontWeight: 500 }}>Find care near you</h3>
+              <p className="mt-1 text-[13.5px] leading-[1.55] text-[var(--paper-muted)]" style={SANS}>Map every licensed provider in your neighborhood.</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-[13px] font-medium" style={{ color: 'var(--paper-accent)' }}>
+                Open the ZIP map <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/c:translate-x-0.5" />
+              </span>
+            </Link>
+          </div>
+
+          {/* ── Where the care is (zips) ── */}
+          {zips.length > 0 && (
+            <div className="paper-rise mt-11" style={{ animationDelay: '360ms' }}>
+              <h2 className="border-b border-[var(--paper-rule)] pb-3 text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.3rem', fontWeight: 500 }}>
+                Where the care is
+              </h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {zips.slice(0, 9).map(z => (
+                  <Link key={z.zip_code} href={`/zip/${z.zip_code}`}
+                    className="rounded-xl border border-[var(--paper-rule)] bg-[var(--paper-2)] px-4 py-3 transition-colors hover:border-[var(--paper-accent)]">
+                    <p className="tabular-nums text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.05rem', fontWeight: 500 }}>{z.zip_code}</p>
+                    <p className="truncate text-[12px] text-[var(--paper-muted)]" style={SANS}>{z.city}</p>
+                    <p className="mt-1.5 text-[12px] font-medium tabular-nums" style={{ color: 'var(--paper-accent)' }}>{fmtNum(z.providers)} providers</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Context strip (sizing the answer) ── */}
+          <div className="paper-rise mt-11 flex flex-wrap gap-x-10 gap-y-4 border-t border-[var(--paper-rule)] pt-6" style={{ animationDelay: '420ms' }}>
+            <Stat label="Licensed providers" value={fmtNum(stats.provider_count)} />
+            <Stat label="Total licensed seats" value={fmtNum(stats.total_capacity)} />
+            {costs?.mhi != null && <Stat label="Median household income" value={`$${Math.round(costs.mhi).toLocaleString()}`} />}
+            {costs?.pr_f != null && <Stat label="Female poverty rate" value={`${costs.pr_f.toFixed(1)}%`} />}
+          </div>
+
+        </div>
+      </div>
+    </AppLayout>
+  )
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--paper-faint)]" style={SANS}>{label}</p>
+      <p className="mt-1 tabular-nums text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.4rem', fontWeight: 500 }}>{value}</p>
+    </div>
   )
 }

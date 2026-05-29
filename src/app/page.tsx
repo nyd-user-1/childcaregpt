@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { AppLayout } from '@/components/AppLayout'
 import { ChatInput } from '@/components/ChatInput'
 import { ChatMessage } from '@/components/ChatMessage'
@@ -19,11 +20,13 @@ const STARTERS: { label: string; prompt: string }[] = [
   { label: 'What do the program types mean?', prompt: 'What are the different types of child care programs in New York?' },
 ]
 
-export default function HomePage() {
+function HomeInner() {
   const { messages, isStreaming, sendMessage } = useChat()
   const scrollRef = useRef<HTMLDivElement>(null)
   const [address, setAddress] = useState<SelectedAddress | null>(null)
   const hasMessages = messages.length > 0
+  const searchParams = useSearchParams()
+  const autoSentRef = useRef(false)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -38,6 +41,17 @@ export default function HomePage() {
   function handleSend(message: string, addr: SelectedAddress | null = address) {
     sendMessage(message, addr ?? null)
   }
+
+  // Deep-link: /?q=... auto-sends once (e.g. "Ask about Suffolk County" from a
+  // detail page lands the parent straight in a relevant conversation).
+  useEffect(() => {
+    if (autoSentRef.current) return
+    const q = searchParams.get('q')
+    if (q && q.trim()) {
+      autoSentRef.current = true
+      sendMessage(q.trim(), null)
+    }
+  }, [searchParams, sendMessage])
 
   // ── Conversation phase ─────────────────────────────────────────────
   if (hasMessages) {
@@ -122,5 +136,13 @@ export default function HomePage() {
         </div>
       </div>
     </AppLayout>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <HomeInner />
+    </Suspense>
   )
 }
