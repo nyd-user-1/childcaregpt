@@ -137,7 +137,7 @@ export default function CityTable({ cities: initial, total: initialTotal }: { ci
         </div>
 
         {/* ── Controls ───────────────────────────────────────────── */}
-        <div className="paper-rise shrink-0 border-y border-[var(--paper-rule)] bg-[var(--paper)] px-6 sm:px-10 py-3 flex items-center gap-3 sm:gap-4" style={{ animationDelay: '180ms' }}>
+        <div className="paper-rise shrink-0 sm:border-y border-[var(--paper-rule)] bg-[var(--paper)] px-6 sm:px-10 py-3 flex items-center gap-3 sm:gap-4" style={{ animationDelay: '180ms' }}>
           <label className="relative flex flex-1 items-center max-w-md">
             <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--paper-faint)]" />
             <input

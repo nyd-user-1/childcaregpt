@@ -107,7 +107,7 @@ export function SearchShell() {
         </div>
 
         {/* ── Sticky search ── */}
-        <div className="paper-rise sticky top-0 z-10 -mx-6 border-y border-[var(--paper-rule)] bg-[var(--paper)]/92 px-6 py-3.5 backdrop-blur-sm sm:-mx-10 sm:px-10" style={{ animationDelay: '120ms' }}>
+        <div className="paper-rise sticky top-0 z-10 -mx-6 sm:border-y border-[var(--paper-rule)] bg-[var(--paper)]/92 px-6 py-3.5 backdrop-blur-sm sm:-mx-10 sm:px-10" style={{ animationDelay: '120ms' }}>
           <label className="relative flex items-center">
             <Search className="pointer-events-none absolute left-4 h-[18px] w-[18px] text-[var(--paper-faint)]" />
             <input
