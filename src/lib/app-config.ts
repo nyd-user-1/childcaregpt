@@ -32,6 +32,7 @@ export const NAV_CYCLE = [
 export const PATH_NAV: Record<string, string> = {
   '/':          'Chat',
   '/search':    'Search',
+  '/data':      'Data',
   '/charts':    'Charts',
   '/maps':      'Maps',
   '/county':    'Counties',

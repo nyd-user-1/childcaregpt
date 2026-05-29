@@ -6,7 +6,7 @@ import { ChevronDown, User, BarChart3, Map } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   SIDEBAR_NAV_TOP, SIDEBAR_NAV_BOTTOM,
-  SIDEBAR_DATA_ITEMS, SIDEBAR_MAP_ITEMS, SIDEBAR_FOOTER_LABEL,
+  SIDEBAR_MAP_ITEMS, SIDEBAR_FOOTER_LABEL,
 } from '@/lib/app-config'
 
 const SANS: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
@@ -16,7 +16,6 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
-  const [dataOpen, setDataOpen] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
 
   const navItem = (active: boolean) =>
@@ -55,27 +54,10 @@ export function Sidebar({ activeLabel = 'Chat' }: SidebarProps) {
           </Link>
         ))}
 
-        {SIDEBAR_DATA_ITEMS.length > 0 && (
-          <>
-            <button
-              onClick={() => setDataOpen(v => !v)}
-              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] transition-colors"
-            >
-              <BarChart3 className="h-[18px] w-[18px] flex-shrink-0" />
-              <span className="flex-1 text-left">Data</span>
-              <ChevronDown className={cn('h-4 w-4 text-[var(--paper-faint)] transition-transform duration-200', dataOpen && 'rotate-180')} />
-            </button>
-            {dataOpen && (
-              <div className="ml-[30px] border-l border-[var(--paper-rule)] pl-3 space-y-0.5">
-                {SIDEBAR_DATA_ITEMS.map(({ label, href }) => (
-                  <Link key={label} href={href} className={subItem(activeLabel === label)}>
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </>
-        )}
+        <Link href="/data" className={navItem(activeLabel === 'Data')}>
+          <BarChart3 className="h-[18px] w-[18px] flex-shrink-0" />
+          Data
+        </Link>
 
         {SIDEBAR_MAP_ITEMS.length > 0 && (
           <>
