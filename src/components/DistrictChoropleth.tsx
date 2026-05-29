@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { APIProvider, Map as GMap, useMap } from '@vis.gl/react-google-maps'
 import { geojsonUrl } from '@/lib/blob-geojson'
 
@@ -38,7 +39,7 @@ function FitBounds() {
 }
 
 function DistrictLayer({
-  geojsonKey, districtProp, lookup, thresholds, hovered, onHover, onLeave,
+  geojsonKey, districtProp, lookup, thresholds, hovered, onHover, onLeave, onSelect,
 }: {
   geojsonKey: string
   districtProp: string
@@ -47,6 +48,7 @@ function DistrictLayer({
   hovered: number | null
   onHover: (d: number) => void
   onLeave: () => void
+  onSelect: (d: number) => void
 }) {
   const map = useMap()
   const loadedRef = useRef(false)
@@ -55,8 +57,8 @@ function DistrictLayer({
 
   // Keep mutable inputs in refs so the load effect depends only on [map] —
   // otherwise re-renders on hover would tear down and never rebuild the layer.
-  const refs = useRef({ lookup, onHover, onLeave, districtProp })
-  refs.current = { lookup, onHover, onLeave, districtProp }
+  const refs = useRef({ lookup, onHover, onLeave, onSelect, districtProp })
+  refs.current = { lookup, onHover, onLeave, onSelect, districtProp }
 
   useEffect(() => {
     if (!map || loadedRef.current) return
@@ -75,6 +77,10 @@ function DistrictLayer({
           if (refs.current.lookup[d]) refs.current.onHover(d)
         })
         layer.addListener('mouseout', () => refs.current.onLeave())
+        layer.addListener('click', (e: google.maps.Data.MouseEvent) => {
+          const d = Number(e.feature.getProperty(refs.current.districtProp))
+          if (refs.current.lookup[d]) refs.current.onSelect(d)
+        })
         setReady(true)
       })
 
@@ -115,6 +121,7 @@ export default function DistrictChoropleth({
   thresholds: number[]
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
+  const router = useRouter()
   const [hovered, setHovered] = useState<number | null>(null)
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null)
 
@@ -153,6 +160,7 @@ export default function DistrictChoropleth({
             hovered={hovered}
             onHover={setHovered}
             onLeave={() => setHovered(null)}
+            onSelect={d => router.push(`/district/${chamber}/${d}`)}
           />
         </GMap>
       </APIProvider>
@@ -161,7 +169,7 @@ export default function DistrictChoropleth({
       <div className="absolute top-4 left-4 z-10 pointer-events-none">
         <div className="bg-[var(--paper)]/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-sm border border-[var(--paper-rule)]">
           <p className="text-[10px] uppercase tracking-[0.16em] text-[var(--paper-faint)]">NY State {chamberLabel} Districts</p>
-          <p className="text-[12px] text-[var(--paper-muted)]">Licensed providers per district</p>
+          <p className="text-[12px] text-[var(--paper-muted)]">Licensed providers per district · tap a district for your rep</p>
         </div>
       </div>
 
