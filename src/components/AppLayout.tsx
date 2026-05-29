@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { flushSync } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { PanelLeftOpen, PanelLeftClose, Sun, Moon } from 'lucide-react'
@@ -69,6 +69,52 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
     }
   }, [pathname])
 
+  // Mobile floating sidebar toggle — draggable, snaps to the nearest edge on release.
+  const FAB_SIZE = 48
+  const [fabPos, setFabPos] = useState<{ x: number; y: number } | null>(null)
+  const [fabDragging, setFabDragging] = useState(false)
+  const fabRef = useRef<HTMLButtonElement>(null)
+  const fabDrag = useRef<{ ptrX: number; ptrY: number; startX: number; startY: number; moved: boolean } | null>(null)
+
+  const handleFabPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    fabDrag.current = { ptrX: e.clientX, ptrY: e.clientY, startX: rect.left, startY: rect.top, moved: false }
+
+    const onMove = (ev: PointerEvent) => {
+      const d = fabDrag.current
+      if (!d) return
+      ev.preventDefault()
+      const dx = ev.clientX - d.ptrX
+      const dy = ev.clientY - d.ptrY
+      if (!d.moved && Math.hypot(dx, dy) > 6) { d.moved = true; setFabDragging(true) }
+      if (d.moved) {
+        const x = Math.max(0, Math.min(window.innerWidth - FAB_SIZE, d.startX + dx))
+        const y = Math.max(0, Math.min(window.innerHeight - FAB_SIZE, d.startY + dy))
+        setFabPos({ x, y })
+      }
+    }
+
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      window.removeEventListener('pointercancel', onUp)
+      const d = fabDrag.current
+      fabDrag.current = null
+      if (!d) return
+      if (!d.moved) { setSidebarOpen(v => !v); return }
+      setFabDragging(false)
+      setFabPos(prev => {
+        const currX = prev?.x ?? d.startX
+        const snapLeft = currX + FAB_SIZE / 2 < window.innerWidth / 2
+        return { x: snapLeft ? 8 : window.innerWidth - FAB_SIZE - 8, y: prev?.y ?? d.startY }
+      })
+    }
+
+    window.addEventListener('pointermove', onMove, { passive: false })
+    window.addEventListener('pointerup', onUp)
+    window.addEventListener('pointercancel', onUp)
+  }
+
   const activeNav = PATH_NAV[pathname] ?? (
     pathname.startsWith('/county')    ? 'Counties'  :
     pathname.startsWith('/facility')  ? 'Facilities':
@@ -103,10 +149,10 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
 
       <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--paper)] overflow-hidden shadow-[0_4px_24px_rgba(31,29,26,0.06)] border border-[var(--paper-rule)]">
 
-        <div className="flex items-center px-5 pt-2 pb-2 sm:pt-5 sm:pb-3">
+        <div className="hidden sm:flex items-center px-5 pt-5 pb-3">
 
           <button onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle sidebar"
-            className="order-last sm:order-first flex h-9 w-9 items-center justify-center rounded-xl border-0 outline-none transition-colors hover:bg-[var(--paper-2)]">
+            className="flex h-9 w-9 items-center justify-center rounded-xl border-0 outline-none transition-colors hover:bg-[var(--paper-2)]">
             {sidebarOpen
               ? <PanelLeftClose className="h-5 w-5 text-[var(--paper-text)]" />
               : <PanelLeftOpen  className="h-5 w-5 text-[var(--paper-text)]" />
@@ -124,7 +170,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
                 <div className="text-xs text-[var(--paper-muted)] mt-0.5">{chartNav.kpiLabel}</div>
               </div>
             )}
-            <button onClick={toggleTheme} aria-label="Toggle dark mode" className={`${themeBtnCls} max-sm:hidden`}>
+            <button onClick={toggleTheme} aria-label="Toggle dark mode" className={themeBtnCls}>
               {dark
                 ? <Sun  className="h-[18px] w-[18px] fill-amber-400 text-amber-400" />
                 : <Moon className="h-[18px] w-[18px]" />}
@@ -138,6 +184,23 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
       </div>
 
       <div id="chat-panel-root" className="flex shrink-0 h-full max-sm:fixed max-sm:inset-0 max-sm:z-50 max-sm:justify-end max-sm:pointer-events-none" />
+
+      {/* Mobile only: floating, draggable sidebar toggle (the header bar is hidden on mobile) */}
+      <button
+        ref={fabRef}
+        onPointerDown={handleFabPointerDown}
+        aria-label="Toggle sidebar"
+        style={{ touchAction: 'none', ...(fabPos ? { left: fabPos.x, top: fabPos.y } : {}) }}
+        className={cn(
+          'sm:hidden fixed z-[60] flex h-12 w-12 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] shadow-lg hover:bg-[var(--paper-2)]',
+          fabPos ? '' : 'bottom-5 right-4',
+          fabDragging ? '' : 'transition-[left,top] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]',
+        )}
+      >
+        {sidebarOpen
+          ? <PanelLeftClose className="h-5 w-5 text-[var(--paper-text)]" />
+          : <PanelLeftOpen  className="h-5 w-5 text-[var(--paper-text)]" />}
+      </button>
     </div>
   )
 }
