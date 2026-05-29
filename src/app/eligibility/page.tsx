@@ -276,38 +276,58 @@ function CheckItem({ label, tooltip, checked, onClick }: { label: string; toolti
 
 function CountySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
   const ref = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      if (ref.current && !ref.current.contains(e.target as Node)) { setOpen(false); setQuery('') }
     }
     if (open) document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [open])
 
+  const filtered = NY_COUNTIES.filter(c => c.toLowerCase().includes(query.trim().toLowerCase()))
+
+  const select = (county: string) => { onChange(county); setOpen(false); setQuery('') }
+
   return (
     <div className="relative mt-4" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        style={SANS}
-        className={`w-full flex items-center justify-between rounded-xl border-2 bg-[var(--paper)] px-4 py-3 text-base transition-all ${
+      <div
+        className={`flex items-center gap-2 rounded-xl border-2 bg-[var(--paper)] px-4 py-3 transition-all ${
           open ? 'border-[#2f6d6a] shadow-none' : 'border-[var(--paper-rule)]'
         }`}
       >
-        <span className={value ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]'}>{value || 'Select your county…'}</span>
-        <ChevronDown className={`h-4 w-4 text-[var(--paper-faint)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
-      </button>
+        <input
+          ref={inputRef}
+          type="text"
+          value={open ? query : value}
+          onChange={e => { setQuery(e.target.value); if (!open) setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={e => {
+            if (e.key === 'Enter' && filtered.length) { e.preventDefault(); select(filtered[0]) }
+            if (e.key === 'Escape') { setOpen(false); setQuery('') }
+          }}
+          placeholder="Type or select your county…"
+          style={SANS}
+          className="flex-1 bg-transparent text-base text-[var(--paper-text)] placeholder:text-[var(--paper-faint)] outline-none"
+        />
+        <button type="button" onClick={() => { setOpen(o => !o); inputRef.current?.focus() }} aria-label="Toggle county list">
+          <ChevronDown className={`h-4 w-4 text-[var(--paper-faint)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
 
       {open && (
         <div className="absolute top-full left-0 mt-1 w-full bg-[var(--surface)] rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.12)] z-20 overflow-hidden border border-[var(--paper-rule)]">
           <div className="max-h-60 overflow-y-auto no-scrollbar">
-            {NY_COUNTIES.map(county => (
+            {filtered.length === 0 ? (
+              <p className="px-4 py-3 text-sm text-[var(--paper-muted)]" style={SANS}>No county matches “{query}”.</p>
+            ) : filtered.map(county => (
               <button
                 key={county}
                 type="button"
-                onClick={() => { onChange(county); setOpen(false) }}
+                onClick={() => select(county)}
                 style={SANS}
                 className={`w-full text-left px-4 py-2.5 text-sm transition-colors border-b border-[var(--paper-rule)] last:border-0 ${
                   value === county
