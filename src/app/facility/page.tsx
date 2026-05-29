@@ -1,6 +1,11 @@
 import { sql } from '@/lib/db'
 import FacilityTable from './FacilityTable'
 
+export const metadata = {
+  title: 'Facilities · ChildcareGPT',
+  description: 'Search New York’s OCFS-licensed child care providers — program type, capacity, and license status.',
+}
+
 export default async function FacilityPage() {
   const [rows, countRows] = await Promise.all([
     sql`

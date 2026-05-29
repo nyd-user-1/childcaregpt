@@ -2,8 +2,36 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ChildcareGPT',
-  description: 'AI-powered childcare intelligence',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  title: 'ChildcareGPT — Find & afford child care in New York',
+  description:
+    'ChildcareGPT helps New York families find licensed child care, see what it costs, and check if they qualify for help paying — built on real OCFS provider data and U.S. Department of Labor cost figures.',
+  applicationName: 'ChildcareGPT',
+  keywords: [
+    'child care New York', 'NY daycare', 'licensed child care providers',
+    'child care costs', 'CCAP eligibility', 'child care assistance',
+    'OCFS providers', 'infant care cost', 'New York childcare', 'find daycare near me',
+  ],
+  authors: [{ name: 'ChildcareGPT' }],
+  openGraph: {
+    type: 'website',
+    siteName: 'ChildcareGPT',
+    title: 'ChildcareGPT — Find & afford child care in New York',
+    description:
+      'Find licensed New York child care, see what it costs, and check if you qualify for help paying.',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'ChildcareGPT — Find & afford child care in New York',
+    description:
+      'Find licensed New York child care, see what it costs, and check if you qualify for help paying.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

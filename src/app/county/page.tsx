@@ -1,6 +1,11 @@
 import { sql } from '@/lib/db'
 import CountyTable from './CountyTable'
 
+export const metadata = {
+  title: 'Counties · ChildcareGPT',
+  description: 'Licensed child care providers, capacity, and typical costs across all 62 New York counties.',
+}
+
 export default async function CountyPage() {
   const rows = await sql`
     SELECT

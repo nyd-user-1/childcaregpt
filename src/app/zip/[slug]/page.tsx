@@ -2,6 +2,14 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { ZipShell } from './Shell'
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  return {
+    title: `Child care in ${slug} · ChildcareGPT`,
+    description: `Licensed child care providers in ZIP code ${slug}, New York — capacity and program types.`,
+  }
+}
+
 export default async function DetailPageZipCode({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 

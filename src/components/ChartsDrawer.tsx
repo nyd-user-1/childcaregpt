@@ -6,6 +6,10 @@ import { LayoutGrid, X } from 'lucide-react'
 import { AreaChart, Area, BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+const ACCENT = '#2f6d6a'
+
 const PREVIEW: Record<string, { x: number; y: number }[]> = {
   'providers-by-county':  [100,62,58,42,38,32,28,24,20,18,14,10].map((y,x)=>({x,y})),
   'capacity-by-county':   [100,88,82,70,62,54,46,38,30,24,18,14].map((y,x)=>({x,y})),
@@ -34,7 +38,8 @@ export function ChartsDrawer() {
       {/* Trigger */}
       <button
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-sm font-medium text-[var(--txt)] hover:bg-[var(--inp-bg)] transition-colors"
+        className="inline-flex items-center gap-2 rounded-lg border border-[var(--paper-rule)] bg-[var(--paper)] px-3 py-1.5 text-sm font-medium text-[var(--paper-text)] transition-colors hover:bg-[var(--paper-2)]"
+        style={SANS}
       >
         <LayoutGrid className="h-4 w-4" />
         <span>Charts</span>
@@ -50,59 +55,61 @@ export function ChartsDrawer() {
 
       {/* Bottom sheet */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 bg-[var(--surface)] rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out ${open ? 'translate-y-0' : 'translate-y-full'}`}
-        style={{ maxHeight: '72vh' }}
+        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-[var(--paper)] shadow-2xl transition-transform duration-300 ease-out ${open ? 'translate-y-0' : 'translate-y-full'}`}
+        style={{ maxHeight: '72vh', color: 'var(--paper-text)' }}
       >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-[var(--border)]" />
+          <div className="h-1 w-10 rounded-full bg-[var(--paper-rule)]" />
         </div>
 
         {/* Header */}
-        <div className="flex items-start justify-between px-5 pt-2 pb-3">
+        <div className="flex items-start justify-between px-6 pt-2 pb-4">
           <div>
-            <h2 className="text-lg font-bold text-[var(--txt)]">Charts</h2>
-            <p className="text-sm text-[var(--muted)]">Explore childcare data</p>
+            <p className="text-[10.5px] uppercase tracking-[0.24em] text-[var(--paper-faint)]" style={SANS}>Jump to a chart</p>
+            <h2 className="mt-1 text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.5rem', fontWeight: 500, letterSpacing: '-0.01em' }}>
+              All <span className="italic" style={{ color: 'var(--paper-accent)' }}>charts</span>
+            </h2>
           </div>
-          <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-[var(--inp-bg)] transition-colors text-[var(--muted)]">
+          <button onClick={() => setOpen(false)} className="rounded-lg p-1.5 text-[var(--paper-faint)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)]">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Grid */}
-        <div className="overflow-y-auto no-scrollbar px-4 pb-8">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="@container overflow-y-auto no-scrollbar px-5 pb-8">
+          <div className="grid grid-cols-2 gap-3 @xl:grid-cols-3 @4xl:grid-cols-4">
             {CHART_CONFIGS.map(chart => {
               const data = PREVIEW[chart.slug] ?? [50,60,70,80,75].map((y,x)=>({x,y}))
               return (
                 <button key={chart.slug}
                   onClick={() => { router.push(`/chart/${chart.slug}`); setOpen(false) }}
-                  className="group text-left rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:shadow-md hover:border-transparent transition-all overflow-hidden">
+                  className="group/card overflow-hidden rounded-xl border border-[var(--paper-rule)] bg-[var(--paper-2)] text-left transition-colors hover:border-[var(--paper-accent)]">
                   <div className="h-20 px-2 pt-2">
                     <ResponsiveContainer width="100%" height="100%">
                       {AREA_SLUGS.has(chart.slug) ? (
                         <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
                           <defs>
                             <linearGradient id={`dr-${chart.slug}`} x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={chart.color} stopOpacity={0.3} />
-                              <stop offset="95%" stopColor={chart.color} stopOpacity={0.02} />
+                              <stop offset="5%" stopColor={ACCENT} stopOpacity={0.3} />
+                              <stop offset="95%" stopColor={ACCENT} stopOpacity={0.02} />
                             </linearGradient>
                           </defs>
-                          <Area type="monotone" dataKey="y" stroke={chart.color} strokeWidth={1.5}
+                          <Area type="monotone" dataKey="y" stroke={ACCENT} strokeWidth={1.5}
                             fill={`url(#dr-${chart.slug})`} dot={false} animationDuration={400} />
                           <XAxis dataKey="x" hide />
                         </AreaChart>
                       ) : (
                         <BarChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
-                          <Bar dataKey="y" fill={chart.color} radius={[2,2,0,0]} animationDuration={400} />
+                          <Bar dataKey="y" fill={ACCENT} radius={[2,2,0,0]} animationDuration={400} />
                           <XAxis dataKey="x" hide />
                         </BarChart>
                       )}
                     </ResponsiveContainer>
                   </div>
-                  <div className="px-3 pb-2.5 pt-1">
-                    <p className="text-xs font-semibold text-[var(--txt)] group-hover:text-sky-500 transition-colors leading-tight">{chart.title}</p>
-                    <p className="text-[10px] text-[var(--muted)] mt-0.5 leading-tight">{chart.description}</p>
+                  <div className="px-3 pb-2.5 pt-1.5">
+                    <p className="leading-tight text-[var(--paper-text)] transition-colors group-hover/card:text-[var(--paper-accent)]" style={{ ...SERIF, fontSize: '0.9rem', fontWeight: 500 }}>{chart.title}</p>
+                    <p className="mt-0.5 text-[10px] leading-tight text-[var(--paper-muted)]" style={SANS}>{chart.description}</p>
                   </div>
                 </button>
               )

@@ -1,6 +1,11 @@
 import { sql } from '@/lib/db'
 import ZipTable from './ZipTable'
 
+export const metadata = {
+  title: 'ZIP Codes · ChildcareGPT',
+  description: 'Licensed child care providers and capacity by ZIP code across New York State.',
+}
+
 export default async function ZipCodePage() {
   const [rows, countRows] = await Promise.all([
     sql`

@@ -1,19 +1,27 @@
 'use client'
 
-import { use, useState, useEffect, useCallback } from 'react'
-import { notFound } from 'next/navigation'
+import { use, useState, useEffect } from 'react'
+import { notFound, useRouter, useSearchParams } from 'next/navigation'
 import { APIProvider, Map as GMap, AdvancedMarker, Pin } from '@vis.gl/react-google-maps'
 import { getCountyBySlug } from '@/lib/ny-counties'
 import { cn } from '@/lib/utils'
-import { X } from 'lucide-react'
+import { X, Info } from 'lucide-react'
+import { ConsoleExplainerPanel } from '../../ConsoleExplainerPanel'
 
-const PROGRAM_TYPES = ['FDC', 'GFDC', 'SACC', 'SDCC'] as const
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+
+const PROGRAM_TYPES = ['DCC', 'FDC', 'GFDC', 'SACC', 'SDCC'] as const
+type TypeKey = 'ALL' | typeof PROGRAM_TYPES[number]
+const TABS: TypeKey[] = ['ALL', 'DCC', 'FDC', 'GFDC', 'SACC', 'SDCC']
 const TAB_LABELS: Record<string, string> = {
-  FDC: 'Family Day Care', GFDC: 'Group Family Day Care',
+  ALL: 'All Types',
+  DCC: 'Day Care Center', FDC: 'Family Day Care', GFDC: 'Group Family Day Care',
   SACC: 'School Age Child Care', SDCC: 'Small Day Care Center',
 }
+// Warm, on-palette pin colors (teal → earth tones).
 const PIN_COLORS: Record<string, string> = {
-  FDC: '#0ea5e9', GFDC: '#10b981', SACC: '#f59e0b', SDCC: '#8b5cf6',
+  DCC: '#2f6d6a', FDC: '#5a9b8f', GFDC: '#c9a15e', SACC: '#c08457', SDCC: '#8a5a3c',
 }
 
 type Facility = {
@@ -22,8 +30,6 @@ type Facility = {
   latitude: number | null; longitude: number | null
   facility_status: string; provider_name: string
 }
-
-type SelectedFacility = Facility & { x: number; y: number }
 
 // County approximate centers for map focus
 const COUNTY_CENTERS: Record<string, { lat: number; lng: number; zoom: number }> = {
@@ -96,50 +102,66 @@ export default function ConsoleDetailSlot({ params }: { params: Promise<{ slug: 
   const county = getCountyBySlug(slug)
   if (!county) notFound()
 
-  const [activeType, setActiveType] = useState<typeof PROGRAM_TYPES[number]>('FDC')
+  const [activeType, setActiveType] = useState<TypeKey>('ALL')
   const [facilities, setFacilities] = useState<Facility[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<Facility | null>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const wantList = searchParams.get('panel') === 'providers'
 
   useEffect(() => {
     setSelected(null)
     setLoading(true)
-    fetch(`/api/facilities?county=${encodeURIComponent(county.county)}&program_type=${activeType}&limit=200`)
+    const base = `/api/facilities?county=${encodeURIComponent(county.county)}&limit=200`
+    const url = activeType === 'ALL' ? base : `${base}&program_type=${activeType}`
+    fetch(url)
       .then(r => r.json())
       .then(d => { setFacilities(d.data ?? []); setLoading(false) })
       .catch(() => setLoading(false))
   }, [county.county, activeType])
 
   const center = COUNTY_CENTERS[slug] ?? { lat: 42.9, lng: -75.5, zoom: 8 }
-  const pinColor = PIN_COLORS[activeType]
+  const pinFor = (pt: string) => activeType === 'ALL' ? (PIN_COLORS[pt] ?? '#2f6d6a') : (PIN_COLORS[activeType] ?? '#2f6d6a')
   const mappable = facilities.filter(f => f.latitude && f.longitude)
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
+
+      {/* ── County header ── */}
+      <div className="flex shrink-0 items-end justify-between gap-3 border-b border-[var(--paper-rule)] px-5 py-3.5">
+        <div className="min-w-0">
+          <h2 className="leading-none text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.6rem', fontWeight: 500, letterSpacing: '-0.015em' }}>
+            {county.county} <span className="italic" style={{ color: 'var(--paper-accent)' }}>County</span>
+          </h2>
+        </div>
+        <button onClick={() => setPanelOpen(true)} aria-label="How this works"
+          className="shrink-0 rounded-lg p-1.5 text-[var(--paper-faint)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)]">
+          <Info className="h-5 w-5" />
+        </button>
+      </div>
+
       {/* ── Type tab bar ── */}
-      <div className="shrink-0 flex items-center gap-0 border-b border-[var(--border)] bg-[var(--surface)] px-4">
-        {PROGRAM_TYPES.map(t => (
-          <button key={t} onClick={() => setActiveType(t)}
+      <div className="flex shrink-0 items-center gap-1 border-b border-[var(--paper-rule)] px-4">
+        {TABS.map(t => (
+          <button key={t} onClick={() => setActiveType(t)} title={TAB_LABELS[t]}
             className={cn(
-              'px-3 py-3 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap',
-              activeType === t
-                ? 'border-sky-500 text-sky-600'
-                : 'border-transparent text-[var(--muted)] hover:text-[var(--txt)]'
-            )}>
-            {TAB_LABELS[t]}
+              '-mb-px flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] transition-colors',
+              activeType === t ? 'text-[var(--paper-text)]' : 'border-transparent text-[var(--paper-faint)] hover:text-[var(--paper-text)]',
+            )}
+            style={{ ...SANS, borderColor: activeType === t ? 'var(--paper-accent)' : 'transparent' }}>
+            <span className="h-2 w-2 rounded-sm" style={{ background: t === 'ALL' ? 'var(--paper-text)' : PIN_COLORS[t] }} />
+            {t === 'ALL' ? 'All' : t}
           </button>
         ))}
-        <div className="ml-auto flex items-center gap-2 text-xs text-[var(--muted)] py-3">
-          {loading ? (
-            <span className="animate-pulse">Loading…</span>
-          ) : (
-            <span>{mappable.length} mapped · {facilities.length - mappable.length} no coords</span>
-          )}
-        </div>
+        <span className="ml-auto shrink-0 pl-2 text-[11px] tabular-nums text-[var(--paper-muted)]" style={SANS}>
+          {loading ? <span className="animate-pulse">Loading…</span> : `${mappable.length} of ${facilities.length} mapped`}
+        </span>
       </div>
 
       {/* ── Map ── */}
-      <div className="flex-1 relative">
+      <div className="relative flex-1">
         <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''}>
           <GMap
             mapId="console-provider-map"
@@ -161,9 +183,9 @@ export default function ConsoleDetailSlot({ params }: { params: Promise<{ slug: 
                 title={f.facility_name}
               >
                 <Pin
-                  background={selected?.facility_id === f.facility_id ? '#0f172a' : pinColor}
-                  borderColor="white"
-                  glyphColor="white"
+                  background={selected?.facility_id === f.facility_id ? '#1f1d1a' : pinFor(f.program_type)}
+                  borderColor="#ffffff"
+                  glyphColor="#ffffff"
                   scale={selected?.facility_id === f.facility_id ? 1.3 : 0.9}
                 />
               </AdvancedMarker>
@@ -173,33 +195,42 @@ export default function ConsoleDetailSlot({ params }: { params: Promise<{ slug: 
 
         {/* ── Facility info panel ── */}
         {selected && (
-          <div className="absolute bottom-4 left-4 right-4 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4">
+          <div className="absolute bottom-4 left-4 right-4 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper)] p-4 shadow-2xl">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="font-semibold text-sm text-gray-900 leading-snug">{selected.facility_name}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{selected.city} · {TAB_LABELS[selected.program_type] ?? selected.program_type}</p>
+                <p className="leading-snug text-[var(--paper-text)]" style={{ ...SERIF, fontSize: '1.05rem', fontWeight: 500 }}>{selected.facility_name}</p>
+                <p className="mt-0.5 text-[12px] text-[var(--paper-muted)]" style={SANS}>{selected.city} · {TAB_LABELS[selected.program_type] ?? selected.program_type}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+              <button onClick={() => setSelected(null)} className="shrink-0 text-[var(--paper-faint)] transition-colors hover:text-[var(--paper-text)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                <p className="text-xs text-gray-500">Total</p>
-                <p className="text-sm font-bold text-sky-600">{selected.total_capacity}</p>
+            <div className="mt-3 grid grid-cols-3 gap-2" style={SANS}>
+              <div className="rounded-lg bg-[var(--paper-2)] px-2.5 py-2">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--paper-faint)]">Capacity</p>
+                <p className="mt-0.5 tabular-nums text-[1.1rem] font-semibold text-[var(--paper-accent)]">{selected.total_capacity}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                <p className="text-xs text-gray-500">Provider</p>
-                <p className="text-xs font-medium text-gray-700 truncate">{selected.provider_name ?? '—'}</p>
+              <div className="rounded-lg bg-[var(--paper-2)] px-2.5 py-2">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--paper-faint)]">Provider</p>
+                <p className="mt-0.5 truncate text-[12px] font-medium text-[var(--paper-text)]">{selected.provider_name ?? '—'}</p>
               </div>
-              <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                <p className="text-xs text-gray-500">Status</p>
-                <p className="text-xs font-medium text-gray-700">{selected.facility_status}</p>
+              <div className="rounded-lg bg-[var(--paper-2)] px-2.5 py-2">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-[var(--paper-faint)]">Status</p>
+                <p className="mt-0.5 text-[12px] font-medium text-[var(--paper-text)]">{selected.facility_status}</p>
               </div>
             </div>
           </div>
         )}
       </div>
+
+      <ConsoleExplainerPanel
+        open={panelOpen || wantList}
+        onClose={() => { setPanelOpen(false); if (wantList) router.replace(`/console/${slug}`, { scroll: false }) }}
+        county={county.county}
+        facilities={mappable}
+        initialView={wantList ? 'list' : 'explainer'}
+        loading={loading}
+      />
     </div>
   )
 }

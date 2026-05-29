@@ -2,6 +2,15 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { FacilityShell } from './Shell'
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return {
+    title: `${name} · ChildcareGPT`,
+    description: `${name} — a licensed New York child care provider. Program type, capacity, address, phone, and license status.`,
+  }
+}
+
 export default async function DetailPageFacility({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 

@@ -1,6 +1,11 @@
 import { AppLayout } from '@/components/AppLayout'
 import { ProviderSection } from './ProviderSection'
 
+export const metadata = {
+  title: 'Launchpad · ChildcareGPT',
+  description: 'Explore New York child care providers by county and program type.',
+}
+
 export default function LaunchpadLayout({
   children,
   detail,

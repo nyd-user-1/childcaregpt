@@ -1,24 +1,14 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
+import { Search, X, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { cn } from '@/lib/utils'
 
-const GRADIENTS = [
-  'linear-gradient(160deg,#f5c118 0%,#92700a 100%)',
-  'linear-gradient(160deg,#f08040 0%,#8b3800 100%)',
-  'linear-gradient(160deg,#b87af8 0%,#6221a8 100%)',
-  'linear-gradient(160deg,#f0d040 0%,#a16000 100%)',
-  'linear-gradient(160deg,#f07080 0%,#9f1030 100%)',
-  'linear-gradient(160deg,#30c0f0 0%,#0260a0 100%)',
-  'linear-gradient(160deg,#f09090 0%,#be1030 100%)',
-  'linear-gradient(160deg,#f08055 0%,#9a3010 100%)',
-  'linear-gradient(160deg,#80b8f8 0%,#1d38c0 100%)',
-  'linear-gradient(160deg,#f8de60 0%,#c07000 100%)',
-]
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
 
 function fmt(n: number | null) {
   if (n == null) return '—'
@@ -71,7 +61,7 @@ type ColKey = 'providers' | 'total' | 'infant' | 'toddler' | 'preschool'
             | 'mcinfant' | 'mcinfantMo' | 'mcinfantYr'
             | 'mctoddler' | 'mcpreschool' | 'mhi'
 
-interface ColDef { key: ColKey; header: string; tooltip: string }
+interface ColDef { key: ColKey; header: string; tooltip: string; cost?: boolean }
 
 const COLS: ColDef[] = [
   { key: 'providers',        header: 'PROVIDERS',      tooltip: 'Number of OCFS-regulated childcare facilities in the county.' },
@@ -81,11 +71,11 @@ const COLS: ColDef[] = [
   { key: 'preschool',        header: 'PRESCHOOL',      tooltip: 'Sum of licensed preschool capacity across facilities.' },
   { key: 'schoolAge',        header: 'SCHOOL AGE',     tooltip: 'Sum of licensed school-age capacity across facilities.' },
   { key: 'seatsPerProvider', header: 'SEATS/PROVIDER', tooltip: 'Average seats per licensed facility (total seats ÷ providers). High values indicate large centers; low values indicate small home-based programs.' },
-  { key: 'mcinfant',         header: 'MED. INFANT/WK', tooltip: 'Median weekly center-based infant care cost (DOL NDCP, 2022).' },
-  { key: 'mcinfantMo',       header: 'MED. INFANT/MO', tooltip: 'Median monthly center-based infant care cost (weekly × 4.33, DOL NDCP, 2022).' },
-  { key: 'mcinfantYr',       header: 'MED. INFANT/YR', tooltip: 'Median annual center-based infant care cost (weekly × 52, DOL NDCP, 2022).' },
-  { key: 'mctoddler',        header: 'MED. TODDLER',   tooltip: 'Median weekly center-based toddler care cost (DOL NDCP, 2022).' },
-  { key: 'mcpreschool',      header: 'MED. PRESCHOOL', tooltip: 'Median weekly center-based preschool cost (DOL NDCP, 2022).' },
+  { key: 'mcinfant',         header: 'MED. INFANT/WK', tooltip: 'Median weekly center-based infant care cost (DOL NDCP, 2022).', cost: true },
+  { key: 'mcinfantMo',       header: 'MED. INFANT/MO', tooltip: 'Median monthly center-based infant care cost (weekly × 4.33, DOL NDCP, 2022).', cost: true },
+  { key: 'mcinfantYr',       header: 'MED. INFANT/YR', tooltip: 'Median annual center-based infant care cost (weekly × 52, DOL NDCP, 2022).', cost: true },
+  { key: 'mctoddler',        header: 'MED. TODDLER',   tooltip: 'Median weekly center-based toddler care cost (DOL NDCP, 2022).', cost: true },
+  { key: 'mcpreschool',      header: 'MED. PRESCHOOL', tooltip: 'Median weekly center-based preschool cost (DOL NDCP, 2022).', cost: true },
   { key: 'mhi',              header: 'MED. INCOME',    tooltip: 'Median household income (DOL NDCP, 2022).' },
 ]
 
@@ -93,27 +83,28 @@ function ColHeader({ col, active, dir, onSort }: {
   col: ColDef; active: boolean; dir: 'asc' | 'desc'; onSort: () => void
 }) {
   return (
-    <th className="px-3 py-4 bg-[var(--surface)] border-b border-[var(--border)] whitespace-nowrap">
+    <th className="px-3 py-3.5 bg-[var(--paper)] border-b border-[var(--paper-rule)] whitespace-nowrap text-right">
       <div className="relative group/col inline-block">
         <button
           onClick={onSort}
           className={cn(
-            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-black/5 hover:text-[var(--txt)]',
-            active ? 'text-[var(--txt)]' : 'text-[var(--muted)]',
+            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-[var(--paper-rule-soft)] hover:text-[var(--paper-text)]',
+            active ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]',
           )}
+          style={SANS}
         >
           {col.header}
           {active
             ? dir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
             : <ChevronUp className="h-3 w-3 opacity-0 group-hover/col:opacity-40" />}
         </button>
-        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full left-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
+        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full right-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
           <div className="px-3.5 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--txt)] mb-1.5">{col.header}</p>
-            <p className="text-[12px] text-[var(--muted)] leading-relaxed font-normal">{col.tooltip}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--paper-text)] mb-1.5" style={SANS}>{col.header}</p>
+            <p className="text-[12px] text-[var(--paper-muted)] leading-relaxed font-normal">{col.tooltip}</p>
           </div>
           <Link href="/glossary" onClick={e => e.stopPropagation()}
-            className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3.5 py-2.5 text-[11px] font-medium text-sky-500 hover:bg-[var(--inp-bg)] transition-colors">
+            className="flex items-center justify-between gap-2 border-t border-[var(--paper-rule)] px-3.5 py-2.5 text-[11px] font-medium text-[var(--paper-accent)] hover:bg-[var(--paper-2)] transition-colors" style={SANS}>
             <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
             <ArrowUpRight className="h-3 w-3" />
           </Link>
@@ -141,12 +132,41 @@ function getVal(row: CountyRow, key: ColKey): number {
   }
 }
 
+function cellVal(c: CountyRow, key: ColKey): string {
+  switch (key) {
+    case 'providers':        return fmt(c.provider_count)
+    case 'total':            return fmt(c.total_capacity)
+    case 'infant':           return fmt(c.infant_capacity)
+    case 'toddler':          return fmt(c.toddler_capacity)
+    case 'preschool':        return fmt(c.preschool_capacity)
+    case 'schoolAge':        return fmt(c.school_age_capacity)
+    case 'seatsPerProvider': return c.provider_count > 0 ? String(Math.round(c.total_capacity / c.provider_count)) : '—'
+    case 'mcinfant':         return fmtCost(c.mcinfant)
+    case 'mcinfantMo':       return fmtCostMo(c.mcinfant)
+    case 'mcinfantYr':       return fmtCostYr(c.mcinfant)
+    case 'mctoddler':        return fmtCost(c.mctoddler)
+    case 'mcpreschool':      return fmtCost(c.mcpreschool)
+    case 'mhi':              return fmtIncome(c.mhi)
+  }
+}
+
 export default function CountyTable({ counties }: { counties: CountyRow[] }) {
   const router = useRouter()
   const [view, setView]       = useState<'list' | 'grid'>('list')
   const [search, setSearch]   = useState('')
   const [sortCol, setSortCol] = useState<'county' | ColKey>('county')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  // ⌘K focuses search; Esc clears it.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+      if (e.key === 'Escape' && document.activeElement === searchRef.current) setSearch('')
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   function handleSort(col: 'county' | ColKey) {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -166,47 +186,83 @@ export default function CountyTable({ counties }: { counties: CountyRow[] }) {
     })
   }, [search, sortCol, sortDir, counties])
 
-  const iconBtn = 'h-8 w-8 flex items-center justify-center rounded-lg transition-colors'
-  const activeBtn = 'bg-[var(--inp-bg)] text-[var(--txt)]'
-  const mutedBtn  = 'text-[var(--muted)] hover:text-[var(--txt)]'
-  const td = 'px-4 py-2.5 border-b border-[var(--border)]'
+  const iconBtn   = 'h-8 w-8 flex items-center justify-center rounded-lg transition-colors'
+  const activeBtn = 'bg-[var(--paper-2)] text-[var(--paper-text)]'
+  const mutedBtn  = 'text-[var(--paper-faint)] hover:text-[var(--paper-text)]'
+  const td        = 'px-4 py-3 border-b border-[var(--paper-rule-soft)] text-right tabular-nums'
 
   return (
     <AppLayout showNavArrows>
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
 
-        <div className="shrink-0 bg-[var(--surface)] px-5 pt-4 pb-3 flex flex-col gap-3">
-          <div className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 py-3">
-            <Search className="h-4 w-4 text-[var(--muted)] shrink-0" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search counties..."
-              className="flex-1 bg-transparent text-sm text-[var(--txt)] placeholder:text-[var(--muted)] outline-none" />
-          </div>
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => setView('list')} className={cn(iconBtn, view === 'list' ? activeBtn : mutedBtn)}><List className="h-4 w-4" /></button>
-            <button onClick={() => setView('grid')} className={cn(iconBtn, view === 'grid' ? activeBtn : mutedBtn)}><LayoutGrid className="h-4 w-4" /></button>
-            <div className="flex-1" />
-            <span className="text-xs text-[var(--muted)]">{filtered.length} of {counties.length}</span>
+        {/* ── Masthead ───────────────────────────────────────────── */}
+        <div className="shrink-0 px-6 sm:px-10 pt-9 pb-5">
+          <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
+            ChildcareGPT · <span className="tabular-nums">{counties.length}</span> counties
+          </p>
+          <h1
+            className="paper-rise mt-3 leading-[1.05]"
+            style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(2rem, 4.5vw, 3rem)', fontWeight: 400, letterSpacing: '-0.02em' }}
+          >
+            Child care in New York,{' '}
+            <span style={{ fontStyle: 'italic', color: 'var(--paper-accent)' }}>county by county.</span>
+          </h1>
+          <div className="paper-rise mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] uppercase tracking-[0.18em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '120ms' }}>
+            <span>OCFS providers · DOL costs</span>
+            <span className="h-3 w-px bg-[var(--paper-rule)]" />
+            <span>2022</span>
           </div>
         </div>
 
+        {/* ── Controls ───────────────────────────────────────────── */}
+        <div className="paper-rise shrink-0 border-y border-[var(--paper-rule)] bg-[var(--paper)] px-6 sm:px-10 py-3 flex items-center gap-3 sm:gap-4" style={{ animationDelay: '180ms' }}>
+          <label className="relative flex flex-1 items-center max-w-md">
+            <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--paper-faint)]" />
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search counties…"
+              className="w-full rounded-full border border-[var(--paper-rule)] bg-[var(--paper-2)] pl-9 pr-9 py-2 text-[15px] text-[var(--paper-text)] placeholder:text-[var(--paper-faint)] outline-none focus:border-[var(--paper-accent)] transition-colors"
+              style={SANS}
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); searchRef.current?.focus() }} aria-label="Clear search"
+                className="absolute right-3 text-[var(--paper-faint)] hover:text-[var(--paper-text)] transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </label>
+
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => setView('list')} aria-label="List view" className={cn(iconBtn, view === 'list' ? activeBtn : mutedBtn)}><List className="h-4 w-4" /></button>
+            <button onClick={() => setView('grid')} aria-label="Grid view" className={cn(iconBtn, view === 'grid' ? activeBtn : mutedBtn)}><LayoutGrid className="h-4 w-4" /></button>
+          </div>
+
+          <span className="hidden sm:block text-[11px] uppercase tracking-[0.18em] text-[var(--paper-faint)] tabular-nums shrink-0" style={SANS}>
+            {filtered.length} / {counties.length}
+          </span>
+        </div>
+
+        {/* ── List view ──────────────────────────────────────────── */}
         {view === 'list' && (
-          <div className="px-5 pb-5 flex-1 min-h-0 overflow-hidden">
-            <div className="h-full overflow-auto no-scrollbar rounded-xl border border-[var(--border)]">
+          <div className="flex-1 min-h-0 overflow-hidden px-6 sm:px-10 py-5">
+            <div className="h-full overflow-auto no-scrollbar rounded-xl border border-[var(--paper-rule)]">
               <table className="text-sm whitespace-nowrap" style={{ minWidth: '1600px', width: '100%', borderSpacing: 0 }}>
-                <thead className="sticky top-0 z-20 bg-[var(--surface)]">
+                <thead className="sticky top-0 z-20 bg-[var(--paper)]">
                   <tr>
                     <th onClick={() => handleSort('county')} style={{ willChange: 'transform' }}
-                      className="px-4 py-4 text-left sticky left-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] cursor-pointer select-none min-w-[200px]">
-                      <button className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-black/5 hover:text-[var(--txt)]',
-                        sortCol === 'county' ? 'text-[var(--txt)]' : 'text-[var(--muted)]')}>
+                      className="px-4 py-3.5 text-left sticky left-0 z-30 bg-[var(--paper)] border-b border-[var(--paper-rule)] cursor-pointer select-none min-w-[200px]">
+                      <button className={cn('inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-[var(--paper-rule-soft)] hover:text-[var(--paper-text)]',
+                        sortCol === 'county' ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]')} style={SANS}>
                         COUNTY
                         {sortCol === 'county'
                           ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
                           : <ChevronUp className="h-3 w-3 opacity-40" />}
                       </button>
                     </th>
-                    <th className="px-3 py-4 bg-[var(--surface)] border-b border-[var(--border)]">
-                      <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)] px-1.5 py-0.5">STATE</span>
+                    <th className="px-3 py-3.5 bg-[var(--paper)] border-b border-[var(--paper-rule)] text-left">
+                      <span className="text-[10.5px] font-semibold uppercase tracking-[0.12em] text-[var(--paper-faint)] px-1.5 py-0.5" style={SANS}>STATE</span>
                     </th>
                     {COLS.map(col => (
                       <ColHeader key={col.key} col={col} active={sortCol === col.key} dir={sortDir} onSort={() => handleSort(col.key)} />
@@ -216,27 +272,17 @@ export default function CountyTable({ counties }: { counties: CountyRow[] }) {
                 <tbody>
                   {filtered.map(c => (
                     <tr key={c.county} onClick={() => router.push(`/county/${toSlug(c.county)}`)}
-                      className="group/row cursor-pointer hover:bg-[var(--inp-bg)] transition-colors">
-                      <td style={{ willChange: 'transform' }}
-                        className={cn(td, 'sticky left-0 z-[1] bg-[var(--surface)] group-hover/row:bg-[var(--row-hover)] font-semibold text-[var(--txt)] transition-colors')}>
+                      className="group/row cursor-pointer hover:bg-[var(--paper-2)] transition-colors">
+                      <td style={{ ...SERIF, willChange: 'transform' }}
+                        className={cn('px-4 py-3 border-b border-[var(--paper-rule-soft)] sticky left-0 z-[1] bg-[var(--paper)] group-hover/row:bg-[var(--paper-2)] text-[15px] font-medium text-[var(--paper-text)] transition-colors')}>
                         {c.county} County
                       </td>
-                      <td className={cn(td, 'text-[var(--muted)]')}>NY</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.provider_count)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.total_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.infant_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.toddler_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.preschool_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(c.school_age_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>
-                        {c.provider_count > 0 ? Math.round(c.total_capacity / c.provider_count) : '—'}
-                      </td>
-                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCost(c.mcinfant)}</td>
-                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCostMo(c.mcinfant)}</td>
-                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCostYr(c.mcinfant)}</td>
-                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCost(c.mctoddler)}</td>
-                      <td className={cn(td, 'text-sky-500 font-medium')}>{fmtCost(c.mcpreschool)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmtIncome(c.mhi)}</td>
+                      <td className={cn(td, 'text-left text-[var(--paper-faint)]')}>NY</td>
+                      {COLS.map(col => (
+                        <td key={col.key} className={cn(td, col.cost ? 'text-[var(--paper-accent)] font-medium' : 'text-[var(--paper-text)]')}>
+                          {cellVal(c, col.key)}
+                        </td>
+                      ))}
                     </tr>
                   ))}
                 </tbody>
@@ -245,19 +291,27 @@ export default function CountyTable({ counties }: { counties: CountyRow[] }) {
           </div>
         )}
 
+        {/* ── Grid view ──────────────────────────────────────────── */}
         {view === 'grid' && (
-          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-5 pt-2 pb-8">
-            <div className="grid grid-cols-5 gap-3">
-              {filtered.map((c, i) => (
+          <div className="@container flex-1 min-h-0 overflow-y-auto no-scrollbar px-6 sm:px-10 pt-1 pb-10">
+            <div className="grid grid-cols-2 gap-3 @lg:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-5">
+              {filtered.map(c => (
                 <Link key={c.county} href={`/county/${toSlug(c.county)}`}
-                  className="relative rounded-2xl overflow-hidden block"
-                  style={{ background: GRADIENTS[i % GRADIENTS.length], aspectRatio: '3 / 4' }}>
-                  <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-white">
-                    {fmt(c.total_capacity)} seats
+                  className="group/card flex flex-col justify-between rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-4 transition-colors hover:border-[var(--paper-accent)]"
+                  style={{ aspectRatio: '3 / 4' }}>
+                  <div className="min-w-0">
+                    <p className="leading-tight text-[var(--paper-text)] truncate" style={{ ...SERIF, fontSize: '1.05rem', fontWeight: 500 }}>
+                      {c.county}
+                    </p>
+                    <p className="mt-0.5 text-[11px] uppercase tracking-[0.16em] text-[var(--paper-faint)]" style={SANS}>New York</p>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/30 to-transparent">
-                    <p className="text-sm font-bold text-white leading-tight">{c.county} County</p>
-                    <p className="text-xs text-white/70 mt-0.5">NY · {fmt(c.provider_count)} providers</p>
+                  <div>
+                    <p className="tabular-nums leading-none text-[var(--paper-accent)]" style={{ ...SERIF, fontSize: '1.6rem', fontWeight: 500 }}>
+                      {fmt(c.total_capacity)}
+                    </p>
+                    <p className="mt-1 text-[12px] text-[var(--paper-muted)]" style={SANS}>
+                      seats · {fmt(c.provider_count)} providers
+                    </p>
                   </div>
                 </Link>
               ))}

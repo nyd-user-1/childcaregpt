@@ -3,6 +3,15 @@ import { sql } from '@/lib/db'
 import { NY_COUNTIES } from '@/lib/ny-counties'
 import { CountyShell } from './Shell'
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return {
+    title: `${name} County · ChildcareGPT`,
+    description: `Child care in ${name} County, New York — licensed providers, capacity, and typical weekly costs.`,
+  }
+}
+
 export default async function DetailPageCounty({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 

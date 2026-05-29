@@ -4,15 +4,18 @@ import { sql } from '@/lib/db'
 // import this from a client component). /api/facilities calls these today; the
 // facility/county detail pages can adopt them later to retire their own copies.
 
-// Full detail for one provider by facility_id (includes lat/lng + phone).
+// Full detail for one provider by facility_id (address, phone, dates, lat/lng).
 export async function getFacilityById(facilityId: string) {
   return sql`
     SELECT
-      facility_id, facility_name, county, city,
+      facility_id, facility_name, county, city, state, zip_code,
+      address_omitted, street_number, street_name, additional_address, floor, apartment,
       program_type, facility_status, total_capacity,
-      infant_capacity, toddler_capacity, preschool_capacity,
-      school_age_capacity, provider_name, license_expiration_date,
-      profile_url, phone_number, latitude, longitude
+      infant_capacity, toddler_capacity, preschool_capacity, school_age_capacity,
+      provider_name,
+      phone_number, phone_number_omitted, phone_extension,
+      facility_opened_date, license_issue_date, license_expiration_date,
+      profile_url, latitude, longitude
     FROM facilities
     WHERE facility_id = ${facilityId}
     LIMIT 1

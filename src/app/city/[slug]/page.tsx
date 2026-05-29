@@ -2,6 +2,15 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { CityShell } from './Shell'
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return {
+    title: `${name} · ChildcareGPT`,
+    description: `Licensed child care in ${name}, New York — providers, capacity, and program types.`,
+  }
+}
+
 export default async function DetailPageCity({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 

@@ -7,6 +7,16 @@ export async function generateStaticParams() {
   return CHART_CONFIGS.map(c => ({ slug: c.slug }))
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const config = getChartConfig(slug)
+  if (!config) return {}
+  return {
+    title: `${config.title} · ChildcareGPT`,
+    description: `${config.description} — New York child care data from OCFS and the U.S. Department of Labor.`,
+  }
+}
+
 export default async function ChartPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const config = getChartConfig(slug)

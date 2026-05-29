@@ -3,30 +3,20 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Search, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
+import { Search, X, List, LayoutGrid, ChevronUp, ChevronDown, ArrowUpRight, Info } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import { cn } from '@/lib/utils'
 
-const GRADIENTS = [
-  'linear-gradient(160deg,#f5c118 0%,#92700a 100%)',
-  'linear-gradient(160deg,#f08040 0%,#8b3800 100%)',
-  'linear-gradient(160deg,#b87af8 0%,#6221a8 100%)',
-  'linear-gradient(160deg,#f0d040 0%,#a16000 100%)',
-  'linear-gradient(160deg,#f07080 0%,#9f1030 100%)',
-  'linear-gradient(160deg,#30c0f0 0%,#0260a0 100%)',
-  'linear-gradient(160deg,#f09090 0%,#be1030 100%)',
-  'linear-gradient(160deg,#f08055 0%,#9a3010 100%)',
-  'linear-gradient(160deg,#80b8f8 0%,#1d38c0 100%)',
-  'linear-gradient(160deg,#f8de60 0%,#c07000 100%)',
-]
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
 
 const STATUS_COLOR: Record<string, string> = {
-  'License':                         'text-sky-500',
-  'Registration':                    'text-sky-500',
-  'Pending Revocation':              'text-amber-500',
-  'Pending Revocation and Denial':   'text-amber-500',
-  'Pending Denial':                  'text-amber-400',
-  'Suspended':                       'text-red-500',
+  'License':                       'text-[var(--paper-accent)]',
+  'Registration':                  'text-[var(--paper-accent)]',
+  'Pending Revocation':            'text-amber-600',
+  'Pending Revocation and Denial': 'text-amber-600',
+  'Pending Denial':                'text-amber-500',
+  'Suspended':                     'text-red-600',
 }
 
 const TYPE_LABEL: Record<string, string> = {
@@ -72,18 +62,18 @@ type ColKey = 'county' | 'city' | 'type' | 'status' | 'total'
             | 'infant' | 'toddler' | 'preschool' | 'schoolAge'
             | 'director' | 'licExp'
 
-interface ColDef { key: ColKey; header: string; tooltip: string }
+interface ColDef { key: ColKey; header: string; tooltip: string; num?: boolean }
 
 const COLS: ColDef[] = [
   { key: 'county',    header: 'COUNTY',      tooltip: 'The NY county in which the facility is located.' },
   { key: 'city',      header: 'CITY',        tooltip: 'The city or town in which the facility is located.' },
   { key: 'type',      header: 'TYPE',        tooltip: 'OCFS program type: Day Care Center (DCC), Group Family Day Care (GFDC), Family Day Care (FDC), School Age Child Care (SACC), or Small Day Care Center (SDCC).' },
   { key: 'status',    header: 'STATUS',      tooltip: 'Current licensing status: License or Registration (active), Pending Revocation (enforcement action pending), Suspended (license suspended).' },
-  { key: 'total',     header: 'TOTAL',       tooltip: 'Total licensed capacity — the maximum number of children this facility is approved to serve at one time.' },
-  { key: 'infant',    header: 'INFANT',      tooltip: 'Licensed capacity for infants (typically birth to 18 months). Only applies to Day Care Centers (DCC).' },
-  { key: 'toddler',   header: 'TODDLER',     tooltip: 'Licensed capacity for toddlers (typically 18 months to 3 years). Only applies to Day Care Centers (DCC).' },
-  { key: 'preschool', header: 'PRESCHOOL',   tooltip: 'Licensed capacity for preschool-age children (3 years to kindergarten). Only applies to Day Care Centers (DCC).' },
-  { key: 'schoolAge', header: 'SCHOOL AGE',  tooltip: 'Licensed capacity for school-age children (kindergarten and above).' },
+  { key: 'total',     header: 'TOTAL',       tooltip: 'Total licensed capacity — the maximum number of children this facility is approved to serve at one time.', num: true },
+  { key: 'infant',    header: 'INFANT',      tooltip: 'Licensed capacity for infants (typically birth to 18 months). Only applies to Day Care Centers (DCC).', num: true },
+  { key: 'toddler',   header: 'TODDLER',     tooltip: 'Licensed capacity for toddlers (typically 18 months to 3 years). Only applies to Day Care Centers (DCC).', num: true },
+  { key: 'preschool', header: 'PRESCHOOL',   tooltip: 'Licensed capacity for preschool-age children (3 years to kindergarten). Only applies to Day Care Centers (DCC).', num: true },
+  { key: 'schoolAge', header: 'SCHOOL AGE',  tooltip: 'Licensed capacity for school-age children (kindergarten and above).', num: true },
   { key: 'director',  header: 'DIRECTOR',    tooltip: 'Name of the approved on-site Director or Provider. Shown as "There is no approved Director/On-Site Provider" if no approved director is on file.' },
   { key: 'licExp',    header: 'LIC. EXP',    tooltip: 'License or registration expiration date. Facilities must renew before this date to maintain active status.' },
 ]
@@ -92,27 +82,28 @@ function ColHeader({ col, active, dir, onSort }: {
   col: ColDef; active: boolean; dir: 'asc' | 'desc'; onSort: () => void
 }) {
   return (
-    <th className="px-3 py-4 bg-[var(--surface)] border-b border-[var(--border)] whitespace-nowrap">
+    <th className={cn('px-3 py-3.5 bg-[var(--paper)] border-b border-[var(--paper-rule)] whitespace-nowrap', col.num ? 'text-right' : 'text-left')}>
       <div className="relative group/col inline-block">
         <button
           onClick={onSort}
           className={cn(
-            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-black/5 hover:text-[var(--txt)]',
-            active ? 'text-[var(--txt)]' : 'text-[var(--muted)]',
+            'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-[var(--paper-rule-soft)] hover:text-[var(--paper-text)]',
+            active ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]',
           )}
+          style={SANS}
         >
           {col.header}
           {active
             ? dir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
             : <ChevronUp className="h-3 w-3 opacity-0 group-hover/col:opacity-40" />}
         </button>
-        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full left-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
+        <div className={cn('pointer-events-none group-hover/col:pointer-events-auto absolute top-full z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal', col.num ? 'right-0' : 'left-0')}>
           <div className="px-3.5 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--txt)] mb-1.5">{col.header}</p>
-            <p className="text-[12px] text-[var(--muted)] leading-relaxed font-normal">{col.tooltip}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--paper-text)] mb-1.5" style={SANS}>{col.header}</p>
+            <p className="text-[12px] text-[var(--paper-muted)] leading-relaxed font-normal">{col.tooltip}</p>
           </div>
           <Link href="/glossary" onClick={e => e.stopPropagation()}
-            className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3.5 py-2.5 text-[11px] font-medium text-sky-500 hover:bg-[var(--inp-bg)] transition-colors">
+            className="flex items-center justify-between gap-2 border-t border-[var(--paper-rule)] px-3.5 py-2.5 text-[11px] font-medium text-[var(--paper-accent)] hover:bg-[var(--paper-2)] transition-colors" style={SANS}>
             <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
             <ArrowUpRight className="h-3 w-3" />
           </Link>
@@ -154,6 +145,8 @@ export default function FacilityTable({
   const [total, setTotal]           = useState(initialTotal)
   const [loading, setLoading]       = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const fullTotal = initialTotal
 
   const fetchFacilities = useCallback(async (q: string) => {
     setLoading(true)
@@ -175,6 +168,15 @@ export default function FacilityTable({
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [search, fetchFacilities])
 
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); searchRef.current?.focus() }
+      if (e.key === 'Escape' && document.activeElement === searchRef.current) setSearch('')
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
   function handleSort(col: 'name' | ColKey) {
     if (sortCol === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
     else { setSortCol(col); setSortDir('asc') }
@@ -191,62 +193,91 @@ export default function FacilityTable({
   }), [facilities, sortCol, sortDir])
 
   const iconBtn  = 'h-8 w-8 flex items-center justify-center rounded-lg transition-colors'
-  const activeBtn = 'bg-[var(--inp-bg)] text-[var(--txt)]'
-  const mutedBtn  = 'text-[var(--muted)] hover:text-[var(--txt)]'
-  const td        = 'px-4 py-2.5 border-b border-[var(--border)]'
+  const activeBtn = 'bg-[var(--paper-2)] text-[var(--paper-text)]'
+  const mutedBtn  = 'text-[var(--paper-faint)] hover:text-[var(--paper-text)]'
+  const tdNum = 'px-4 py-3 border-b border-[var(--paper-rule-soft)] text-right tabular-nums text-[var(--paper-text)]'
+  const tdStrMuted  = 'px-4 py-3 border-b border-[var(--paper-rule-soft)] text-left text-[var(--paper-muted)]'
+  const tdStrStrong = 'px-4 py-3 border-b border-[var(--paper-rule-soft)] text-left text-[var(--paper-text)]'
 
   return (
     <AppLayout showNavArrows>
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
 
-        <div className="shrink-0 bg-[var(--surface)] px-5 pt-4 pb-3 flex flex-col gap-3">
-          <div className={cn('flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--inp-bg)] px-4 py-3', loading && 'opacity-60')}>
-            <Search className="h-4 w-4 text-[var(--muted)] shrink-0" />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search facilities, counties, cities..."
-              className="flex-1 bg-transparent text-sm text-[var(--txt)] placeholder:text-[var(--muted)] outline-none"
-            />
-          </div>
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => setView('list')} className={cn(iconBtn, view === 'list' ? activeBtn : mutedBtn)}><List className="h-4 w-4" /></button>
-            <button onClick={() => setView('grid')} className={cn(iconBtn, view === 'grid' ? activeBtn : mutedBtn)}><LayoutGrid className="h-4 w-4" /></button>
-            <div className="flex-1" />
-            <span className="text-xs text-[var(--muted)]">
-              {loading ? 'Searching…' : `${sorted.length.toLocaleString()} of ${total.toLocaleString()}`}
-            </span>
+        {/* ── Masthead ───────────────────────────────────────────── */}
+        <div className="shrink-0 px-6 sm:px-10 pt-9 pb-5">
+          <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
+            ChildcareGPT · <span className="tabular-nums">{fullTotal.toLocaleString()}</span> facilities
+          </p>
+          <h1 className="paper-rise mt-3 leading-[1.05]" style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(2rem, 4.5vw, 3rem)', fontWeight: 400, letterSpacing: '-0.02em' }}>
+            Every licensed provider in{' '}
+            <span style={{ fontStyle: 'italic', color: 'var(--paper-accent)' }}>New York.</span>
+          </h1>
+          <div className="paper-rise mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[11px] uppercase tracking-[0.18em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '120ms' }}>
+            <span>OCFS-regulated</span>
+            <span className="h-3 w-px bg-[var(--paper-rule)]" />
+            <span>New York</span>
           </div>
         </div>
 
+        {/* ── Controls ───────────────────────────────────────────── */}
+        <div className="paper-rise shrink-0 border-y border-[var(--paper-rule)] bg-[var(--paper)] px-6 sm:px-10 py-3 flex items-center gap-3 sm:gap-4" style={{ animationDelay: '180ms' }}>
+          <label className="relative flex flex-1 items-center max-w-md">
+            <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[var(--paper-faint)]" />
+            <input
+              ref={searchRef}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search facilities, counties, cities…"
+              className="w-full rounded-full border border-[var(--paper-rule)] bg-[var(--paper-2)] pl-9 pr-9 py-2 text-[15px] text-[var(--paper-text)] placeholder:text-[var(--paper-faint)] outline-none focus:border-[var(--paper-accent)] transition-colors"
+              style={SANS}
+            />
+            {search && (
+              <button onClick={() => { setSearch(''); searchRef.current?.focus() }} aria-label="Clear search"
+                className="absolute right-3 text-[var(--paper-faint)] hover:text-[var(--paper-text)] transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </label>
+
+          <div className="flex items-center gap-0.5">
+            <button onClick={() => setView('list')} aria-label="List view" className={cn(iconBtn, view === 'list' ? activeBtn : mutedBtn)}><List className="h-4 w-4" /></button>
+            <button onClick={() => setView('grid')} aria-label="Grid view" className={cn(iconBtn, view === 'grid' ? activeBtn : mutedBtn)}><LayoutGrid className="h-4 w-4" /></button>
+          </div>
+
+          <span className="hidden sm:block text-[11px] uppercase tracking-[0.18em] text-[var(--paper-faint)] tabular-nums shrink-0" style={SANS}>
+            {loading ? 'Searching…' : `${sorted.length.toLocaleString()} / ${total.toLocaleString()}`}
+          </span>
+        </div>
+
+        {/* ── List view ──────────────────────────────────────────── */}
         {view === 'list' && (
-          <div className="px-5 pb-5 flex-1 min-h-0 overflow-hidden">
-            <div className="h-full overflow-auto no-scrollbar rounded-xl border border-[var(--border)]">
+          <div className="flex-1 min-h-0 overflow-hidden px-6 sm:px-10 py-5">
+            <div className="h-full overflow-auto no-scrollbar rounded-xl border border-[var(--paper-rule)]">
               <table className="text-sm whitespace-nowrap" style={{ minWidth: '1800px', width: '100%', borderSpacing: 0 }}>
-                <thead className="sticky top-0 z-20 bg-[var(--surface)]">
+                <thead className="sticky top-0 z-20 bg-[var(--paper)]">
                   <tr>
                     <th
                       onClick={() => handleSort('name')}
                       style={{ willChange: 'transform' }}
-                      className="px-4 py-4 text-left sticky left-0 z-30 bg-[var(--surface)] border-b border-[var(--border)] cursor-pointer select-none min-w-[220px]"
+                      className="px-4 py-3.5 text-left sticky left-0 z-30 bg-[var(--paper)] border-b border-[var(--paper-rule)] cursor-pointer select-none min-w-[220px]"
                     >
                       <div className="relative group/col inline-block">
                         <button className={cn(
-                          'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide transition-colors hover:bg-black/5 hover:text-[var(--txt)]',
-                          sortCol === 'name' ? 'text-[var(--txt)]' : 'text-[var(--muted)]',
-                        )}>
+                          'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] transition-colors hover:bg-[var(--paper-rule-soft)] hover:text-[var(--paper-text)]',
+                          sortCol === 'name' ? 'text-[var(--paper-text)]' : 'text-[var(--paper-faint)]',
+                        )} style={SANS}>
                           FACILITY
                           {sortCol === 'name'
                             ? sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
                             : <ChevronUp className="h-3 w-3 opacity-40" />}
                         </button>
-                        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full left-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
+                        <div className="pointer-events-none group-hover/col:pointer-events-auto absolute top-full left-0 z-50 mt-2 hidden group-hover/col:block w-64 rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)] shadow-xl text-left overflow-hidden normal-case tracking-normal whitespace-normal">
                           <div className="px-3.5 py-3">
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--txt)] mb-1.5">FACILITY</p>
-                            <p className="text-[12px] text-[var(--muted)] leading-relaxed font-normal">Legal name of the OCFS-regulated childcare program. Click a row to view the facility detail page.</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--paper-text)] mb-1.5" style={SANS}>FACILITY</p>
+                            <p className="text-[12px] text-[var(--paper-muted)] leading-relaxed font-normal">Legal name of the OCFS-regulated childcare program. Click a row to view the facility detail page.</p>
                           </div>
                           <Link href="/glossary" onClick={e => e.stopPropagation()}
-                            className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3.5 py-2.5 text-[11px] font-medium text-sky-500 hover:bg-[var(--inp-bg)] transition-colors">
+                            className="flex items-center justify-between gap-2 border-t border-[var(--paper-rule)] px-3.5 py-2.5 text-[11px] font-medium text-[var(--paper-accent)] hover:bg-[var(--paper-2)] transition-colors" style={SANS}>
                             <span className="inline-flex items-center gap-1.5"><Info className="h-3 w-3" />Learn more</span>
                             <ArrowUpRight className="h-3 w-3" />
                           </Link>
@@ -263,24 +294,24 @@ export default function FacilityTable({
                     <tr
                       key={f.facility_id}
                       onClick={() => router.push(`/facility/${toSlug(f.facility_name)}`)}
-                      className="group cursor-pointer hover:bg-[var(--inp-bg)] transition-colors"
+                      className="group/row cursor-pointer hover:bg-[var(--paper-2)] transition-colors"
                     >
-                      <td style={{ willChange: 'transform' }} className={cn(td, 'sticky left-0 z-[1] bg-[var(--surface)] group-hover:bg-[var(--row-hover)] font-semibold text-[var(--txt)] transition-colors max-w-[220px] truncate')}>
+                      <td style={{ ...SERIF, willChange: 'transform' }} className="px-4 py-3 border-b border-[var(--paper-rule-soft)] sticky left-0 z-[1] bg-[var(--paper)] group-hover/row:bg-[var(--paper-2)] text-[15px] font-medium text-[var(--paper-text)] transition-colors max-w-[220px] truncate">
                         {f.facility_name}
                       </td>
-                      <td className={cn(td, 'text-[var(--muted)]')}>{f.county}</td>
-                      <td className={cn(td, 'text-[var(--muted)]')}>{f.city}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{TYPE_LABEL[f.program_type] ?? f.program_type}</td>
-                      <td className={cn(td, 'font-semibold', STATUS_COLOR[f.facility_status] ?? 'text-[var(--txt)]')}>
+                      <td className={tdStrMuted}>{f.county}</td>
+                      <td className={tdStrMuted}>{f.city}</td>
+                      <td className={tdStrStrong}>{TYPE_LABEL[f.program_type] ?? f.program_type}</td>
+                      <td className={cn('px-4 py-3 border-b border-[var(--paper-rule-soft)] text-left font-medium', STATUS_COLOR[f.facility_status] ?? 'text-[var(--paper-text)]')}>
                         {f.facility_status}
                       </td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(f.total_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(f.infant_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(f.toddler_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(f.preschool_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmt(f.school_age_capacity)}</td>
-                      <td className={cn(td, 'text-[var(--muted)] max-w-[160px] truncate')}>{f.provider_name ?? '—'}</td>
-                      <td className={cn(td, 'text-[var(--txt)]')}>{fmtDate(f.license_expiration_date)}</td>
+                      <td className={tdNum}>{fmt(f.total_capacity)}</td>
+                      <td className={tdNum}>{fmt(f.infant_capacity)}</td>
+                      <td className={tdNum}>{fmt(f.toddler_capacity)}</td>
+                      <td className={tdNum}>{fmt(f.preschool_capacity)}</td>
+                      <td className={tdNum}>{fmt(f.school_age_capacity)}</td>
+                      <td className={cn(tdStrMuted, 'max-w-[160px] truncate')}>{f.provider_name ?? '—'}</td>
+                      <td className={tdStrStrong}>{fmtDate(f.license_expiration_date)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -289,22 +320,24 @@ export default function FacilityTable({
           </div>
         )}
 
+        {/* ── Grid view ──────────────────────────────────────────── */}
         {view === 'grid' && (
-          <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-5 pt-2 pb-8">
-            <div className="grid grid-cols-5 gap-3">
-              {sorted.map((f, i) => (
+          <div className="@container flex-1 min-h-0 overflow-y-auto no-scrollbar px-6 sm:px-10 pt-1 pb-10">
+            <div className="grid grid-cols-2 gap-3 @lg:grid-cols-3 @3xl:grid-cols-4 @5xl:grid-cols-5">
+              {sorted.map(f => (
                 <Link
                   key={f.facility_id}
                   href={`/facility/${toSlug(f.facility_name)}`}
-                  className="relative rounded-2xl overflow-hidden block"
-                  style={{ background: GRADIENTS[i % GRADIENTS.length], aspectRatio: '3 / 4' }}
+                  className="group/card flex flex-col justify-between rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-4 transition-colors hover:border-[var(--paper-accent)]"
+                  style={{ aspectRatio: '3 / 4' }}
                 >
-                  <div className="absolute top-3 right-3 rounded-full bg-white/20 backdrop-blur-sm px-2.5 py-1 text-xs font-semibold text-white">
-                    {fmt(f.total_capacity)} seats
+                  <div className="min-w-0">
+                    <p className="leading-tight text-[var(--paper-text)] line-clamp-2" style={{ ...SERIF, fontSize: '1.05rem', fontWeight: 500 }}>{f.facility_name}</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[var(--paper-faint)] truncate" style={SANS}>{f.city} · {TYPE_LABEL[f.program_type] ?? f.program_type}</p>
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/30 to-transparent">
-                    <p className="text-sm font-bold text-white leading-tight">{f.facility_name}</p>
-                    <p className="text-xs text-white/70 mt-0.5">{f.city}, NY</p>
+                  <div>
+                    <p className="tabular-nums leading-none text-[var(--paper-accent)]" style={{ ...SERIF, fontSize: '1.6rem', fontWeight: 500 }}>{fmt(f.total_capacity)}</p>
+                    <p className={cn('mt-1 text-[12px] font-medium', STATUS_COLOR[f.facility_status] ?? 'text-[var(--paper-muted)]')} style={SANS}>{f.facility_status}</p>
                   </div>
                 </Link>
               ))}

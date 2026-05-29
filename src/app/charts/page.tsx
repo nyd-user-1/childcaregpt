@@ -3,6 +3,15 @@ import { AppLayout } from '@/components/AppLayout'
 import { MiniAreaChart, MiniBarChart } from '@/components/MiniCharts'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
+export const metadata = {
+  title: 'Charts · ChildcareGPT',
+  description: 'Data views of New York child care — providers, capacity, costs, and where the gaps are, across all 62 counties.',
+}
+
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+const ACCENT = '#2f6d6a'
+
 /* ── Preview data keyed by slug ──────────────────────────────────── */
 const PREVIEW: Record<string, number[]> = {
   'providers-by-county':  [100, 62, 58, 42, 38, 32, 28, 24, 20, 18, 14, 10, 8, 6, 4],
@@ -23,31 +32,50 @@ const PREVIEW: Record<string, number[]> = {
 }
 const AREA_SLUGS = new Set(['facilities-by-year', 'cost-trend', 'center-vs-family'])
 
-/* ── Page ─────────────────────────────────────────────────────────── */
-
 export default function ChartsPage() {
   return (
     <AppLayout showNavArrows>
-      <div className="flex-1 overflow-y-auto no-scrollbar">
-        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {CHART_CONFIGS.map(chart => {
-            const data = PREVIEW[chart.slug] ?? [50, 60, 70, 80, 75, 65, 55]
-            return (
-              <Link key={chart.slug} href={`/chart/${chart.slug}`}
-                className="group flex flex-col rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden hover:border-transparent hover:shadow-md transition-all">
-                <div className="flex-1 min-h-0 h-28 sm:h-32">
-                  {AREA_SLUGS.has(chart.slug)
-                    ? <MiniAreaChart id={chart.slug} color={chart.color} data={data} />
-                    : <MiniBarChart color={chart.color} data={data} />}
-                </div>
-                <div className="shrink-0 px-4 pt-2 pb-3">
-                  <p className="text-[13px] font-bold text-[var(--txt)] group-hover:text-sky-500 leading-snug transition-colors">{chart.title}</p>
-                  <p className="text-[11px] text-[var(--muted)] mt-0.5 leading-snug">{chart.description}</p>
-                </div>
-              </Link>
-            )
-          })}
+      <div className="flex-1 overflow-y-auto no-scrollbar" style={{ background: 'var(--paper)', color: 'var(--paper-text)' }}>
+
+        {/* ── Masthead ── */}
+        <div className="px-6 sm:px-10 pt-9 pb-6">
+          <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
+            ChildcareGPT · {CHART_CONFIGS.length} charts
+          </p>
+          <h1 className="paper-rise mt-3 leading-[1.05]" style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(2rem, 4.5vw, 3rem)', fontWeight: 400, letterSpacing: '-0.02em' }}>
+            Child care in New York,{' '}
+            <span style={{ fontStyle: 'italic', color: 'var(--paper-accent)' }}>by the numbers.</span>
+          </h1>
+          <p className="paper-rise mt-4 max-w-[56ch] text-[var(--paper-muted)]" style={{ ...SERIF, animationDelay: '120ms', fontSize: 'clamp(1.05rem, 1.6vw, 1.2rem)', lineHeight: 1.55 }}>
+            Who provides care, what it costs, and where the gaps are — across all 62 counties.
+          </p>
         </div>
+
+        {/* ── Grid ── */}
+        <div className="@container px-6 sm:px-10 pb-12">
+          <div className="grid grid-cols-2 gap-4 @xl:grid-cols-3 @4xl:grid-cols-4">
+            {CHART_CONFIGS.map(chart => {
+              const data = PREVIEW[chart.slug] ?? [50, 60, 70, 80, 75, 65, 55]
+              return (
+                <Link key={chart.slug} href={`/chart/${chart.slug}`}
+                  className="group/card flex flex-col overflow-hidden rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] transition-colors hover:border-[var(--paper-accent)]">
+                  <div className="h-28 min-h-0 flex-1 p-3 sm:h-32">
+                    {AREA_SLUGS.has(chart.slug)
+                      ? <MiniAreaChart id={chart.slug} color={ACCENT} data={data} />
+                      : <MiniBarChart color={ACCENT} data={data} />}
+                  </div>
+                  <div className="shrink-0 px-4 pt-2.5 pb-3.5">
+                    <p className="leading-snug text-[var(--paper-text)] transition-colors group-hover/card:text-[var(--paper-accent)]" style={{ ...SERIF, fontSize: '1rem', fontWeight: 500 }}>
+                      {chart.title}
+                    </p>
+                    <p className="mt-1 text-[11.5px] leading-snug text-[var(--paper-muted)]" style={SANS}>{chart.description}</p>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
+
       </div>
     </AppLayout>
   )

@@ -1,5 +1,10 @@
 import { AppLayout } from '@/components/AppLayout'
 
+export const metadata = {
+  title: 'Console · ChildcareGPT',
+  description: 'Where child care is scarcest in New York — counties ranked by working families per licensed seat, with a live provider map.',
+}
+
 export default function ConsoleLayout({
   children,
   detail,
@@ -9,11 +14,11 @@ export default function ConsoleLayout({
 }) {
   return (
     <AppLayout showNavArrows>
-      <div className="flex-1 overflow-hidden flex gap-4 p-4">
-        {/* Left slot — county table */}
+      <div className="flex flex-1 gap-4 overflow-hidden p-4" style={{ background: 'var(--paper)' }}>
+        {/* Left slot — county supply-vs-need ranking */}
         {children}
-        {/* Right slot — map + facility detail */}
-        <div className="flex-1 min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+        {/* Right slot — provider map + facility detail */}
+        <div className="min-w-0 flex-1 overflow-hidden rounded-xl border border-[var(--paper-rule)] bg-[var(--paper)]">
           {detail}
         </div>
       </div>
