@@ -59,10 +59,10 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
   const prevNav = navIdx >= 0 ? NAV_CYCLE[(navIdx - 1 + n) % n] : null
   const nextNav = navIdx >= 0 ? NAV_CYCLE[(navIdx + 1) % n]     : null
 
-  const navBtnCls = 'flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--muted)] hover:bg-[var(--inp-bg)] transition-colors'
+  const navBtnCls = 'flex h-8 w-8 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
 
   return (
-    <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px]" style={{ background: 'var(--bg)' }}>
+    <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px]" style={{ background: 'var(--paper-ground)' }}>
 
       <div className={`shrink-0 transition-all duration-300 ease-in-out overflow-hidden ${sidebarOpen ? 'w-full sm:w-[240px] sm:mr-[18px]' : 'w-0'}`}>
         <div className="w-[240px] h-full rounded-none sm:rounded-2xl overflow-hidden">
@@ -70,25 +70,25 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--surface)] overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.07)] border border-[var(--border)]">
+      <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--paper)] overflow-hidden shadow-[0_4px_24px_rgba(31,29,26,0.06)] border border-[var(--paper-rule)]">
 
         <div className="flex items-center px-5 pt-5 pb-3">
 
           <button onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle sidebar"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border-0 outline-none transition-colors hover:bg-[var(--inp-bg)]">
+            className="flex h-9 w-9 items-center justify-center rounded-xl border-0 outline-none transition-colors hover:bg-[var(--paper-2)]">
             {sidebarOpen
-              ? <PanelLeftClose className="h-5 w-5 text-[var(--txt)]" />
-              : <PanelLeftOpen  className="h-5 w-5 text-[var(--txt)]" />
+              ? <PanelLeftClose className="h-5 w-5 text-[var(--paper-text)]" />
+              : <PanelLeftOpen  className="h-5 w-5 text-[var(--paper-text)]" />
             }
           </button>
 
           {title && (
-            <div className="ml-4 flex items-center gap-2 text-[var(--txt)]">
-              <Link href="/" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xl font-bold hover:bg-[var(--inp-bg)] transition-colors">
+            <div className="ml-4 flex items-center gap-2 text-[var(--paper-text)]" style={{ fontFamily: 'var(--font-display), Georgia, serif' }}>
+              <Link href="/" className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xl font-semibold hover:bg-[var(--paper-2)] transition-colors">
                 <AppLogo className="h-5 w-5 shrink-0" />
                 {APP_NAME}
               </Link>
-              <span className="text-[var(--muted)] text-xl select-none">|</span>
+              <span className="text-[var(--paper-faint)] text-xl select-none">|</span>
               <span className="text-xl font-medium">{title}</span>
             </div>
           )}
@@ -109,7 +109,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
                 <div className="tabular-nums font-bold text-3xl leading-tight" style={{ color: chartNav.color }}>
                   {chartNav.kpi}
                 </div>
-                <div className="text-xs text-[var(--muted)] mt-0.5">{chartNav.kpiLabel}</div>
+                <div className="text-xs text-[var(--paper-muted)] mt-0.5">{chartNav.kpiLabel}</div>
               </div>
             </div>
           ) : navIdx >= 0 ? (

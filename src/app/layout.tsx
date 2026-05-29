@@ -42,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&display=swap" rel="stylesheet" />
       </head>
-      <body className="h-full" style={{ fontFamily: "'DM Sans', sans-serif", background: 'var(--bg)' }}>
+      <body className="h-full" style={{ fontFamily: "'DM Sans', sans-serif", background: 'var(--paper-ground)' }}>
         {children}
       </body>
     </html>

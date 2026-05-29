@@ -37,6 +37,7 @@
      Additive: existing vars above are untouched so the rest of the app is unchanged. */
   --paper:        #f7f4ee;  /* warm cream ground */
   --paper-2:      #f1ece2;  /* slightly deeper panel */
+  --paper-ground: #ebe4d6;  /* deeper warm "desk" behind the floating panels */
   --paper-text:   #1f1d1a;  /* warm ink */
   --paper-muted:  rgba(31, 29, 26, 0.66);
   --paper-faint:  rgba(31, 29, 26, 0.42);
