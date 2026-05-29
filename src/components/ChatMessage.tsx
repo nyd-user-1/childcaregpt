@@ -3,6 +3,7 @@
 import { ChatMarkdown } from '@/components/ChatMarkdown'
 import { ChatResponseFooter } from '@/components/ChatResponseFooter'
 import { ChatFacilityCards } from '@/components/ChatFacilityCards'
+import { ChatStartApplicationCard } from '@/components/ChatStartApplicationCard'
 import { AppLogo } from '@/components/AppLogo'
 import type { Message } from '@/hooks/useChat'
 
@@ -31,6 +32,9 @@ export function ChatMessage({ message, isStreaming, onFollowUp }: { message: Mes
           : <p className="text-[15px] italic text-[var(--paper-faint)]" style={SERIF}>Thinking…</p>}
         {message.meta?.facilities?.length ? (
           <ChatFacilityCards facilities={message.meta.facilities} />
+        ) : null}
+        {message.meta?.eligDraft ? (
+          <ChatStartApplicationCard draft={message.meta.eligDraft} />
         ) : null}
         {isStreaming && message.content && (
           <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse" style={{ background: 'var(--paper-accent)' }} />

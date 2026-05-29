@@ -24,8 +24,26 @@ export interface ChatFacility {
   distance_miles?: number | null
 }
 
+// A partial CCAP application the model assembled from the conversation. Field
+// names mirror /application's EligData exactly so the page can read it straight
+// out of localStorage (key: ccap-eligibility-data) with no remapping.
+export interface EligDraft {
+  firstName?: string; lastName?: string; email?: string; phone?: string
+  address?: string; county?: string
+  dateOfBirth?: string; maritalStatus?: string; language?: string
+  employed?: string; employerName?: string
+  jobSearchOrTraining?: string; vocationalProgram?: string
+  college?: string; basicEducation?: string; hsOrGed?: string
+  homeless?: string; domesticViolence?: string; disability?: string
+  substanceProgram?: string; dssActivities?: string
+  householdSize?: string; monthlyIncome?: string
+  benefits?: string[]
+  childSpecialNeeds?: string
+}
+
 export interface ChatMeta {
-  facilities: ChatFacility[]
+  facilities?: ChatFacility[]
+  eligDraft?: EligDraft
 }
 
 export interface Message {

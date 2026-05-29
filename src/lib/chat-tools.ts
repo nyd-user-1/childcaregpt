@@ -66,6 +66,30 @@ export const TOOLS = [
       required: ['facility_id'],
     },
   },
+  {
+    name: 'prefill_application',
+    description: "Capture the facts a parent has volunteered so they can start the official NY Child Care Assistance (CCAP / OCFS-6025) application with those fields pre-filled. Call this ONLY once the parent has clearly shared enough to be worth pre-filling: at minimum their full name, a street address, the county, and one of {date of birth, household size, monthly income, marital status}. Pass ONLY values the parent actually stated — never guess, never invent, leave anything unknown out entirely. This does not submit anything; it just hands what they told you to the application form. Do not announce the tool call in prose; a 'Start your application' card appears automatically after you call it.",
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        firstName:    { type: 'string', description: "Parent's first name, as stated." },
+        lastName:     { type: 'string', description: "Parent's last name, as stated." },
+        email:        { type: 'string', description: 'Email address, only if the parent gave one.' },
+        phone:        { type: 'string', description: 'Phone number, digits as stated (e.g. "6314353215" or "(631) 435-3215").' },
+        address:      { type: 'string', description: 'Home street address as stated, e.g. "12 Maple St, Brentwood, NY 11717".' },
+        county:       { type: 'string', description: 'New York county WITHOUT the word "County" — e.g. "Suffolk", "Bronx", "Albany". Must be a real NY county.' },
+        dateOfBirth:  { type: 'string', description: "Parent's date of birth as MM-DD-YYYY digits, e.g. \"03-14-1990\". Only if explicitly stated." },
+        maritalStatus:{ type: 'string', enum: ['Single', 'Married', 'Separated', 'Divorced', 'Widowed'], description: 'Only if the parent stated it.' },
+        language:     { type: 'string', description: 'Preferred language, e.g. "English", "Spanish". Only if stated.' },
+        employed:     { type: 'string', enum: ['Yes', 'No'], description: 'Whether the parent is employed, only if stated.' },
+        employerName: { type: 'string', description: "Employer name, only if stated." },
+        householdSize:{ type: 'string', description: 'Total people in the household, as a number string e.g. "4". Only if stated.' },
+        monthlyIncome:{ type: 'string', description: 'Total monthly household income in dollars, digits only e.g. "3200". Only if stated.' },
+        childSpecialNeeds: { type: 'string', enum: ['Yes', 'No'], description: 'Whether a child has special needs, only if stated.' },
+      },
+      required: ['firstName', 'lastName', 'address', 'county'],
+    },
+  },
 ] as const
 
 // Optional context passed by the API route — NOT model input. The user's
@@ -192,6 +216,35 @@ export async function executeToolCall(name: string, input: Record<string, unknow
         `
         if (!rows.length) return { found: false }
         return { found: true, ...rows[0], program_type_label: PROGRAM_TYPE_LABEL[rows[0].program_type as string] ?? rows[0].program_type }
+      }
+
+      case 'prefill_application': {
+        // Pure capture — no DB. Pass through only string/string[] fields the
+        // model filled, trimmed. The route emits this as meta.eligDraft and the
+        // client writes it to localStorage for /application to read.
+        const draft: Record<string, unknown> = {}
+        const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+        for (const key of [
+          'firstName', 'lastName', 'email', 'phone', 'address', 'county',
+          'dateOfBirth', 'maritalStatus', 'language', 'employed', 'employerName',
+          'householdSize', 'monthlyIncome', 'childSpecialNeeds',
+        ]) {
+          const v = str(input[key])
+          if (v) draft[key] = v
+        }
+        // Normalize phone to digits (matches what /application's tel formatting expects).
+        if (typeof draft.phone === 'string') {
+          const digits = (draft.phone as string).replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '')
+          if (digits.length >= 7) draft.phone = digits
+          else delete draft.phone
+        }
+        // monthlyIncome → digits only.
+        if (typeof draft.monthlyIncome === 'string') {
+          const digits = (draft.monthlyIncome as string).replace(/[^0-9]/g, '')
+          if (digits) draft.monthlyIncome = digits
+          else delete draft.monthlyIncome
+        }
+        return { captured: true, draft }
       }
 
       default:

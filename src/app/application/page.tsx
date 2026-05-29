@@ -46,10 +46,13 @@ function parseAddress(addr: string): { street: string; city: string; state: stri
   if (stateMatch) rest = rest.slice(0, rest.lastIndexOf(stateMatch[0])).trim()
   const typeRe = /\b(avenue|ave|street|st|road|rd|drive|dr|boulevard|blvd|court|ct|lane|ln|place|pl|way|circle|cir|highway|hwy|trail|trl|parkway|pkwy|square|sq|loop|run)\b/i
   const m = typeRe.exec(rest)
-  const titleCase = (t: string) => t.replace(/\b\w/g, c => c.toUpperCase())
+  // Strip surrounding commas/whitespace so "12 Maple St, Brentwood," doesn't
+  // leak comma artifacts into the City field.
+  const clean = (t: string) => t.replace(/^[\s,]+|[\s,]+$/g, '')
+  const titleCase = (t: string) => clean(t).replace(/\b\w/g, c => c.toUpperCase())
   if (m) {
     const end = m.index + m[0].length
-    return { street: titleCase(rest.slice(0, end).trim()), city: titleCase(rest.slice(end).trim()), state, zip }
+    return { street: titleCase(rest.slice(0, end)), city: titleCase(rest.slice(end)), state, zip }
   }
   return { street: titleCase(rest), city: '', state, zip }
 }

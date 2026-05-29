@@ -59,7 +59,14 @@ BAD (never do this):
 - What age is your child? ← a question back at the user
 - Do you prefer center-based or family care? ← a question back at the user
 
-Tie each follow-up to what the parent could naturally want next given your answer (the same county/program in play). No trailing "?".`
+Tie each follow-up to what the parent could naturally want next given your answer (the same county/program in play). No trailing "?".
+
+## Helping a parent start their application
+You can hand the facts a parent volunteers straight to the official NY Child Care Assistance (CCAP / OCFS-6025) application so they don't re-type them. Use the prefill_application tool — but ONLY when both are true:
+1. The parent is clearly trying to apply for help (asking how to apply, wanting to start, sharing their details for this purpose), AND
+2. They have actually told you at least their full name, a street address, and the county — plus at least one of: date of birth, household size, monthly income, or marital status.
+
+Never fish for these fields with a barrage of questions. If a parent naturally shares them in the course of the conversation, call the tool with ONLY what they actually said — never guess a value, never invent a date or income. After calling it, a "Start your application" card appears on its own; do NOT describe the tool call or restate their data — just continue warmly (e.g. one short line letting them know they can pick up the application with their info ready). Eligibility is still decided only by the official screener, not by you.`
 
 type ChatMsg = { role: 'user' | 'assistant'; content: string }
 type ReqLocation = { lat: number; lng: number; description?: string }
@@ -104,8 +111,10 @@ export async function POST(req: NextRequest) {
       // keep-alive comment during tool resolution
       controller.enqueue(encoder.encode(': tool-resolution\n\n'))
 
-      // Collect facilities returned by tools so the UI can render map + cards.
+      // Collect facilities returned by tools so the UI can render map + cards,
+      // plus any application draft the model captured via prefill_application.
       const facilities = new Map<string, Record<string, unknown>>()
+      let eligDraft: Record<string, unknown> | null = null
       function trackTools(name: string, result: unknown) {
         if ((name === 'find_facilities') && Array.isArray(result)) {
           for (const f of result as Array<Record<string, unknown>>) {
@@ -116,12 +125,17 @@ export async function POST(req: NextRequest) {
           const f = result as Record<string, unknown>
           const id = String(f.facility_id ?? '')
           if (id) facilities.set(id, f)
+        } else if (name === 'prefill_application' && result && (result as Record<string, unknown>).captured) {
+          const d = (result as Record<string, unknown>).draft
+          if (d && typeof d === 'object' && Object.keys(d).length) eligDraft = d as Record<string, unknown>
         }
       }
       const sendMeta = () => {
-        if (facilities.size > 0) {
-          const list = Array.from(facilities.values())
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ meta: { facilities: list } })}\n\n`))
+        const meta: Record<string, unknown> = {}
+        if (facilities.size > 0) meta.facilities = Array.from(facilities.values())
+        if (eligDraft) meta.eligDraft = eligDraft
+        if (Object.keys(meta).length) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ meta })}\n\n`))
         }
       }
 
