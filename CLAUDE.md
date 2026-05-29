@@ -63,6 +63,15 @@ Indexes: `county`, `program_type`, `facility_status`, `zip_code`, `region_code`.
 DOL National Database of Childcare Prices, NY counties only, 2008–2022.
 Key columns: `county_fips_code` (e.g. `'36001'`), `county_name` (e.g. `'Albany County'`), `studyyear`, median/75th-pct center + family care costs by age group (`mcinfant`, `mctoddler`, `mcpreschool`, `mfccinfant`, etc.), women's labor force participation (`flfpr_20to64_under6`), income (`mhi`, `mfi`), poverty (`pr_f`, `pr_p`).
 
+#### `county_demographics` — 62 rows, keyed on `county_fips`
+U.S. Census ACS 5-year (2022), one row per NY county. Census variable → column:
+`population` (B01003_001E) · `children_under6` (B23008_002E) · `under6_both_working` (B23008_004E) · `under6_single_father_working` (B23008_010E) · `under6_single_mother_working` (B23008_013E) · `under6_one_parent` (B23008_008E, single-parent total) · `births_past_year` (B13002_002E) · `under5_below_poverty` (B17020_003E) · `under5_above_poverty` (B17020_011E). Generated col `working_families_under6` = both-working + single-mother-working. Plus `county_name`, `studyyear`. Census negatives/suppressed → null.
+
+#### `zip_demographics` — ~1,169 rows, keyed on `zip` (5-digit)
+Same Census columns at ZCTA geography, filtered to ZIPs that have OCFS providers. No cost/income (county-only, DOL).
+
+Query helpers: `src/lib/queries/county-demographics.ts` (`getCountyDemographics(bareCountyName)` — maps boroughs, e.g. Brooklyn→Kings County) and `src/lib/queries/zip-demographics.ts` (`getZipDemand(zip5)`). Both compute an **under-5** poverty rate (label it under-5, not under-6 — Census publishes under-5) from the below/above counts. Surfaced in the "Snapshot" table on county + ZIP detail pages.
+
 ### API Routes
 
 | Route | Description |
@@ -73,6 +82,8 @@ Key columns: `county_fips_code` (e.g. `'36001'`), `county_name` (e.g. `'Albany C
 ### Ingest Scripts (`scripts/`)
 - `ingest-facilities.mjs` — fetches both `fymg-3wv3` + `cb42-qumz`, merges dates, batch-upserts all 16,800 facilities. Run: `DATABASE_URL=... node scripts/ingest-facilities.mjs`
 - `ingest-county-costs.mjs` — reads `dol-child-care-data.csv` (keep locally, not committed), inserts NY rows only. Run: `DATABASE_URL=... node scripts/ingest-county-costs.mjs`
+- `ingest-county-demographics.mjs` — Census ACS5 2022 for all NY counties (`for=county:*&in=state:36`) → `county_demographics`. Run: `node --env-file=.env.local scripts/ingest-county-demographics.mjs` (needs `CENSUS_API_KEY` in `.env.local`, also set in Vercel).
+- `ingest-zip-demographics.mjs` — Census ACS5 2022, all ZCTAs filtered to facility ZIPs → `zip_demographics`. Same run command. NB: single-ZCTA queries 302-redirect, so it fetches `for=...:*` then filters.
 - `backfill-dates.mjs` — one-time script, already run, can be discarded.
 
 ---
@@ -112,6 +123,25 @@ This is a pixel-perfect port of SolarGPT. When in doubt, read the SolarGPT sourc
 ## CSS Variables
 - Before using any CSS variable as an opaque background, verify what it resolves to.
 - `--inp-bg` is `rgba(0,0,0,0.04)` — nearly transparent. Use `--row-hover` (`#f5f5f5`) for solid hover backgrounds in tables.
+
+---
+
+## Theming (light + dark)
+
+The app is colored through `--paper-*` CSS variables (`globals.css`). **Dark mode is a single `html.dark { … }` block** overriding those same tokens (warm onyx: panel `#1a1712`, cream text `#f0e9d8`, accent `#3f8479` — a balanced teal that holds contrast both as text on dark *and* as a white-text fill like the eligibility CTA). Adding `.dark` to `<html>` flips every paper surface, so **never hardcode hex for paper surfaces — use the tokens** or they won't flip.
+
+- Toggle (sun/moon) lives in the `AppLayout` header. Defaults to **light** (paper voice is light-first); choice persists in `localStorage('theme')`. An inline script in `layout.tsx` applies `.dark` before paint to avoid a flash.
+- Transition: View Transitions API — a `clip-path` circle expands from the click point. CSS in `globals.css` (`::view-transition-old/new(root)`) disables the default cross-fade.
+- Known gap: `ChildcareDotMap`'s `MAP_STYLE` is hardcoded light, so the dot map glows light in dark mode (follow-up).
+
+## Mobile (responsive rules)
+
+**Every responsive change must be mobile-only and leave desktop byte-identical.** Put the mobile value as the base Tailwind class and re-assert desktop with `sm:`/`md:` (e.g. `pt-5 sm:pt-14`), or use `max-sm:` for mobile-only overrides. Verify desktop with a ~1180px screenshot.
+
+- **Header** (`AppLayout`): sidebar toggle sits on the right on mobile (`order-last sm:order-first`), padding tightened — frees the top-left.
+- **Panels are a drawer on mobile:** `#chat-panel-root` is `max-sm:fixed inset-0 z-50 justify-end pointer-events-none` so a panel overlays the page instead of pushing it; `AppPanel` wrapper has `max-sm:pointer-events-auto`. Desktop keeps the side-by-side push. Test a panel via `/console/[slug]?panel=providers` (opens deterministically).
+- Detail/index/hub mastheads raise on mobile and hide non-essential above-the-fold copy with `max-sm:hidden`.
+- **Still TODO (blocked by the other terminal's active map/launchpad edits):** `/console` mobile (map on top full-width, hide table, county dropdown) and `/launchpad`.
 
 ---
 
