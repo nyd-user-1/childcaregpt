@@ -12,7 +12,7 @@ import { CHART_CONFIGS } from '@/lib/chart-configs'
 
 // ── Brand ──────────────────────────────────────────────────────────────────
 export const APP_NAME        = 'ChildcareGPT'
-export const ACCENT_COLOR    = '#38bdf8'
+export const ACCENT_COLOR    = '#2f6d6a'
 export const CHART_NAV_EVENT = 'childcaregpt:chart-nav'
 
 // ── Top-level nav cycle (prev/next arrows in AppLayout header) ─────────────

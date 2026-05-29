@@ -282,7 +282,7 @@ export default function ReportPage() {
 
                 {/* Masthead */}
                 <p className="paper-rise text-[11px] uppercase tracking-[0.28em] text-[var(--paper-faint)]" style={{ ...SANS, animationDelay: '0ms' }}>
-                  ChildcareGPT · Your Report
+                  ChildcareGPT · Your Snapshot
                 </p>
                 <h1 className="paper-rise mt-3 leading-[1.05]" style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(1.9rem, 4.5vw, 2.6rem)', fontWeight: 400, letterSpacing: '-0.02em' }}>
                   Here&apos;s your childcare <span style={{ fontStyle: 'italic', color: ACCENT }}>snapshot.</span>
