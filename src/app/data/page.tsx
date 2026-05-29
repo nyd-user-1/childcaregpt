@@ -82,7 +82,7 @@ export default function DataPage() {
           </p>
           <h1
             className="paper-rise mt-4 leading-[1.04]"
-            style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(2.5rem, 6vw, 4.25rem)', fontWeight: 400, letterSpacing: '-0.02em' }}
+            style={{ ...SERIF, animationDelay: '60ms', fontSize: 'clamp(1.9rem, 6vw, 4.25rem)', fontWeight: 400, letterSpacing: '-0.02em' }}
           >
             New York child care,
             <br />
