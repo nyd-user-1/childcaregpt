@@ -137,7 +137,7 @@ export default function ConsoleDetailSlot({ params }: { params: Promise<{ slug: 
           </h2>
         </div>
         <button onClick={() => setPanelOpen(true)} aria-label="How this works"
-          className="shrink-0 rounded-lg p-1.5 text-[var(--paper-faint)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)]">
+          className="shrink-0 rounded-lg p-1.5 text-[var(--paper-faint)] transition-colors hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)]">
           <Info className="h-5 w-5" />
         </button>
       </div>
