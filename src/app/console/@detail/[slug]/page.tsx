@@ -143,7 +143,7 @@ export default function ConsoleDetailSlot({ params }: { params: Promise<{ slug: 
       </div>
 
       {/* ── Type tab bar ── */}
-      <div className="flex shrink-0 items-center gap-1 border-b border-[var(--paper-rule)] px-4">
+      <div className="flex shrink-0 items-center gap-1 border-b border-[var(--paper-rule)] px-4 overflow-x-auto no-scrollbar">
         {TABS.map(t => (
           <button key={t} onClick={() => setActiveType(t)} title={TAB_LABELS[t]}
             className={cn(

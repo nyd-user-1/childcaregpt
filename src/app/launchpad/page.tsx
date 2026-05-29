@@ -106,22 +106,22 @@ function ProviderCard({ c }: { c: Card }) {
   return (
     <Link
       href={`/facility/${c.slug}`}
-      className="group/card relative flex flex-col rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-5 pl-6 transition-colors hover:border-[var(--paper-accent)]"
+      className="group/card relative flex flex-col rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-5 pl-6 transition-colors hover:border-[var(--paper-accent)] max-sm:aspect-square max-sm:p-4 max-sm:pl-5"
     >
       <span className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full" style={{ background: cfg.color }} />
       <span className="text-[10.5px] uppercase tracking-[0.18em]" style={{ ...SANS, color: cfg.color, fontWeight: 600 }}>
         {cfg.label}
       </span>
-      <h3 className="mt-3 text-[17px] leading-snug" style={{ ...SERIF, fontWeight: 500 }}>{c.name}</h3>
-      <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[var(--paper-muted)]" style={SANS}>
+      <h3 className="mt-3 text-[17px] leading-snug max-sm:mt-2 max-sm:text-[15px] max-sm:line-clamp-3" style={{ ...SERIF, fontWeight: 500 }}>{c.name}</h3>
+      <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[var(--paper-muted)] min-w-0" style={SANS}>
         <MapPin className="h-3.5 w-3.5 shrink-0 text-[var(--paper-faint)]" />
-        {[c.city, c.county && `${c.county} County`].filter(Boolean).join(' · ')}
+        <span className="truncate">{[c.city, c.county && `${c.county} County`].filter(Boolean).join(' · ')}</span>
       </p>
-      <p className="mt-3 text-[12.5px] leading-[1.55] text-[var(--paper-muted)]" style={SANS}>
+      <p className="mt-3 text-[12.5px] leading-[1.55] text-[var(--paper-muted)] max-sm:hidden" style={SANS}>
         {ageMix(c)}
         {since && <span className="text-[var(--paper-faint)]"> · {since}</span>}
       </p>
-      <div className="mt-4 flex items-center gap-1 text-[12px] text-[var(--paper-accent)]" style={SANS}>
+      <div className="mt-4 flex items-center gap-1 text-[12px] text-[var(--paper-accent)] max-sm:hidden" style={SANS}>
         <span className="font-medium">View provider</span>
         <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/card:translate-x-1" />
       </div>
@@ -340,8 +340,13 @@ export default function LaunchpadPage() {
           </div>
         </div>
 
-        {/* Program-type tabs */}
-        <div className="flex flex-wrap items-center gap-1 border-b border-[var(--paper-rule-soft)]">
+        {/* Section header — mobile only — reads the providers list as its own section */}
+        <div className="sm:hidden mt-1 border-t border-[var(--paper-rule)] pt-4">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--paper-faint)]" style={SANS}>Providers</p>
+        </div>
+
+        {/* Program-type tabs — horizontal scroll on mobile so they don't smush */}
+        <div className="flex items-center gap-1 border-b border-[var(--paper-rule-soft)] sm:flex-wrap max-sm:overflow-x-auto max-sm:no-scrollbar">
           {TYPE_TABS.map(t => {
             const on = type === t
             const cfg = TYPE_CFG[t]
@@ -349,7 +354,7 @@ export default function LaunchpadPage() {
               <button
                 key={t}
                 onClick={() => setType(t)}
-                className="relative -mb-px flex items-center gap-1.5 px-3.5 py-2.5 text-[13px] transition-colors"
+                className="relative -mb-px flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3.5 py-2.5 text-[13px] transition-colors"
                 style={{
                   ...SANS,
                   color: on ? cfg.color : 'var(--paper-muted)',
@@ -371,8 +376,8 @@ export default function LaunchpadPage() {
           </p>
         ) : (
           <div
-            className="grid gap-4 transition-opacity"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(248px, 1fr))', opacity: cardsLoading ? 0.5 : 1 }}
+            className="grid gap-3 sm:gap-4 transition-opacity grid-cols-2 sm:[grid-template-columns:repeat(auto-fill,minmax(248px,1fr))]"
+            style={{ opacity: cardsLoading ? 0.5 : 1 }}
           >
             {cards.map(c => <ProviderCard key={c.id} c={c} />)}
           </div>

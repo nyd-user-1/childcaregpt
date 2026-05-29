@@ -272,7 +272,11 @@ export default function ChildcareDotMap({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? ''
   const [dots, setDots] = useState<DotRow[] | null>(null)
   const [visibleTypes, setVisibleTypes] = useState<Set<string>>(new Set(ALL_TYPES))
-  const [legendVisible, setLegendVisible] = useState(true)
+  // Default the legend OPEN on desktop, CLOSED on mobile (it eats too much map).
+  const [legendVisible, setLegendVisible] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return !window.matchMedia('(max-width: 639px)').matches
+  })
 
   useEffect(() => {
     let cancelled = false
