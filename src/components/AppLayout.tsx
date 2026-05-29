@@ -84,10 +84,10 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
 
       <div className="flex flex-1 flex-col min-w-0 rounded-none sm:rounded-2xl bg-[var(--paper)] overflow-hidden shadow-[0_4px_24px_rgba(31,29,26,0.06)] border border-[var(--paper-rule)]">
 
-        <div className="flex items-center px-5 pt-5 pb-3">
+        <div className="flex items-center px-5 pt-2 pb-2 sm:pt-5 sm:pb-3">
 
           <button onClick={() => setSidebarOpen(v => !v)} aria-label="Toggle sidebar"
-            className="flex h-9 w-9 items-center justify-center rounded-xl border-0 outline-none transition-colors hover:bg-[var(--paper-2)]">
+            className="order-last sm:order-first flex h-9 w-9 items-center justify-center rounded-xl border-0 outline-none transition-colors hover:bg-[var(--paper-2)]">
             {sidebarOpen
               ? <PanelLeftClose className="h-5 w-5 text-[var(--paper-text)]" />
               : <PanelLeftOpen  className="h-5 w-5 text-[var(--paper-text)]" />
