@@ -67,6 +67,20 @@ export const TOOLS = [
     },
   },
   {
+    name: 'find_facilities_by_district',
+    description: 'Find licensed child care providers inside a specific New York State legislative district — either a State Senate district or a State Assembly district. Use this whenever a parent asks about providers in a Senate or Assembly district by number (e.g. "child care in Senate District 2", "providers in Assembly District 11"). Returns the same provider details as find_facilities.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        chamber:      { type: 'string', enum: ['senate', 'assembly'], description: 'Which legislative chamber the district belongs to.' },
+        district:     { type: 'number', description: 'The district number, e.g. 2. Senate has 1–63, Assembly has 1–150.' },
+        program_type: { type: 'string', enum: ['DCC', 'FDC', 'GFDC', 'SACC', 'SDCC'], description: 'Optional program-type filter.' },
+        limit:        { type: 'number', description: 'Max results, default 8, max 20.' },
+      },
+      required: ['chamber', 'district'],
+    },
+  },
+  {
     name: 'prefill_application',
     description: "Capture the facts a parent has volunteered so they can start the official NY Child Care Assistance (CCAP / OCFS-6025) application with those fields pre-filled. Call this ONLY once the parent has clearly shared enough to be worth pre-filling: at minimum their full name, a street address, the county, and one of {date of birth, household size, monthly income, marital status}. Pass ONLY values the parent actually stated — never guess, never invent, leave anything unknown out entirely. This does not submit anything; it just hands what they told you to the application form. Do not announce the tool call in prose; a 'Start your application' card appears automatically after you call it.",
     input_schema: {
@@ -216,6 +230,32 @@ export async function executeToolCall(name: string, input: Record<string, unknow
         `
         if (!rows.length) return { found: false }
         return { found: true, ...rows[0], program_type_label: PROGRAM_TYPE_LABEL[rows[0].program_type as string] ?? rows[0].program_type }
+      }
+
+      case 'find_facilities_by_district': {
+        const chamber = input.chamber === 'senate' ? 'senate' : input.chamber === 'assembly' ? 'assembly' : null
+        const district = Number(input.district)
+        if (!chamber || !Number.isInteger(district)) {
+          return { error: 'Provide a chamber ("senate" or "assembly") and a numeric district.' }
+        }
+        const programType = typeof input.program_type === 'string' ? input.program_type : null
+        const limit = Math.min(Number(input.limit) || 8, 20)
+        // Column is chosen from the validated enum only — never user text.
+        const col = chamber === 'senate' ? 'senate_district' : 'assembly_district'
+        const rows = await sql.query(
+          `SELECT facility_id, facility_name, provider_name, county, city, zip_code,
+                  program_type, facility_status, total_capacity,
+                  infant_capacity, toddler_capacity, preschool_capacity, school_age_capacity,
+                  phone_number, latitude, longitude
+           FROM facilities
+           WHERE ${col} = $1
+             AND (facility_status ILIKE '%license%' OR facility_status ILIKE '%registered%' OR facility_status ILIKE '%active%')
+             AND ($2::text IS NULL OR program_type = $2)
+           ORDER BY total_capacity DESC NULLS LAST
+           LIMIT $3`,
+          [district, programType, limit],
+        )
+        return rows.map((r: Record<string, unknown>) => ({ ...r, program_type_label: PROGRAM_TYPE_LABEL[r.program_type as string] ?? r.program_type }))
       }
 
       case 'prefill_application': {

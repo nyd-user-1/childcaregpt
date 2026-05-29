@@ -1,9 +1,13 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { ChevronLeft, ChevronRight, Phone, Mail, MapPin, ArrowRight, Building2 } from 'lucide-react'
 import { AppLayout } from '@/components/AppLayout'
 import type { DistrictDetail } from '@/lib/district-data'
+
+// Client-only: pulls Google Maps + district GeoJSON, so keep it out of SSR.
+const DistrictMiniMap = dynamic(() => import('@/components/DistrictMiniMap'), { ssr: false })
 
 const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
 const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
@@ -97,6 +101,14 @@ export function DistrictShell({
             <strong style={{ fontWeight: 600, color: 'var(--paper-accent)' }}>{fmtNum(detail.provider_count)}</strong>{' '}
             licensed child care {detail.provider_count === 1 ? 'provider' : 'providers'} in this district — if access or cost is a struggle, they should hear about it.
           </p>
+
+          {/* ── District map ── */}
+          <div className="paper-rise mt-9" style={{ animationDelay: '150ms' }}>
+            <DistrictMiniMap chamber={chamber} district={district} />
+            <p className="mt-2 text-[11px] text-[var(--paper-faint)]" style={SANS}>
+              {chamberLabel} District {district} · boundary from the NYS Legislature
+            </p>
+          </div>
 
           {/* ── Contact card ── */}
           <div className="paper-rise mt-9 rounded-2xl border border-[var(--paper-rule)] bg-[var(--paper-2)] p-6 sm:p-7" style={{ animationDelay: '180ms' }}>

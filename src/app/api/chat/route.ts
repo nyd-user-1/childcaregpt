@@ -27,6 +27,7 @@ You must NOT tell anyone whether they qualify for assistance. CCAP eligibility d
 
 ## Tools
 - find_facilities — providers by county / program type / name. Call whenever a place or provider is mentioned.
+- find_facilities_by_district — providers inside a State Senate or Assembly district by number. Use this whenever a parent asks about a legislative district (e.g. "Senate District 2", "Assembly District 11"). Don't ask them which county it covers — just call this with the chamber and number.
 - get_county_costs — typical monthly costs by age group for a county. Use for any cost question.
 - list_program_types — the five NY program types and what each means.
 - get_facility_detail — full detail for one provider.
@@ -118,7 +119,7 @@ export async function POST(req: NextRequest) {
       const facilities = new Map<string, Record<string, unknown>>()
       let eligDraft: Record<string, unknown> | null = null
       function trackTools(name: string, result: unknown) {
-        if ((name === 'find_facilities') && Array.isArray(result)) {
+        if ((name === 'find_facilities' || name === 'find_facilities_by_district') && Array.isArray(result)) {
           for (const f of result as Array<Record<string, unknown>>) {
             const id = String(f.facility_id ?? '')
             if (id) facilities.set(id, f)
