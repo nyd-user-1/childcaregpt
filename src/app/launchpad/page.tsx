@@ -345,8 +345,8 @@ export default function LaunchpadPage() {
           <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--paper-faint)]" style={SANS}>Providers</p>
         </div>
 
-        {/* Program-type tabs — horizontal scroll on mobile so they don't smush */}
-        <div className="flex items-center gap-1 border-b border-[var(--paper-rule-soft)] sm:flex-wrap max-sm:overflow-x-auto max-sm:no-scrollbar">
+        {/* Program-type tabs — sticky as cards scroll underneath */}
+        <div className="sticky top-0 z-20 mt-3 -mx-5 sm:-mx-7 px-5 sm:px-7 bg-[var(--paper)] flex items-center gap-1 border-b border-[var(--paper-rule-soft)] sm:flex-wrap max-sm:overflow-x-auto max-sm:no-scrollbar">
           {TYPE_TABS.map(t => {
             const on = type === t
             const cfg = TYPE_CFG[t]

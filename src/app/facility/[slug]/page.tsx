@@ -62,8 +62,31 @@ export default async function DetailPageFacility({ params }: { params: Promise<{
   const prevSlug = (prevRows[0]?.slug ?? lastRows[0]?.slug ?? slug) as string
   const nextSlug = (nextRows[0]?.slug ?? firstRows[0]?.slug ?? slug) as string
 
+  // Inherit the parent county's typical cost as context. Same NYC-borough remap
+  // the county page uses. Cost is a county-level figure, clearly labeled.
+  const countyForCost = (() => {
+    const c = (facility.county as string) ?? ''
+    if (c === 'Brooklyn') return 'Kings County'
+    if (c === 'Manhattan') return 'New York County'
+    if (c === 'Staten Island') return 'Richmond County'
+    return c ? `${c} County` : ''
+  })()
+  const costRows = countyForCost
+    ? await sql`
+        SELECT mcinfant, mfccinfant
+        FROM county_costs
+        WHERE lower(county_name) = lower(${countyForCost}) AND studyyear = 2022
+        LIMIT 1
+      `
+    : []
+  const costs = costRows[0] ?? null
+
   return (
     <FacilityShell
+      countyCosts={costs ? {
+        mcinfant:   costs.mcinfant   != null ? Number(costs.mcinfant)   : null,
+        mfccinfant: costs.mfccinfant != null ? Number(costs.mfccinfant) : null,
+      } : null}
       facility={{
         facility_id:             Number(facility.facility_id),
         facility_name:           facility.facility_name as string,

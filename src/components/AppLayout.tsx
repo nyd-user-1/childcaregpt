@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { PanelLeftOpen, PanelLeftClose, Sun, Moon } from 'lucide-react'
 import { Sidebar } from '@/components/Sidebar'
+import { GlossaryProvider } from '@/components/PanelGlossary'
 import { cn } from '@/lib/utils'
 import {
   CHART_NAV_EVENT,
@@ -128,6 +129,7 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
   const themeBtnCls = 'flex h-9 w-9 items-center justify-center rounded-full border border-[var(--paper-rule)] bg-[var(--paper)] text-[var(--paper-faint)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-text)] transition-colors'
 
   return (
+    <GlossaryProvider>
     <div className="flex h-dvh overflow-hidden p-0 sm:p-[18px] bg-[var(--paper-ground)] max-sm:bg-[var(--paper)]">
 
       {/* Mobile: dim + close the drawer by tapping outside it */}
@@ -202,5 +204,6 @@ export function AppLayout({ children }: { children: React.ReactNode; showNavArro
           : <PanelLeftOpen  className="h-5 w-5 text-[var(--paper-text)]" />}
       </button>
     </div>
+    </GlossaryProvider>
   )
 }

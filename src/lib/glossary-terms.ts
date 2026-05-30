@@ -256,4 +256,13 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
     body: 'Used to join cost data to the right county and to color the map. You don’t need it to use ChildcareGPT — it works behind the scenes.',
     whereSeen: 'The key linking cost data to counties.',
   },
+  {
+    id: 'families-per-seat',
+    name: 'Families Per Seat',
+    abbr: 'FPS',
+    category: 'Data & Sources',
+    plain: 'A rough measure of how hard it is to find care: the number of working-parent families with a young child for every licensed child care seat. Higher means tighter — more families competing for each spot.',
+    body: 'Calculated as need ÷ supply, where need is households with a child under 6 where the parent(s) work (U.S. Census), and supply is total licensed capacity (NY OCFS). It’s a relative coverage index, not an exact count of unmet demand — provider hours, ages served, and real openings aren’t in the data.',
+    whereSeen: 'The Console’s supply-vs-need view and the Launchpad table (county and ZIP).',
+  },
 ]

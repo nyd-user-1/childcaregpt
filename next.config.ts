@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
+import createMDX from "@next/mdx";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  pageExtensions: ["ts", "tsx", "md", "mdx"],
 };
 
-export default nextConfig;
+// Turbopack requires remark/rehype plugins as string names (functions can't
+// cross into Rust). GFM gives us tables, strikethrough, autolinks.
+const withMDX = createMDX({
+  extension: /\.mdx?$/,
+  options: {
+    // frontmatter: strip the YAML --- block so it isn't rendered as body text.
+    // gfm: tables, strikethrough, autolinks.
+    remarkPlugins: ["remark-frontmatter", "remark-gfm"],
+  },
+});
+
+export default withMDX(nextConfig);

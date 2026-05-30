@@ -2,14 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ChevronDown, User, BarChart3, Map, Sun, Moon } from 'lucide-react'
+import { ChevronDown, BarChart3, Map, Sun, Moon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
-  SIDEBAR_NAV_TOP, SIDEBAR_NAV_BOTTOM,
-  SIDEBAR_MAP_ITEMS, SIDEBAR_FOOTER_LABEL,
+  SIDEBAR_NAV_TOP, SIDEBAR_NAV_BOTTOM, SIDEBAR_MAP_ITEMS,
 } from '@/lib/app-config'
 
-const SANS: React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
+const SERIF: React.CSSProperties = { fontFamily: 'var(--font-display), Georgia, serif' }
+const SANS:  React.CSSProperties = { fontFamily: "'DM Sans', sans-serif" }
 
 interface SidebarProps {
   activeLabel?: string
@@ -38,16 +38,20 @@ export function Sidebar({ activeLabel = 'Chat', dark, onToggleTheme }: SidebarPr
   return (
     <aside className="flex h-full flex-col overflow-hidden bg-[var(--paper)]" style={{ ...SANS, color: 'var(--paper-text)' }}>
 
-      {/* Header — Log In */}
-      <div className="px-3 pt-3 pb-2">
-        <div className="flex items-center gap-2 rounded-lg border border-[var(--paper-rule)] px-3 py-2.5 transition-colors hover:bg-[var(--paper-2)]">
-          <User className="h-[18px] w-[18px] flex-shrink-0 text-[var(--paper-text)]" />
-          <span className="text-[15px] font-medium text-[var(--paper-text)]">Log In</span>
+      {/* Masthead */}
+      <Link href="/" className="block px-4 pt-5 pb-5">
+        <div
+          style={SERIF}
+          className="text-[22px] italic leading-none text-[var(--paper-accent)] transition-opacity hover:opacity-80"
+        >
+          ChildcareGPT
         </div>
-      </div>
+      </Link>
+
+      <div className="mx-4 border-t border-[var(--paper-rule)]" />
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto no-scrollbar px-3 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto no-scrollbar px-3 pt-3 space-y-0.5">
 
         {SIDEBAR_NAV_TOP.map(({ label, icon: Icon, href }) => (
           <Link key={label} href={href} className={navItem(activeLabel === label)}>
@@ -91,32 +95,20 @@ export function Sidebar({ activeLabel = 'Chat', dark, onToggleTheme }: SidebarPr
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3">
-        {/* Theme toggle — mobile only; desktop toggles from the header */}
-        {onToggleTheme && (
+      {/* Footer — theme toggle (mobile only; desktop toggles from the header) */}
+      {onToggleTheme && (
+        <div className="p-3">
           <button
             onClick={onToggleTheme}
-            className="sm:hidden mb-1.5 w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)] transition-colors"
+            className="sm:hidden w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-[15px] font-medium text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)] transition-colors"
           >
             {dark
               ? <Sun className="h-[18px] w-[18px] flex-shrink-0 fill-amber-400 text-amber-400" />
               : <Moon className="h-[18px] w-[18px] flex-shrink-0" />}
             {dark ? 'Light mode' : 'Dark mode'}
           </button>
-        )}
-        <Link
-          href="/glossary"
-          className={cn(
-            'flex items-center rounded-lg border border-[var(--paper-rule)] px-3 py-2.5 text-[15px] font-medium transition-colors',
-            activeLabel === SIDEBAR_FOOTER_LABEL
-              ? 'bg-[var(--paper-2)] text-[var(--paper-accent)]'
-              : 'text-[var(--paper-text)] hover:bg-[var(--paper-2)] hover:text-[var(--paper-accent)]',
-          )}
-        >
-          {SIDEBAR_FOOTER_LABEL}
-        </Link>
-      </div>
+        </div>
+      )}
 
     </aside>
   )

@@ -67,6 +67,36 @@ export default async function DetailPageCity({ params }: { params: Promise<{ slu
   const prevSlug = (prevRows[0]?.slug ?? lastRows[0]?.slug ?? slug) as string
   const nextSlug = (nextRows[0]?.slug ?? firstRows[0]?.slug ?? slug) as string
 
+  // Inherit the parent county's typical cost as context (the level-appropriate
+  // pattern: each detail page leads with its own real data + county-cost context).
+  // county_costs uses "<County> County" with NYC-borough remapping.
+  const countyForCost = (() => {
+    const c = (stats.county as string) ?? ''
+    if (c === 'Brooklyn') return 'Kings County'
+    if (c === 'Manhattan') return 'New York County'
+    if (c === 'Staten Island') return 'Richmond County'
+    return c ? `${c} County` : ''
+  })()
+  const costRows = countyForCost
+    ? await sql`
+        SELECT mcinfant, mfccinfant
+        FROM county_costs
+        WHERE lower(county_name) = lower(${countyForCost}) AND studyyear = 2022
+        LIMIT 1
+      `
+    : []
+  const costs = costRows[0] ?? null
+
+  // Per-program-type counts for the city's provider mix.
+  const typeCountRows = await sql`
+    SELECT program_type, COUNT(*)::int AS n
+    FROM facilities
+    WHERE regexp_replace(lower(city), '[^a-z0-9]+', '-', 'g') = ${slug}
+    GROUP BY program_type
+  `
+  const typeCounts: Record<string, number> = { DCC: 0, FDC: 0, GFDC: 0, SACC: 0, SDCC: 0 }
+  for (const r of typeCountRows) typeCounts[r.program_type as string] = Number(r.n)
+
   return (
     <CityShell
       stats={{
@@ -79,6 +109,11 @@ export default async function DetailPageCity({ params }: { params: Promise<{ slu
         preschool_capacity: Number(stats.preschool_capacity),
         school_age_capacity:Number(stats.school_age_capacity),
       }}
+      countyCosts={costs ? {
+        mcinfant:   costs.mcinfant   != null ? Number(costs.mcinfant)   : null,
+        mfccinfant: costs.mfccinfant != null ? Number(costs.mfccinfant) : null,
+      } : null}
+      typeCounts={typeCounts}
       zips={zipRows.map(z => ({
         zip_code:  z.zip_code as string,
         providers: Number(z.providers),

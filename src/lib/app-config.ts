@@ -7,6 +7,7 @@
 
 import {
   MessageCircle, Search, LayoutDashboard, Rocket, BarChart3, Map, ClipboardList, MonitorDot,
+  FileText, BookOpen, Newspaper,
 } from 'lucide-react'
 import { CHART_CONFIGS } from '@/lib/chart-configs'
 
@@ -43,6 +44,7 @@ export const PATH_NAV: Record<string, string> = {
   '/console':   'Console',
   '/report':      'Report',
   '/eligibility': 'Eligibility',
+  '/blog':        'Guides',
   '/glossary':    'Glossary',
 }
 
@@ -60,6 +62,7 @@ export const PATH_TITLE: Record<string, string> = {
   '/report':       'Report',
   '/eligibility':  'Eligibility',
   '/application':  'Application',
+  '/blog':         'Guides',
   '/glossary':     'Glossary',
 }
 
@@ -76,8 +79,10 @@ export const SIDEBAR_NAV_TOP: NavItem[] = [
 ]
 
 export const SIDEBAR_NAV_BOTTOM: NavItem[] = [
-  { label: 'Report',      icon: BarChart3,     href: '/report'      },
+  { label: 'Report',      icon: FileText,      href: '/report'      },
   { label: 'Eligibility', icon: ClipboardList, href: '/eligibility' },
+  { label: 'Guides',      icon: Newspaper,     href: '/blog'        },
+  { label: 'Glossary',    icon: BookOpen,      href: '/glossary'    },
 ]
 
 export type DataItem = { label: string; href: string }
@@ -90,5 +95,3 @@ export const SIDEBAR_DATA_ITEMS: DataItem[] = [
 ]
 
 export const SIDEBAR_MAP_ITEMS: DataItem[] = []
-
-export const SIDEBAR_FOOTER_LABEL = 'Glossary'
