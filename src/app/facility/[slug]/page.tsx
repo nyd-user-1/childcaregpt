@@ -2,9 +2,18 @@ import { notFound } from 'next/navigation'
 import { sql } from '@/lib/db'
 import { FacilityShell } from './Shell'
 
+// /facility/[slug] accepts EITHER the numeric facility_id (canonical — names
+// collide: dozens of "KinderCare") OR the name slug the site's own prev/next
+// and search links use. Chat, the MCP server, and the interest email link by id.
+const isId = (slug: string) => /^\d{1,10}$/.test(slug)
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  let name = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  if (isId(slug)) {
+    const r = await sql`SELECT facility_name FROM facilities WHERE facility_id = ${Number(slug)} LIMIT 1`
+    if (r[0]?.facility_name) name = String(r[0].facility_name)
+  }
   return {
     title: `${name} · ChildcareGPT`,
     description: `${name} — a licensed New York child care provider. Program type, capacity, address, phone, and license status.`,
@@ -21,7 +30,8 @@ export default async function DetailPageFacility({ params }: { params: Promise<{
       infant_capacity, toddler_capacity, preschool_capacity, school_age_capacity, total_capacity,
       facility_opened_date, license_issue_date, license_expiration_date
     FROM facilities
-    WHERE regexp_replace(lower(facility_name), '[^a-z0-9]+', '-', 'g') = ${slug}
+    WHERE (${isId(slug)} AND facility_id = ${isId(slug) ? Number(slug) : -1})
+       OR (NOT ${isId(slug)} AND regexp_replace(lower(facility_name), '[^a-z0-9]+', '-', 'g') = ${slug})
     ORDER BY facility_id
     LIMIT 1
   `
