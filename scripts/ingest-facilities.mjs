@@ -22,6 +22,7 @@ const pool = new Pool({ connectionString: DATABASE_URL, ssl: true });
 
 const MAIN_API  = 'https://data.ny.gov/resource/fymg-3wv3.json';
 const DATES_API = 'https://data.ny.gov/resource/cb42-qumz.json';
+const RUN_STARTED_AT = new Date();
 const PAGE_SIZE  = 1000;
 const BATCH_SIZE = 100;
 
@@ -40,9 +41,11 @@ const COLS = [
   'school_age_capacity','total_capacity',
   'profile_url','latitude','longitude',
   'facility_opened_date','license_issue_date','license_expiration_date',
-  'ingested_at',
+  'ingested_at','last_seen_at',
 ];
 
+// ingested_at = first time we saw the facility (never overwritten → "new" marker)
+// last_seen_at = most recent run that returned it (rows older than the latest run are retired by OCFS)
 const UPDATE_COLS = COLS.filter(c => c !== 'facility_id' && c !== 'ingested_at');
 
 function rowToParams(r, dates) {
@@ -79,7 +82,8 @@ function rowToParams(r, dates) {
     dates?.facility_opened_date    ?? null,
     dates?.license_issue_date      ?? null,
     dates?.license_expiration_date ?? null,
-    new Date(),
+    RUN_STARTED_AT,
+    RUN_STARTED_AT,
   ];
 }
 
@@ -122,6 +126,7 @@ async function upsertBatch(client, rows, dateMap) {
 async function main() {
   const client = await pool.connect();
   try {
+    await client.query('ALTER TABLE facilities ADD COLUMN IF NOT EXISTS last_seen_at timestamptz');
     console.log('Fetching date data from cb42-qumz...');
     const dateRows = await fetchAllPages(
       DATES_API,
@@ -160,6 +165,11 @@ async function main() {
     }
 
     console.log(`Done. Total rows ingested: ${total}`);
+    const { rows: [stats] } = await client.query(
+      `SELECT count(*) FILTER (WHERE ingested_at >= $1)::int AS new_rows,
+              count(*) FILTER (WHERE last_seen_at IS NULL OR last_seen_at < $1)::int AS retired_rows
+         FROM facilities`, [RUN_STARTED_AT]);
+    console.log(`New this run: ${stats.new_rows} · not returned by OCFS (retired): ${stats.retired_rows}`);
   } finally {
     client.release();
     await pool.end();

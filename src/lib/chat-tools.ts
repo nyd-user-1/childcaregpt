@@ -33,6 +33,8 @@ export const TOOLS = [
         county:       { type: 'string', description: 'County name without the word "County", e.g. "Albany", "Suffolk", "Bronx". For NYC use "Brooklyn", "Manhattan", "Queens", "Bronx", "Staten Island".' },
         program_type: { type: 'string', enum: ['DCC', 'FDC', 'GFDC', 'SACC', 'SDCC'], description: 'DCC=Day Care Center, FDC=Family Day Care, GFDC=Group Family Day Care, SACC=School-Age, SDCC=Small Day Care Center' },
         search:       { type: 'string', description: 'Optional free-text match on facility or provider name.' },
+        city:         { type: 'string', description: 'Optional city/town/hamlet name as OCFS records it, e.g. "Brentwood", "Albany".' },
+        zip:          { type: 'string', description: 'Optional 5-digit ZIP code.' },
         limit:        { type: 'number', description: 'Max results, default 8, max 20.' },
       },
       required: [],
@@ -129,6 +131,8 @@ export async function executeToolCall(name: string, input: Record<string, unknow
         const county = typeof input.county === 'string' ? input.county.trim() : null
         const programType = typeof input.program_type === 'string' ? input.program_type : null
         const search = typeof input.search === 'string' ? input.search.trim() : null
+        const city = typeof input.city === 'string' && input.city.trim() ? input.city.trim() : null
+        const zip = typeof input.zip === 'string' && /^\d{5}$/.test(input.zip.trim()) ? input.zip.trim() : null
         const limit = Math.min(Number(input.limit) || 8, 20)
         const loc = usableLocation(ctx)
 
@@ -175,6 +179,8 @@ export async function executeToolCall(name: string, input: Record<string, unknow
           FROM facilities
           WHERE (facility_status ILIKE '%license%' OR facility_status ILIKE '%regist%' OR facility_status ILIKE '%active%')
             AND (${county}::text IS NULL OR county ILIKE ${county})
+            AND (${city}::text IS NULL OR city ILIKE ${city})
+            AND (${zip}::text IS NULL OR zip_code = ${zip})
             AND (${programType}::text IS NULL OR program_type = ${programType})
             AND (${search}::text IS NULL OR facility_name ILIKE ${'%' + (search ?? '') + '%'} OR provider_name ILIKE ${'%' + (search ?? '') + '%'})
           ORDER BY total_capacity DESC NULLS LAST

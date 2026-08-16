@@ -1,6 +1,24 @@
 import { NextRequest } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { jsonSchema, stepCountIs, streamText, tool, type ModelMessage } from 'ai'
 import { TOOLS, executeToolCall, type ToolContext } from '@/lib/chat-tools'
+import { chatModel } from '@/lib/ai/bedrock'
+
+// POST /api/chat — ChildcareGPT's in-app assistant, streamed.
+//
+// Engine: Claude on Amazon Bedrock through the AI SDK (streamText + tools),
+// ported from leuk's app/api/ai/directory/route.ts on 2026-08-15. Before that
+// this route drove @anthropic-ai/sdk directly with CLAUDE_CHILDCARE_API_KEY;
+// that key is now only the fallback lane (lib/ai/bedrock.ts chatModel()) for a
+// deployment where CHILDCARE_BEDROCK_* is not yet set.
+//
+// The WIRE FORMAT IS UNCHANGED: the client (src/hooks/useChat.ts) reads a
+// text/event-stream of `data: {"text"}` chunks, one `data: {"meta"}` frame
+// (facilities for the map + cards, eligDraft for the application card) and a
+// `data: [DONE]` sentinel. Text now streams as deltas instead of whole blocks —
+// the client concatenates, so that is a speed win and not a contract change.
+//
+// Tools are the existing lib/chat-tools.ts definitions (Anthropic tool JSON
+// schema) wrapped with jsonSchema() — one tool list, two engines never.
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -74,6 +92,21 @@ Never fish for these fields with a barrage of questions. If a parent naturally s
 type ChatMsg = { role: 'user' | 'assistant'; content: string }
 type ReqLocation = { lat: number; lng: number; description?: string }
 
+/** The AI SDK tool set, built per request so each executor closes over this
+ *  request's ToolContext (the parent's geocoded location, never model input). */
+function toolset(ctx: ToolContext) {
+  return Object.fromEntries(
+    TOOLS.map(t => [
+      t.name,
+      tool({
+        description: t.description,
+        inputSchema: jsonSchema<Record<string, unknown>>(t.input_schema as unknown as Record<string, unknown>),
+        execute: (input: Record<string, unknown>) => executeToolCall(t.name, input, ctx),
+      }),
+    ]),
+  )
+}
+
 export async function POST(req: NextRequest) {
   const { messages, location } = await req.json() as { messages: ChatMsg[]; location?: ReqLocation | null }
   if (!messages?.length) {
@@ -83,18 +116,24 @@ export async function POST(req: NextRequest) {
   const ctx: ToolContext = { location: location ?? null }
   const hasLocation = !!location && !(location.lat === 0 && location.lng === 0)
 
-  const apiKey = process.env.CLAUDE_CHILDCARE_API_KEY
+  const chat = chatModel()
   const encoder = new TextEncoder()
 
   const readable = new ReadableStream({
     async start(controller) {
       let hasEmittedText = false
+      // Set at every step boundary so the first delta of the next text block
+      // is separated from the last one — the same "\n\n between blocks" the
+      // old whole-block emitter produced.
+      let needsGap = false
       const send = (text: string) => {
         if (!text) return
         let out = text
-        if (hasEmittedText) {
+        if (needsGap) {
           const trimmed = out.replace(/^\s+/, '')
-          if (trimmed.length > 0) out = '\n\n' + trimmed
+          if (!trimmed.length) return
+          out = hasEmittedText ? '\n\n' + trimmed : trimmed
+          needsGap = false
         }
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: out })}\n\n`))
         hasEmittedText = true
@@ -106,8 +145,8 @@ export async function POST(req: NextRequest) {
         } catch { /* already closed */ }
       }
 
-      if (!apiKey) {
-        send('*Chat isn’t configured yet — the CLAUDE_CHILDCARE_API_KEY isn’t set in this environment.*')
+      if (!chat) {
+        send('*Chat isn’t configured yet — set CHILDCARE_BEDROCK_REGION + a Bedrock credential (or CLAUDE_CHILDCARE_API_KEY) in this environment.*')
         done(); return
       }
 
@@ -143,41 +182,46 @@ export async function POST(req: NextRequest) {
       }
 
       try {
-        const client = new Anthropic({ apiKey })
-        type AnthMsg = Anthropic.Messages.MessageParam
         // Coords flow to find_facilities through ctx, not the prompt. The model
         // only needs to know proximity ranking is on so it frames the answer.
         const system = hasLocation
           ? `${SYSTEM_PROMPT}\n\n## This parent's location\nThe parent is at "${location!.description ?? 'their saved address'}". When you call find_facilities, results are already sorted by real distance from them and capped to a tight radius — present them as "near you", lead with the closest, and mention each provider's distance (the distance_miles field, e.g. "0.8 mi away"). Do not re-sort by capacity.`
           : SYSTEM_PROMPT
-        const history: AnthMsg[] = messages.map(m => ({ role: m.role, content: m.content }))
+        const history: ModelMessage[] = messages.slice(-24).map(m => ({ role: m.role, content: m.content }))
+        // Prompt-cache breakpoint on the last message: instructions + tools +
+        // history are served from Anthropic's cache on every tool round. Same
+        // providerOptions.anthropic shape on both lanes (Bedrock re-exports it).
+        if (history.length) {
+          history[history.length - 1].providerOptions = { anthropic: { cacheControl: { type: 'ephemeral' } } }
+        }
 
-        for (let i = 0; i < 6; i++) {
-          const response = await client.messages.create({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 2048,
-            system,
-            tools: TOOLS as unknown as Anthropic.Messages.Tool[],
-            messages: history,
-          })
-          for (const block of response.content) {
-            if (block.type === 'text' && block.text) send(block.text)
+        const result = streamText({
+          model: chat.model,
+          instructions: system,
+          messages: history,
+          tools: toolset(ctx),
+          stopWhen: stepCountIs(6),
+          maxOutputTokens: 2048,
+        })
+
+        for await (const part of result.fullStream) {
+          switch (part.type) {
+            case 'text-delta':
+              send(part.text)
+              break
+            case 'tool-result':
+              trackTools(part.toolName, part.output)
+              break
+            case 'finish-step':
+              needsGap = true
+              break
+            case 'error':
+              throw part.error instanceof Error ? part.error : new Error(String(part.error))
           }
-          if (response.stop_reason !== 'tool_use') { sendMeta(); done(); return }
-
-          const toolBlocks = response.content.filter(
-            (b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use'
-          )
-          const toolResults = await Promise.all(toolBlocks.map(async b => {
-            const result = await executeToolCall(b.name, b.input as Record<string, unknown>, ctx)
-            trackTools(b.name, result)
-            return { type: 'tool_result' as const, tool_use_id: b.id, content: JSON.stringify(result) }
-          }))
-          history.push({ role: 'assistant', content: response.content })
-          history.push({ role: 'user', content: toolResults })
         }
         sendMeta(); done()
       } catch (err) {
+        console.error('api/chat failed', (err as Error)?.name ?? 'error')
         send(`*${(err as Error).message || 'Something went wrong. Please try again.'}*`)
         done()
       }

@@ -48,14 +48,19 @@ The shell is template-ready. The content layer is not. To complete the template:
 
 # Database & API Infrastructure
 
-## Neon Postgres (`wispy-hat-96132084` / `neon-bisque-arrow`)
+## Neon Postgres — org **2525 LLC**, project `round-block-26042209` (childcaregpt)
+Migrated 2026-08-15 from the legacy Vercel-managed project `wispy-hat-96132084` (full `pg_restore` of `public`; row counts verified identical, then re-ingested). The legacy project can be deleted once the new Vercel org is confirmed live on the new URL.
 Connection via `DATABASE_URL` env var (set in `.env.local` and Vercel Production/Preview/Development).
 Client: `@neondatabase/serverless` — import `sql` from `@/lib/db`.
 
+**Vercel:** team **`nys-gpt`** (vercel.com/nys-gpt), project `childcaregpt` (`prj_hhebv0eKXlZZ4UxVj52UdmCcT2fg`) — moved 2026-08-15 from the legacy `nyd-user-1's projects` team. Deploy with `vercel --prod`. Production domain **childcare.nysgpt.com** (Cloudflare CNAME → vercel-dns) — verified onto the nys-gpt project 2026-08-15 (Cloudflare TXT `_vercel` = `vc-domain-verify=childcare.nysgpt.com,…`, then `vercel api …/domains/childcare.nysgpt.com/verify -X POST`). The legacy Vercel project + legacy Neon `wispy-hat-96132084` no longer serve anything and can be deleted. The raw `*.vercel.app` URLs sit behind Vercel Deployment Protection (`vercel curl` bypasses it). Blob store `childcaregpt-geojson` (`store_YQgDMCffW53IYqFq`, private, iad1) holds the district GeoJSON for `/api/geojson/[key]`; re-upload with `node --env-file=.env.local scripts/geojson-build/upload-blob.mjs` (full-res files must be copied from `For Review/` to repo root first).
+
 ### Tables
 
-#### `facilities` — 16,800 rows, keyed on `facility_id`
-NY State OCFS regulated childcare providers (from `data.ny.gov` dataset `fymg-3wv3` + dates from `cb42-qumz`).
+#### `facilities` — 17,285 rows, keyed on `facility_id`
+NY State OCFS regulated childcare providers (from `data.ny.gov` dataset `fymg-3wv3` + dates from `cb42-qumz`). The ingest is upsert-only and **never deletes**; two timestamps carry lifecycle:
+- `ingested_at` — first time we saw the facility (never overwritten). Rows whose `ingested_at` equals the latest run are **new** (485 as of 2026-08-15). **TODO: show a "New" badge on `DetailPageFacility` for these** (and probably in `/facility` index rows / provider cards).
+- `last_seen_at` — most recent run that returned it. Rows with `last_seen_at IS NULL` or older than the latest run are **retired by OCFS** (555 as of 2026-08-15) — currently kept, not surfaced or filtered anywhere; decide whether to hide/label them.
 Key columns: `facility_id`, `program_type` (DCC/FDC/GFDC/SACC/SDCC), `county`, `facility_status`, `facility_name`, `city`, `zip_code`, `phone_number`, `provider_name`, `total_capacity`, `infant_capacity`, `toddler_capacity`, `preschool_capacity`, `school_age_capacity`, `profile_url`, `latitude`, `longitude`, `facility_opened_date`, `license_issue_date`, `license_expiration_date`.
 Indexes: `county`, `program_type`, `facility_status`, `zip_code`, `region_code`.
 
@@ -78,6 +83,35 @@ Query helpers: `src/lib/queries/county-demographics.ts` (`getCountyDemographics(
 |---|---|
 | `GET /api/facilities` | Query facilities. Params: `county`, `program_type`, `status`, `limit` (max 200), `offset` |
 | `GET /api/county-costs` | County cost data. Params: `year` (default 2022) |
+| `POST /api/interest` | Record a parent's interest in a facility + email them (see `facility_interest`). Header `x-childcare-source: mcp\|chat` = attribution. |
+| `POST /api/chat` | The in-app assistant (Bedrock, SSE) — see "Chat engine". |
+| `GET/POST /api/mcp` | The MCP server — see "MCP server". `/.well-known/mcp.json` is its discovery card. |
+
+### `facility_interest` — a parent's interest in one provider (the one public write)
+`id`, `facility_id` → `facilities`, `first_name`, `last_name`, `email`, `phone`, `children`, `start_when`, `message`, `source` (`web`|`mcp`|`chat`), `created_at`. Written only by `createInterest()` in `src/lib/interest.ts` (validates, inserts, emails the PARENT a confirmation with the provider's phone + OCFS profile + funding links — providers publish a phone with the state, not an email). Exposed as `POST /api/interest`; the MCP `express_interest` tool posts to that route over HTTP (leuk's booking pattern — one write path). **Resend is in sandbox mode** (`onboarding@resend.dev` → only `brendan@nysgpt.com` receives); verify `nysgpt.com` at resend.com/domains and set `RESEND_FROM_EMAIL` to send to real parents — this also gates `/api/send-application` and `/api/send-eligibility`.
+
+---
+
+## Chat engine — Claude on Amazon Bedrock
+
+`/api/chat` (`src/app/api/chat/route.ts`) runs the AI SDK (`streamText` + tools) against **Bedrock**, ported from leuk's `app/api/ai/directory/route.ts` on 2026-08-15. Provider + credentials in `src/lib/ai/bedrock.ts` (`CHILDCARE_BEDROCK_REGION`, `CHILDCARE_BEDROCK_MODEL_ID`, and `CHILDCARE_BEDROCK_API_KEY` *or* `CHILDCARE_AWS_ACCESS_KEY_ID`/`SECRET`; same AWS account/key as leuk's `LEUK_BEDROCK_*`). `chatModel()` falls back to the first-party Anthropic key (`CLAUDE_CHILDCARE_API_KEY`, currently **out of credit**) through the same code path when Bedrock isn't configured — remove once Bedrock is live everywhere. The **wire format is unchanged**: `data: {"text"}` deltas · one `data: {"meta"}` (facilities → map/cards, eligDraft → application card) · `data: [DONE]`; the client (`src/hooks/useChat.ts`) is untouched. Tools are the single list in `src/lib/chat-tools.ts` (Anthropic tool JSON schema wrapped with `jsonSchema()`); `find_facilities` also takes `city` / `zip` now.
+
+---
+
+## MCP server — `/api/mcp` (+ `/.well-known/mcp.json`)
+
+Streamable HTTP, authless, tools-only, stateless — a port of leuk's `app/api/mcp/route.ts` (which descends from 44b's). Connect: `claude mcp add --transport http childcaregpt https://childcare.nysgpt.com/api/mcp`, or claude.ai → Settings → Connectors → custom connector. Smoke test: `node scripts/mcp-smoke.mjs [url] [--interest you@example.com]`.
+
+| Layer | File | Rule |
+|---|---|---|
+| Transport + instructions + tool registration | `src/app/api/mcp/route.ts` | Transport only. No data access here. |
+| Reads | `src/lib/mcp/tools.ts` | Thin over `executeToolCall` in `src/lib/chat-tools.ts` — MCP and chat can never disagree. Adds site-relative `href` (route absolutizes to `url`) and staples `funding` onto every search. |
+| The one write | `src/lib/mcp/interest.ts` | Posts to `/api/interest` over HTTP with `x-childcare-source: mcp` (attribution, not authorization). No read path. |
+| Funding surface | `src/lib/funding.ts` | The three forms as data (`/eligibility`, `/application`, `/report`). Edit here only. |
+| The card (MCP App) | `mcp-app/care/care.html` + `care.ts` → `src/lib/mcp/app/care-html.generated.ts` | Built by `scripts/build-mcp-app.mjs` (runs in `npm run build`; commit the output). URI `ui://childcaregpt/care.<hash>.html`, mime `text/html;profile=mcp-app`. Screens: **results** (map · rows with **I'm interested** · funding strip) → **interest form** → **receipt** · **facility** · **district** (results with a legislator header + district totals) · **costs** (county vs. NY median bars by age, center vs family) · **funding**. Paper-voice tokens inlined. The map is an **OpenStreetMap/CARTO tile mosaic** drawn in the card (Web-Mercator maths, our own pins, attribution printed; `resourceDomains: *.basemaps.cartocdn.com`) — no Google, no key. |
+| Geocoding | `src/lib/geocode.ts` | `find_facilities.near` → **Nominatim** (OSM), New York-bounded, identifying User-Agent, in-memory cache. Feeds the existing distance-ranking path in `chat-tools.ts` (`ctx.location`). Self-host Nominatim/Photon if volume ever matters. |
+
+Tools: `find_facilities`\* (county/city/zip/**near**/program_type/q) · `find_facilities_by_district`\* (+ `district.legislator`, district-wide totals) · `get_facility`\* · `get_county_costs`\* (+ `state_median`, `funding`) · `funding_programs`\* · `list_program_types` · `filters` · `express_interest`\* (\* renders the card). Instructions tell the model: never invent a provider, capacity ≠ availability, surface help-paying-for-care with every search, the card is the interest form, never decide eligibility. NYC boroughs get no `county_url` — the site's `/county/kings` etc. 404 today (facilities store borough names; pre-existing).
 
 ### Ingest Scripts (`scripts/`)
 - `ingest-facilities.mjs` — fetches both `fymg-3wv3` + `cb42-qumz`, merges dates, batch-upserts all 16,800 facilities. Run: `DATABASE_URL=... node scripts/ingest-facilities.mjs`

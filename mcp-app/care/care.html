@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ChildcareGPT</title>
+<style>
+  /* Paper voice — the same tokens as the site's globals.css, inlined because
+     an MCP App is a self-contained document (no stylesheet, no font fetch). */
+  :root {
+    --paper: #f7f4ee; --paper-2: #f1ece2; --text: #1f1d1a;
+    --muted: rgba(31,29,26,.66); --faint: rgba(31,29,26,.42);
+    --accent: #2f6d6a; --accent-soft: rgba(47,109,106,.10);
+    --rule: rgba(31,29,26,.14); --rule-soft: rgba(31,29,26,.07);
+    --ok-bg: #e9f2ef; --ok-fg: #1f5a52; --err-bg: #f8e9e6; --err-fg: #8f2f24;
+    --serif: "Fraunces", Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+  :root[data-theme="dark"] {
+    --paper: #1a1712; --paper-2: #242019; --text: #f0e9d8;
+    --muted: rgba(240,233,216,.64); --faint: rgba(240,233,216,.40);
+    --accent: #3f8479; --accent-soft: rgba(63,132,121,.18);
+    --rule: rgba(240,233,216,.13); --rule-soft: rgba(240,233,216,.07);
+    --ok-bg: #16302b; --ok-fg: #9fd3c6; --err-bg: #3a1e1a; --err-fg: #f0a89c;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--paper); color: var(--text); font: 14px/1.5 var(--sans); }
+  button { font: inherit; color: inherit; }
+  .card { padding: 14px 16px 16px; }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .brand { font-family: var(--serif); font-weight: 500; font-size: 20px; letter-spacing: -0.01em; }
+  .nav { display: flex; gap: 6px; }
+  .nav button { border: 1px solid var(--rule); background: var(--paper-2); border-radius: 999px;
+    width: 30px; height: 30px; cursor: pointer; font-size: 15px; line-height: 1; }
+  .nav button:disabled { opacity: .35; cursor: default; }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: 21px; line-height: 1.15; letter-spacing: -0.02em; margin: 6px 0 0; }
+  h1 i { font-style: italic; color: var(--accent); }
+  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .hidden { display: none !important; }
+  .rule { border-top: 1px solid var(--rule); margin: 12px 0 0; }
+
+  /* map */
+  .map { margin: 12px 0 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--rule-soft); background: var(--paper-2); position: relative; height: 220px; }
+  .map .tl { position: absolute; inset: 0; }
+  .map .tl img { position: absolute; width: 256px; height: 256px; display: block; }
+  :root[data-theme="dark"] .map .tl img { filter: brightness(.82) contrast(1.05) saturate(.8); }
+  .map .pin { position: absolute; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 999px; background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+  .map .pin.origin { background: #1f1d1a; width: 14px; height: 14px; margin: -7px 0 0 -7px; }
+  .map .attr { position: absolute; right: 4px; bottom: 3px; font-size: 9.5px; color: #333; background: rgba(255,255,255,.75); padding: 1px 5px; border-radius: 4px; }
+  /* district header */
+  .dist { margin-top: 12px; padding: 11px 13px; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper-2); display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; align-items: start; }
+  .dist .who { font-weight: 600; font-size: 14.5px; }
+  .dist .role { color: var(--muted); font-size: 12.5px; }
+  .dist .tot { text-align: right; font-size: 12.5px; color: var(--muted); }
+  .dist .tot b { display: block; font-family: var(--serif); font-size: 20px; color: var(--text); letter-spacing: -0.02em; }
+  .dist .contact { grid-column: 1 / -1; color: var(--muted); font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  /* costs */
+  .costs { margin-top: 12px; }
+  .costs .grp { margin-top: 12px; }
+  .costs .gh { font-weight: 600; font-size: 13px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .costs .gh span { color: var(--faint); font-weight: 400; font-size: 12px; }
+  .costs .bar { display: grid; grid-template-columns: 74px 1fr 76px; gap: 8px; align-items: center; margin: 4px 0; font-size: 13px; }
+  .costs .bar .lab { color: var(--muted); }
+  .costs .bar .trk { position: relative; height: 18px; background: var(--rule-soft); border-radius: 5px; overflow: hidden; }
+  .costs .bar .fil { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 5px; }
+  .costs .bar .med { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); opacity: .55; }
+  .costs .bar .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .costs .bar .val small { display: block; color: var(--faint); font-weight: 400; font-size: 11px; }
+  .costs .key { color: var(--faint); font-size: 11.5px; margin-top: 8px; }
+  .costs .key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; background: var(--accent); vertical-align: -1px; margin-right: 4px; }
+  .costs .key b { display: inline-block; width: 2px; height: 11px; background: var(--text); opacity: .55; vertical-align: -2px; margin: 0 5px 0 10px; }
+
+  /* results */
+  .rows { display: flex; flex-direction: column; margin-top: 4px; }
+  .row { display: grid; grid-template-columns: 1fr auto; gap: 8px 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--rule-soft); }
+  .row .name { font-weight: 600; font-size: 14.5px; letter-spacing: -0.005em; display: flex; align-items: center; gap: 4px; }
+  .row .name .ext { width: 24px; height: 24px; font-size: 14px; }
+  .tel { color: var(--accent); text-decoration: none; }
+  .tel:hover { text-decoration: underline; }
+  .row .meta { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .row .meta b { color: var(--text); font-weight: 600; }
+  .row .acts { display: flex; gap: 6px; align-items: center; }
+  .btn { border: 1px solid var(--rule); background: var(--paper-2); border-radius: 999px; padding: 6px 11px; cursor: pointer; font-size: 12.5px; white-space: nowrap; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.pri { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.pri:hover { color: #fff; filter: brightness(1.05); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .ext { background: none; border: 1px solid transparent; border-radius: 999px; width: 30px; height: 30px; cursor: pointer; color: var(--muted); font-size: 15px; }
+  .ext:hover { color: var(--accent); border-color: var(--rule); background: var(--paper-2); }
+  .empty { color: var(--muted); padding: 12px 0; }
+  .fine { color: var(--faint); font-size: 12px; margin-top: 10px; }
+
+  /* funding strip / screen */
+  .fund { margin-top: 14px; padding: 14px 14px 14px; border-radius: 12px; background: var(--accent-soft); border: 1px solid var(--rule); }
+  .fund .fh { font-family: var(--serif); font-size: 20px; letter-spacing: -0.01em; }
+  .fund .fh i { font-style: italic; color: var(--accent); }
+  .fund .fs { color: var(--muted); font-size: 13px; margin: 4px 0 12px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+  .tile { background: var(--paper); border: 1px solid var(--rule-soft); border-radius: 12px; padding: 14px 14px 14px; display: flex; flex-direction: column; gap: 6px; min-height: 150px; }
+  .tile .tt { font-weight: 600; font-size: 14px; line-height: 1.3; }
+  .tile .tb { color: var(--muted); font-size: 13px; line-height: 1.45; flex: 1; }
+  .tile button.btn { padding: 8px 14px; font-size: 13px; margin-top: 8px; }
+  .tile button { align-self: flex-start; }
+  .fund.big .tiles { grid-template-columns: 1fr; }
+  .fund.big .tile { padding: 12px 13px; }
+  .fund.big .tile .tt { font-size: 14.5px; }
+  .fund.big .tile .tb { font-size: 13px; }
+
+  /* interest form */
+  .form { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form .full { grid-column: 1 / -1; }
+  input, textarea { width: 100%; border: 1px solid var(--rule); background: var(--paper-2); color: var(--text);
+    border-radius: 8px; padding: 9px 10px; font: inherit; }
+  textarea { min-height: 64px; resize: vertical; }
+  input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; margin-top: 2px; flex-wrap: wrap; }
+  .link { background: none; border: 0; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font-size: 13px; }
+  .msg { margin-top: 12px; border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+  .msg.ok { background: var(--ok-bg); color: var(--ok-fg); }
+  .msg.err { background: var(--err-bg); color: var(--err-fg); }
+  .receipt { margin-top: 12px; padding: 14px 16px 16px; border-radius: 12px; border: 1px solid var(--rule); background: var(--paper-2); }
+  .receipt .who { font-family: var(--serif); font-size: 22px; letter-spacing: -0.02em; color: var(--accent); margin: 0 0 8px; }
+  .receipt p { margin: 0 0 10px; }
+  .receipt .tel { font-size: 15px; text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="top">
+    <div class="brand">NYSgpt</div>
+    <div class="nav">
+      <button id="back" type="button" aria-label="Back" title="Back">←</button>
+      <button id="fwd" type="button" aria-label="Forward" title="Forward">→</button>
+    </div>
+  </div>
+  <h1 id="title">Loading…</h1>
+  <div class="sub" id="sub"></div>
+
+  <!-- screen: results / facility -->
+  <div id="results" class="hidden">
+    <div class="dist hidden" id="dist"></div>
+    <div class="map hidden" id="map" role="img" aria-label="Map of the providers listed"><div class="tl" id="tiles-map"></div><div class="attr">© OpenStreetMap contributors © CARTO</div></div>
+    <div class="rows" id="rows"></div>
+    <div class="empty hidden" id="empty">Nothing on file for that search — try a neighbouring county or another program type.</div>
+    <div class="fine" id="rfine"></div>
+  </div>
+
+  <!-- screen: costs -->
+  <div id="costs" class="costs hidden"></div>
+
+  <!-- screen: interest form -->
+  <div id="interest" class="hidden">
+    <div class="form">
+      <input id="first" placeholder="First name" autocomplete="given-name" />
+      <input id="last" placeholder="Last name" autocomplete="family-name" />
+      <input id="email" class="full" type="email" placeholder="Email — the confirmation goes here" autocomplete="email" />
+      <input id="phone" placeholder="Phone (optional)" type="tel" autocomplete="tel" />
+      <input id="start" placeholder="When you’d like to start (optional)" />
+      <input id="children" class="full" placeholder="Your child(ren) — ages, e.g. “infant and a 3-year-old”" />
+      <textarea id="message" class="full" placeholder="Anything else the provider should know (optional)"></textarea>
+      <div class="actions">
+        <button class="btn pri" id="send" type="button">Send my interest</button>
+        <button class="link" id="ipage" type="button">See this provider on ChildcareGPT</button>
+      </div>
+    </div>
+    <div class="fine">We record your interest and email you the provider’s phone number and state profile, plus the help-paying-for-care links. Providers list a phone with the state, not an email — the fastest way to a spot is still a call.</div>
+  </div>
+
+  <!-- screen: receipt -->
+  <div id="done" class="hidden">
+    <div class="receipt" id="receipt"></div>
+  </div>
+
+  <div id="msg" class="msg hidden"></div>
+
+  <!-- funding: strip under results/receipt, or the whole screen -->
+  <div id="fund" class="fund hidden">
+    <div class="fh" id="fh"></div>
+    <div class="fs" id="fs"></div>
+    <div class="tiles" id="tiles"></div>
+  </div>
+</div>
+<script type="module" src="./care.ts"></script>
+</body>
+</html>
