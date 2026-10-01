@@ -13,7 +13,7 @@ frontend:
     build:
       commands:
         - |
-          for name in DATABASE_URL CLAUDE_CHILDCARE_API_KEY CHILDCARE_BEDROCK_MODEL_ID CHILDCARE_BEDROCK_REGION CENSUS_API_KEY RESEND_API_KEY NEXT_PUBLIC_GOOGLE_MAPS_API_KEY NEXT_PUBLIC_SITE_URL; do
+          for name in DATABASE_URL CHILDCARE_BEDROCK_MODEL_ID CHILDCARE_BEDROCK_REGION CENSUS_API_KEY RESEND_API_KEY NEXT_PUBLIC_GOOGLE_MAPS_API_KEY NEXT_PUBLIC_SITE_URL; do
             value="$(printenv "$name" || true)"
             if [ -n "$value" ]; then printf '%s=%s\n' "$name" "$value" >> .env.production; fi
           done

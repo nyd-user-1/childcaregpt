@@ -1,5 +1,5 @@
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock'
-import { createAnthropic } from '@ai-sdk/anthropic'
+import { fromNodeProviderChain } from '@aws-sdk/credential-providers'
 import type { LanguageModel } from 'ai'
 
 // Claude on Amazon Bedrock — the inference path for ChildcareGPT chat.
@@ -39,15 +39,17 @@ export const CLAUDE_MODEL_IDS = new Set([
 export function bedrockCredentials():
   | { region: string; apiKey: string }
   | { region: string; accessKeyId: string; secretAccessKey: string }
-  | null {
-  const region = process.env.CHILDCARE_BEDROCK_REGION
-  if (!region) return null
+  | { region: string; role: true } {
+  const region = process.env.CHILDCARE_BEDROCK_REGION ?? 'us-east-1'
   const apiKey = process.env.CHILDCARE_BEDROCK_API_KEY
   if (apiKey) return { region, apiKey }
   const accessKeyId = process.env.CHILDCARE_AWS_ACCESS_KEY_ID
   const secretAccessKey = process.env.CHILDCARE_AWS_SECRET_ACCESS_KEY
   if (accessKeyId && secretAccessKey) return { region, accessKeyId, secretAccessKey }
-  return null
+  // No stored secret: the role the app runs under (the Amplify compute role)
+  // signs the call. This is the standard on AWS; the two shapes above remain
+  // for a laptop.
+  return { region, role: true }
 }
 
 export function bedrockModelId(): string {
@@ -60,10 +62,11 @@ let provider: ReturnType<typeof createAmazonBedrock> | null = null
 export function bedrock(): ReturnType<typeof createAmazonBedrock> | null {
   if (provider) return provider
   const creds = bedrockCredentials()
-  if (!creds) return null
   provider = createAmazonBedrock(
     'apiKey' in creds
       ? { region: creds.region, apiKey: creds.apiKey }
+      : 'role' in creds
+        ? { region: creds.region, credentialProvider: fromNodeProviderChain() }
       : { region: creds.region, accessKeyId: creds.accessKeyId, secretAccessKey: creds.secretAccessKey },
   )
   return provider
@@ -73,19 +76,8 @@ export function bedrockConfigured(): boolean {
   return !!bedrock()
 }
 
-// ── Fallback ────────────────────────────────────────────────────────────────
-// Until CHILDCARE_BEDROCK_* is set on a deployment, the chat keeps working on
-// the first-party Anthropic API with the key it always used. SAME code path
-// (AI SDK streamText), different provider — not a second engine. Once Bedrock
-// is live everywhere this block and CLAUDE_CHILDCARE_API_KEY can go.
-const ANTHROPIC_FALLBACK_MODEL = 'claude-haiku-4-5-20251001'
-
-/** The chat model to use right now, and which lane it is on. Null if neither
- *  Bedrock nor the Anthropic fallback is configured. */
-export function chatModel(): { model: LanguageModel; lane: 'bedrock' | 'anthropic' } | null {
+/** The chat model. Always Claude on Bedrock; no first-party API is called. */
+export function chatModel(): { model: LanguageModel; lane: 'bedrock' } | null {
   const b = bedrock()
-  if (b) return { model: b(bedrockModelId()), lane: 'bedrock' }
-  const key = process.env.CLAUDE_CHILDCARE_API_KEY?.trim()
-  if (key) return { model: createAnthropic({ apiKey: key })(ANTHROPIC_FALLBACK_MODEL), lane: 'anthropic' }
-  return null
+  return b ? { model: b(bedrockModelId()), lane: 'bedrock' } : null
 }
